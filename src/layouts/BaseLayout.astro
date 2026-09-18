@@ -1,0 +1,87 @@
+---
+// Layout único para las dos páginas (en/es). Todo lo que cambia entre
+// idiomas llega por props; el markup no se duplica (regla del brief).
+import { ui } from "../i18n/ui.js";
+import SiteNav from "../components/SiteNav.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import "../styles/global.css";
+
+interface Props {
+  lang: "en" | "es";
+  title: string;
+  description: string;
+  jsonLd: Record<string, unknown>;
+}
+
+const { lang, title, description, jsonLd } = Astro.props;
+const t = ui[lang];
+
+const path = lang === "es" ? "/es/" : "/";
+const canonicalUrl = new URL(path, Astro.site);
+const enUrl = new URL("/", Astro.site);
+const esUrl = new URL("/es/", Astro.site);
+const ogImageUrl = new URL("/og-image.png", Astro.site);
+const ogLocale = lang === "es" ? "es_UY" : "en_US";
+const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <script is:inline>
+      // Aplica el tema antes del primer pintado (sin esto, flash del tema
+      // equivocado). Oscuro por defecto; respeta prefers-color-scheme sólo
+      // en la primera visita; a partir de que el usuario elige, gana su
+      // elección guardada en localStorage. Envuelto en try/catch: en
+      // ventana privada `localStorage` puede lanzar excepción.
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia &&
+                  window.matchMedia("(prefers-color-scheme: light)").matches
+                ? "light"
+                : "dark";
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0b0d10" />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <link rel="alternate" hreflang="en" href={enUrl} />
+    <link rel="alternate" hreflang="es" href={esUrl} />
+    <link rel="alternate" hreflang="x-default" href={enUrl} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content={ogLocale} />
+    <meta property="og:locale:alternate" content={ogLocaleAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{t.skipToContent}</a>
+    <SiteNav lang={lang} />
+    <slot />
+    <SiteFooter lang={lang} />
+  </body>
+</html>

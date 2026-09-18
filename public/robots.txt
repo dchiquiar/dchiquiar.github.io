@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dchiquiar.github.io/sitemap.xml

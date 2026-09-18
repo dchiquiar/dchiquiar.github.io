@@ -1,0 +1,38 @@
+---
+import { ui } from "../i18n/ui.js";
+import SectionHeading from "./SectionHeading.astro";
+import { cleanField } from "../lib/content.js";
+
+interface Props {
+  lang: "en" | "es";
+  person: Record<string, any>;
+}
+const { lang, person } = Astro.props;
+const t = ui[lang];
+const availability = cleanField(person.availability);
+const linkedin = person.links?.linkedin ?? null;
+const github = person.links?.github ?? null;
+---
+
+<section id="contact" class="section">
+  <div class="container contact">
+    <div>
+      <SectionHeading number="04" title={t.sections.contact} id="contact" />
+      <div class="contact__lines">
+        {availability && <p>{availability}</p>}
+        <p>{person.location}</p>
+      </div>
+    </div>
+    <div class="cta-group">
+      <a class="btn btn-primary" href={`mailto:${person.email}`}>
+        {t.contact.emailCta}
+      </a>
+      {linkedin && (
+        <a class="btn btn-secondary" href={linkedin}>LinkedIn</a>
+      )}
+      {github && (
+        <a class="btn btn-secondary" href={github}>GitHub</a>
+      )}
+    </div>
+  </div>
+</section>

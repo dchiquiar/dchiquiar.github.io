@@ -1,0 +1,52 @@
+---
+import { ui } from "../i18n/ui.js";
+
+interface Props {
+  lang: "en" | "es";
+  title: string;
+  tagline: string;
+  problem?: string | null;
+  technologies?: string[];
+  repoUrl?: string | null;
+  liveUrl?: string | null;
+  isPlaceholder?: boolean;
+}
+const {
+  lang,
+  title,
+  tagline,
+  problem = null,
+  technologies = [],
+  repoUrl = null,
+  liveUrl = null,
+  isPlaceholder = false,
+} = Astro.props;
+const t = ui[lang];
+---
+
+<article class="project-card">
+  <div class="project-card__image-placeholder" role="img" aria-label={t.projects.imagePlaceholder}>
+    {t.projects.imagePlaceholder}
+  </div>
+  <div class="project-card__body">
+    {isPlaceholder && <span class="badge">{t.projects.placeholderBadge}</span>}
+    <h3>{title}</h3>
+    <p class="project-card__tagline">{tagline}</p>
+    {problem && <p class="project-card__problem">{problem}</p>}
+    {technologies.length > 0 && (
+      <ul class="tag-list">
+        {technologies.map((tech) => (
+          <li class="tag">{tech}</li>
+        ))}
+      </ul>
+    )}
+    <div class="project-card__links">
+      {repoUrl ? (
+        <a href={repoUrl}>{t.projects.viewCode}</a>
+      ) : (
+        <span class="project-card__no-repo">{t.projects.noRepoNote}</span>
+      )}
+      {liveUrl && <a href={liveUrl}>{t.projects.viewLive}</a>}
+    </div>
+  </div>
+</article>

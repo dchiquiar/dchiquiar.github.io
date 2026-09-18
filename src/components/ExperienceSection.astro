@@ -1,0 +1,78 @@
+---
+import { ui } from "../i18n/ui.js";
+import SectionHeading from "./SectionHeading.astro";
+import { cleanField, cleanList } from "../lib/content.js";
+import { formatDateRange } from "../lib/format.js";
+
+interface Props {
+  lang: "en" | "es";
+  experience: Array<Record<string, any>>;
+  education: Array<Record<string, any>>;
+}
+const { lang, experience, education } = Astro.props;
+const t = ui[lang];
+const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
+---
+
+<section id="experience" class="section">
+  <div class="container">
+    <SectionHeading number="02" title={t.sections.experience} id="experience" />
+
+    <p>
+      <a class="btn btn-primary" href={cvHref} download>{t.experience.downloadCv}</a>
+    </p>
+
+    {experience.map((job) => {
+      const sector = cleanField(job.employer?.sector);
+      const highlights = cleanList(job.highlights);
+      const technologies = job.technologies ?? [];
+      return (
+        <div class="job">
+          <div class="job__header">
+            <h3 class="job__role">{job.role}</h3>
+            <span class="job__dates">{formatDateRange(job, lang)}</span>
+          </div>
+          {(sector || job.location) && (
+            <p class="job__meta">
+              {[sector, job.location].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          {highlights.length > 0 && (
+            <ul class="job__highlights">
+              {highlights.map((h) => (
+                <li>{h}</li>
+              ))}
+            </ul>
+          )}
+          {technologies.length > 0 && (
+            <ul class="tag-list">
+              {technologies.map((tech) => (
+                <li class="tag">{tech}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    })}
+
+    {education.length > 0 && (
+      <>
+        <h3>{t.experience.education}</h3>
+        <ul class="education-list">
+          {education.map((ed) => (
+            <li>
+              <strong>{ed.title}</strong> — {ed.institution}
+              {ed.year ? `, ${ed.year}` : ""}
+              <div class="status">
+                {ed.status === "completed"
+                  ? t.experience.statusCompleted
+                  : t.experience.statusInProgress}
+                {ed.detail ? ` · ${ed.detail}` : ""}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+  </div>
+</section>

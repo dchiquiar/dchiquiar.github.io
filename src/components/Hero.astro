@@ -1,0 +1,33 @@
+---
+import { ui } from "../i18n/ui.js";
+import { cleanField } from "../lib/content.js";
+
+interface Props {
+  lang: "en" | "es";
+  person: Record<string, any>;
+}
+const { lang, person } = Astro.props;
+const t = ui[lang];
+const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
+const availability = cleanField(person.availability);
+---
+
+<section id="top" class="hero">
+  <div class="container">
+    <h1 class="hero__name">{person.name}</h1>
+    <p class="hero__role">{person.headline}</p>
+    <p class="hero__meta">
+      <span>{person.location}</span>
+      <span>{person.seniority}</span>
+      {availability && <span>{availability}</span>}
+    </p>
+    <div class="cta-group">
+      <a class="btn btn-primary" href={cvHref} download>
+        {t.hero.downloadCv}
+      </a>
+      <a class="btn btn-secondary" href="#projects">
+        {t.hero.viewProjects}
+      </a>
+    </div>
+  </div>
+</section>

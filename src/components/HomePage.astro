@@ -1,0 +1,56 @@
+---
+// Único componente de página: src/pages/index.astro y src/pages/es/index.astro
+// sólo le pasan `lang`. Cero markup duplicado entre idiomas.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "./Hero.astro";
+import ProjectsSection from "./ProjectsSection.astro";
+import ExperienceSection from "./ExperienceSection.astro";
+import SkillsSection from "./SkillsSection.astro";
+import ContactSection from "./ContactSection.astro";
+import { loadCv } from "../lib/content.js";
+
+interface Props {
+  lang: "en" | "es";
+}
+const { lang } = Astro.props;
+const cv = loadCv(lang);
+const { person } = cv;
+
+const title = `${person.name} — ${person.headline}`;
+const description =
+  lang === "es"
+    ? `${person.name} — ${person.headline}. Con base en ${person.location}. Portfolio, CV y proyectos.`
+    : `${person.name} — ${person.headline}. Based in ${person.location}. Portfolio, CV and projects.`;
+
+const path = lang === "es" ? "/es/" : "/";
+const siteUrl = "https://dchiquiar.github.io";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: person.name,
+  jobTitle: person.headline,
+  email: `mailto:${person.email}`,
+  url: `${siteUrl}${path}`,
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Montevideo",
+    addressCountry: "UY",
+  },
+  ...(person.links?.linkedin || person.links?.github
+    ? {
+        sameAs: [person.links?.linkedin, person.links?.github].filter(Boolean),
+      }
+    : {}),
+};
+---
+
+<BaseLayout lang={lang} title={title} description={description} jsonLd={jsonLd}>
+  <main id="main">
+    <Hero lang={lang} person={person} />
+    <ProjectsSection lang={lang} />
+    <ExperienceSection lang={lang} experience={cv.experience} education={cv.education} />
+    <SkillsSection lang={lang} categories={cv.skills.categories} languages={cv.languages} />
+    <ContactSection lang={lang} person={person} />
+  </main>
+</BaseLayout>

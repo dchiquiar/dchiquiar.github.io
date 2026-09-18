@@ -1,0 +1,20 @@
+---
+import { ui } from "../i18n/ui.js";
+
+interface Props {
+  lang: "en" | "es";
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+const year = new Date().getFullYear();
+const repoUrl = "https://github.com/dchiquiar/dchiquiar.github.io";
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <p>
+      {t.footer.builtWith} <a href={repoUrl}>{t.footer.githubFallback}</a>.
+      © {year} Diego Chiquiar. {t.footer.rights}
+    </p>
+  </div>
+</footer>

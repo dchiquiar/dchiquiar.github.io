@@ -1,0 +1,52 @@
+---
+import { ui } from "../i18n/ui.js";
+import SectionHeading from "./SectionHeading.astro";
+import { cleanList } from "../lib/content.js";
+
+interface Props {
+  lang: "en" | "es";
+  categories: Array<{ id: string; label: string; items: string[] }>;
+  languages: Array<{ name: string; level: string; note: string | null }>;
+}
+const { lang, categories, languages } = Astro.props;
+const t = ui[lang];
+
+// Filtra items marcados como TODO/pendiente de confirmación y descarta
+// categorías que queden vacías (no se muestra una categoría sin contenido).
+const cleanCategories = categories
+  .map((cat) => ({ ...cat, items: cleanList(cat.items) }))
+  .filter((cat) => cat.items.length > 0);
+---
+
+<section id="stack" class="section">
+  <div class="container">
+    <SectionHeading number="03" title={t.sections.stack} id="stack" />
+    <div class="skills-grid">
+      {cleanCategories.map((cat) => (
+        <div>
+          <h3>{cat.label}</h3>
+          <ul class="tag-list">
+            {cat.items.map((item) => (
+              <li class="tag">{item}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    {languages.length > 0 && (
+      <>
+        <h3 style="margin-top: 2.5rem;">{t.skills.languages}</h3>
+        <ul class="languages-list">
+          {languages.map((l) => (
+            <li>
+              <strong>{l.name}</strong>
+              <span>{l.level}</span>
+              {l.note && <p class="note">{l.note}</p>}
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+  </div>
+</section>
