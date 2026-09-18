@@ -1,0 +1,47 @@
+# ─── Vault interno: NUNCA se publica ───────────────────────────
+# El repo de este sitio es PÚBLICO. Todo lo de abajo es material
+# de trabajo privado (estrategia, notas, logs de agentes).
+vault/
+*-vault/
+**/00-MOC.md
+**/0[1-6]-*/
+_templates/
+archive/
+
+# ─── Claude Code: local, no compartido ─────────────────────────
+# .claude/ completo no se publica: contiene estrategia interna (perfil de
+# Diego, análisis de recruiting, memoria de agentes, configuración del
+# equipo). El gate anti-fuga vive en scripts/check-repo-leak.sh, fuera de
+# .claude/, así que no necesita excepción. Más adelante se puede publicar
+# una versión CURADA a propósito, como vitrina.
+.claude/
+
+# Instrucciones internas del proyecto
+CLAUDE.md
+
+# ─── Capa privada del CV: NUNCA se publica ─────────────────────
+# Teléfono y nombres reales de empleadores (ver ADR-0002). Sólo la consume
+# la generación del PDF, en local. Ver data/schemas/cv.private.schema.json.
+data/private/
+
+# ─── Build / dependencias ──────────────────────────────────────
+node_modules/
+dist/
+.astro/
+.output/
+.vercel/
+.cache/
+
+# ─── Entorno y secretos ────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ─── SO / editor ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vs/
+.idea/
+*.user

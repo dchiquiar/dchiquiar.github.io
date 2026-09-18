@@ -1,0 +1,23 @@
+{
+  "name": "dchiquiar-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Portfolio + CV online de Diego Chiquiar. Sitio estatico (Astro) publicado en GitHub Pages; el contenido sale de data/*.yaml.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "validate:data": "node scripts/validate-data.mjs"
+  },
+  "dependencies": {
+    "astro": "7.3.3"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "js-yaml": "5.4.2"
+  }
+}

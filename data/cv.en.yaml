@@ -1,0 +1,161 @@
+# CV data source — ENGLISH (public layer).
+# Single source of truth for the site (/). The PDF combines this file with
+# the private layer in data/private/ (gitignored, never published) — see
+# data/schemas/cv.private.schema.json. See data/schemas/cv.schema.json for
+# the valid shape of this file.
+#
+# Employers: each experience entry only carries employer.sector (industry
+# description, no proper name). The employer's real name lives in the
+# private layer, linked by the experience id. See ADR-0002-identidad-publicada.
+
+meta:
+  language: en
+  lastUpdated: "2026-09-18"
+
+person:
+  name: "Diego Chiquiar"
+  headline: "Software Developer — .NET / C#"
+  location: "Montevideo, Uruguay (UTC-3)"
+  seniority: "Semi Senior (SSR)"
+  summary: null # TODO: short bio. Copy pending (see vault/06-contenido/narrativa-en.md, out of scope for this data task).
+  availability: null # TODO: <<PREGUNTA in recomendaciones.md §1.1>> accepted work modalities (remote/hybrid/on-site) not yet confirmed.
+  email: "diegochiquiar@gmail.com"
+  links:
+    linkedin: null # TODO: URL missing (not provided in datos-diego.md)
+    github: null # TODO: URL missing (not provided in datos-diego.md)
+
+experience:
+  - id: job-1
+    role: "Software Developer"
+    employer:
+      sector: "Cash-in-transit / valuables transport company"
+    location: "Montevideo, Uruguay"
+    startDate: "2024-04"
+    endDate: "2026-09"
+    current: false
+    summary: null
+    highlights:
+      - "Designed and built from scratch a WPF desktop application (.NET Core, MVVM) that works as an operations console and hosts Quartz.NET jobs for automatic bank reconciliation: it consumes the smart-safe web services, processes deposits, and generates the reconciliation files sent to the banks. Over 1 year in production, ~1,500 reconciliations per day with no manual intervention, integrating 6 banks."
+      - "Redesigned the job-scheduling engine: replaced fixed-schedule jobs with a database-configurable architecture built on Quartz.NET. Uses a mutex to enforce a single running instance and a local SQLite database to persist the day's job state, so a restart doesn't lose what already ran. Lets client schedules change without new deployments."
+      - "Rebuilt, end to end, in .NET for Android, a geolocated valuables-tracking app that was originally built in Xamarin.Forms. Published on Google Play Console, with ~20 operational users."
+      - "Built a remittance-tracking system for clients with online status and location lookups, reducing manual inquiries to the customer service team."
+      - "Maintained an internal WinForms ERP used by the HR, Sales, Billing and Treasury departments, distributed via installer."
+      - "Built internal REST APIs and their interfaces following SOLID principles, and trained end users."
+    technologies:
+      - "C#"
+      - ".NET Core"
+      - "WPF"
+      - "MVVM"
+      - "Quartz.NET"
+      - "SQLite"
+      - "Mutex (single instance)"
+      - "SQL Server"
+      - "Xamarin.Forms"
+      - ".NET for Android"
+      - "WinForms"
+      - "REST APIs"
+      - "SOLID"
+
+  - id: job-2
+    role: "Technical Support Assistant"
+    employer:
+      sector: "TODO: industry description pending (not provided in vault/05-recruiting/datos-diego.md)"
+    location: "Montevideo, Uruguay"
+    startDate: "2017-05"
+    endDate: "2024-01"
+    current: false
+    summary: null
+    highlights:
+      - "Provided functional and end-user technical support for over 6 years."
+      - "Programmed in GeneXus for approximately 1 year — development experience not reflected in earlier versions of the CV. TODO: confirm which project(s), to describe it with a concrete example (see datos-diego.md, <<PREGUNTA>>)."
+    technologies:
+      - "GeneXus"
+
+  - id: job-3
+    role: "Support Technician"
+    employer:
+      sector: "TODO: industry description pending (not provided in vault/05-recruiting/datos-diego.md)"
+    location: "Canelones, Uruguay"
+    startDate: "2013-01"
+    endDate: "2014-01"
+    current: false
+    summary: null
+    highlights:
+      - "Provided technical support at an operations center."
+    technologies: []
+
+education:
+  - id: analista-programador-ort
+    title: "Software Development Analyst"
+    institution: "Universidad ORT Uruguay"
+    year: "2025"
+    status: "completed"
+    detail: "Degree obtained. Completed while working full-time."
+  - id: ciberseguridad-ort
+    title: "Cybersecurity Certification"
+    institution: "Universidad ORT Uruguay"
+    year: "2025"
+    status: "completed"
+    detail: "OWASP Top 10, ISO, NIST."
+  - id: devops-ort
+    title: "DevOps Training"
+    institution: "Universidad ORT Uruguay"
+    year: null
+    status: "in-progress"
+    detail: "Mondays and Wednesdays, 7:30–10:30 PM."
+
+skills:
+  categories:
+    - id: backend
+      label: "Backend"
+      items:
+        - "C#"
+        - ".NET / .NET Core"
+        - "REST APIs"
+        - "Consuming third-party web services (SOAP/REST)"
+        - "Quartz.NET"
+        - "SOLID"
+    - id: data
+      label: "Data"
+      items:
+        - "SQL Server"
+        - "T-SQL"
+        - "ADO.NET"
+    - id: clients
+      label: "Desktop & Mobile Clients"
+      items:
+        - "WPF + .NET Core (MVVM)"
+        - ".NET for Android"
+        - "Xamarin.Forms"
+        - "WinForms"
+        - "JavaScript"
+        - "Ionic"
+    - id: learning
+      label: "Currently learning (self-taught)"
+      items:
+        - "Vue 3"
+        - "React"
+        - "Angular (Udemy)"
+        - "HTML"
+        - "CSS"
+        - "Bootstrap"
+    - id: other
+      label: "Other"
+      items:
+        - "Java"
+        - "GeneXus"
+        - "Google Play Console"
+        - "Cybersecurity (OWASP Top 10, ISO, NIST)"
+        - "Networking & infrastructure basics"
+    - id: ai-assisted
+      label: "AI-assisted development"
+      items:
+        - "Claude Code, agent & skill creation, spec-driven development. TODO: still missing confirmation of the concrete project(s) behind this, to avoid it reading as a buzzword bullet (see datos-diego.md, <<PREGUNTA>>)."
+
+languages:
+  - name: "Spanish"
+    level: "Native"
+    note: null
+  - name: "English"
+    level: "B2 (First Certificate, Cambridge, ~2011)"
+    note: "Currently preparing C1 (CAE), targeting 2027. Diego states he can sustain a technical conversation in English today."

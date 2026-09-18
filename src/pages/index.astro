@@ -1,0 +1,71 @@
+---
+// PROVISIONAL — andamiaje mínimo de F3b para verificar el routing i18n
+// (ADR-0003: inglés sin prefijo en `/`, español en `/es`). El diseño real
+// es F4 y reemplaza este archivo por completo.
+//
+// El contenido sale de data/cv.en.yaml (no se hardcodea texto que ya
+// exista en los datos). Campos en `null` en el YAML se omiten.
+import fs from "node:fs";
+import path from "node:path";
+import { load } from "js-yaml";
+
+// process.cwd(), no import.meta.url: Vite reubica el frontmatter compilado
+// a una profundidad de carpetas distinta a la del código fuente, así que
+// una ruta relativa anclada al módulo se rompe en `astro build` (verificado:
+// funciona en `astro dev` pero falla en build con ENOENT).
+const dataPath = path.resolve(process.cwd(), "data/cv.en.yaml");
+const cv = load(fs.readFileSync(dataPath, "utf-8"));
+const { name, headline, location } = cv.person;
+
+const siteUrl = "https://dchiquiar.github.io";
+const pageTitle = `${name} — ${headline}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{pageTitle}</title>
+    <link rel="alternate" hreflang="en" href={`${siteUrl}/`} />
+    <link rel="alternate" hreflang="es" href={`${siteUrl}/es/`} />
+    <link rel="alternate" hreflang="x-default" href={`${siteUrl}/`} />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 40rem;
+        margin: 3rem auto;
+        padding: 0 1.5rem;
+        line-height: 1.5;
+        color: #1a1a1a;
+      }
+      .notice {
+        background: #fff3cd;
+        border: 1px solid #997404;
+        color: #664d03;
+        padding: 0.75rem 1rem;
+        margin-bottom: 2rem;
+        font-size: 0.95rem;
+      }
+      a {
+        color: #0b4f9e;
+      }
+      a:focus-visible {
+        outline: 3px solid #0b4f9e;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="notice">
+      Provisional page — scaffolding to verify i18n routing. This is not the final design.
+    </p>
+    <main>
+      <h1>{name}</h1>
+      <p>{headline}</p>
+      <p>{location}</p>
+      <p><a href="/es/">View this page in Spanish</a></p>
+    </main>
+  </body>
+</html>

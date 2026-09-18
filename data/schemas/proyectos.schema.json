@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dchiquiar.github.io/schemas/proyectos.schema.json",
+  "title": "Projects data",
+  "description": "Lista de proyectos con código público que se muestran en el sitio (ver vault/05-recruiting/recomendaciones.md §1.2 y §3). Un solo archivo, bilingüe por campo (en/es), no hay variante cv.en/cv.es.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "projects"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lastUpdated"],
+      "properties": {
+        "lastUpdated": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    },
+    "projects": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 4,
+      "description": "Máximo 4 por decisión de F1-A (vault/05-recruiting/recomendaciones.md §3.3).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "description", "repoUrl", "status", "technologies"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["en", "es"],
+            "properties": {
+              "en": { "type": "string" },
+              "es": { "type": "string" }
+            }
+          },
+          "description": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["en", "es"],
+            "properties": {
+              "en": { "type": "string" },
+              "es": { "type": "string" }
+            }
+          },
+          "repoUrl": { "type": ["string", "null"] },
+          "liveUrl": { "type": ["string", "null"] },
+          "status": {
+            "type": "string",
+            "enum": ["planned", "in-progress", "done"]
+          },
+          "technologies": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

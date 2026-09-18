@@ -1,0 +1,15 @@
+# Proyectos con código público a mostrar en el sitio.
+# Ver vault/05-recruiting/recomendaciones.md §1.2 y §3 para criterios de
+# selección y arquetipos. La selección final (F1-C, backlog) todavía no
+# está cerrada — no está en el alcance de F3 decidir qué proyectos entran.
+#
+# Se deja la lista vacía a propósito: no hay que inventar proyectos ni
+# adelantar una decisión de contenido que le corresponde a talent-seeker
+# (F1-C) y a Diego. Cuando F1-C cierre, esta lista se completa con id,
+# título/descripción bilingües, repo y stack, validando contra
+# data/schemas/proyectos.schema.json (máximo 4 items).
+
+meta:
+  lastUpdated: "2026-09-18"
+
+projects: []

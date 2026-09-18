@@ -1,0 +1,161 @@
+# Fuente de datos del CV — ESPAÑOL (capa pública).
+# Única fuente de verdad para el sitio (/es). El PDF combina este archivo con
+# la capa privada en data/private/ (gitignored, nunca se publica) — ver
+# data/schemas/cv.private.schema.json. Ver data/schemas/cv.schema.json para
+# la forma válida de este archivo.
+#
+# Empleadores: cada experiencia sólo lleva employer.sector (descripción de
+# rubro, sin nombre propio). El nombre real de cada empleador vive en la capa
+# privada, enlazado por el id de la experiencia. Ver ADR-0002-identidad-publicada.
+
+meta:
+  language: es
+  lastUpdated: "2026-09-18"
+
+person:
+  name: "Diego Chiquiar"
+  headline: "Desarrollador de Software — .NET / C#"
+  location: "Montevideo, Uruguay (UTC-3)"
+  seniority: "Semi Senior (SSR)"
+  summary: null # TODO: bio corta. Redacción pendiente (ver vault/06-contenido/narrativa-es.md, fuera del alcance de esta tarea de datos).
+  availability: null # TODO: <<PREGUNTA en recomendaciones.md §1.1>> modalidades aceptadas (remoto/híbrido/presencial) sin confirmar.
+  email: "diegochiquiar@gmail.com"
+  links:
+    linkedin: null # TODO: falta URL (no provista en datos-diego.md)
+    github: null # TODO: falta URL (no provista en datos-diego.md)
+
+experience:
+  - id: job-1
+    role: "Desarrollador de Software"
+    employer:
+      sector: "Empresa de transporte de valores (cash-in-transit)"
+    location: "Montevideo, Uruguay"
+    startDate: "2024-04"
+    endDate: "2026-09"
+    current: false
+    summary: null
+    highlights:
+      - "Diseñó y construyó desde cero una aplicación de escritorio en WPF (.NET Core, patrón MVVM) que funciona como consola de operación y aloja jobs de Quartz.NET para la acreditación bancaria automática: consume los web services de los buzones inteligentes, procesa los depósitos y genera los archivos de acreditación enviados a los bancos. Más de 1 año en producción, ~1.500 acreditaciones diarias sin intervención manual, con 6 bancos integrados."
+      - "Rediseñó el motor de programación horaria: reemplazó jobs de horario fijo por una arquitectura configurable desde base de datos con Quartz.NET. Usa un mutex para garantizar instancia única y una base SQLite local para persistir el estado de los jobs del día, de forma que un reinicio no pierde qué corrió. Permite cambiar los horarios de los clientes sin nuevos despliegues."
+      - "Reconstruyó de punta a punta, en .NET for Android, una app de rastreo de valores con geolocalización que originalmente era Xamarin.Forms. Publicada en Google Play Console, con ~20 usuarios operativos."
+      - "Desarrolló un sistema de trazabilidad de remesas para clientes, con consulta en línea de estado y ubicación del dinero, que redujo las consultas manuales al área de atención."
+      - "Mantuvo un ERP interno en WinForms usado por las áreas de RRHH, Comercial, Facturación y Tesorería, distribuido mediante instalador."
+      - "Construyó APIs REST internas y sus interfaces siguiendo principios SOLID, y capacitó a usuarios finales."
+    technologies:
+      - "C#"
+      - ".NET Core"
+      - "WPF"
+      - "MVVM"
+      - "Quartz.NET"
+      - "SQLite"
+      - "Mutex (instancia única)"
+      - "SQL Server"
+      - "Xamarin.Forms"
+      - ".NET for Android"
+      - "WinForms"
+      - "APIs REST"
+      - "SOLID"
+
+  - id: job-2
+    role: "Auxiliar de Soporte Técnico"
+    employer:
+      sector: "TODO: descripción de rubro pendiente (no provista en vault/05-recruiting/datos-diego.md)"
+    location: "Montevideo, Uruguay"
+    startDate: "2017-05"
+    endDate: "2024-01"
+    current: false
+    summary: null
+    highlights:
+      - "Brindó soporte técnico funcional y a usuarios durante más de 6 años."
+      - "Programó en GeneXus durante aproximadamente 1 año — experiencia de desarrollo que no figuraba en versiones previas del CV. TODO: confirmar sobre qué proyectos, para poder describirlo con un ejemplo concreto (ver datos-diego.md, <<PREGUNTA>>)."
+    technologies:
+      - "GeneXus"
+
+  - id: job-3
+    role: "Técnico de Soporte"
+    employer:
+      sector: "TODO: descripción de rubro pendiente (no provista en vault/05-recruiting/datos-diego.md)"
+    location: "Canelones, Uruguay"
+    startDate: "2013-01"
+    endDate: "2014-01"
+    current: false
+    summary: null
+    highlights:
+      - "Brindó soporte técnico en un centro de operaciones."
+    technologies: []
+
+education:
+  - id: analista-programador-ort
+    title: "Analista Programador (Desarrollo de Software)"
+    institution: "Universidad ORT Uruguay"
+    year: "2025"
+    status: "completed"
+    detail: "Título obtenido. Cursado trabajando full-time."
+  - id: ciberseguridad-ort
+    title: "Certificación en Ciberseguridad"
+    institution: "Universidad ORT Uruguay"
+    year: "2025"
+    status: "completed"
+    detail: "OWASP Top 10, ISO, NIST."
+  - id: devops-ort
+    title: "Formación en DevOps"
+    institution: "Universidad ORT Uruguay"
+    year: null
+    status: "in-progress"
+    detail: "Cursado lunes y miércoles, 19:30–22:30."
+
+skills:
+  categories:
+    - id: backend
+      label: "Backend"
+      items:
+        - "C#"
+        - ".NET / .NET Core"
+        - "APIs REST"
+        - "Consumo de web services de terceros (SOAP/REST)"
+        - "Quartz.NET"
+        - "SOLID"
+    - id: data
+      label: "Datos"
+      items:
+        - "SQL Server"
+        - "T-SQL"
+        - "ADO.NET"
+    - id: clients
+      label: "Clientes de escritorio y móvil"
+      items:
+        - "WPF + .NET Core (MVVM)"
+        - ".NET for Android"
+        - "Xamarin.Forms"
+        - "WinForms"
+        - "JavaScript"
+        - "Ionic"
+    - id: learning
+      label: "En formación (autodidacta)"
+      items:
+        - "Vue 3"
+        - "React"
+        - "Angular (Udemy)"
+        - "HTML"
+        - "CSS"
+        - "Bootstrap"
+    - id: other
+      label: "Otros"
+      items:
+        - "Java"
+        - "GeneXus"
+        - "Google Play Console"
+        - "Ciberseguridad (OWASP Top 10, ISO, NIST)"
+        - "Redes e infraestructura, nociones"
+    - id: ai-assisted
+      label: "Desarrollo asistido por IA"
+      items:
+        - "Claude Code, creación de agentes y skills, spec-driven development. TODO: falta confirmar sobre qué proyecto(s) concreto(s), para no quedar como un bullet de moda (ver datos-diego.md, <<PREGUNTA>>)."
+
+languages:
+  - name: "Español"
+    level: "Nativo"
+    note: null
+  - name: "Inglés"
+    level: "B2 (First Certificate, Cambridge, ~2011)"
+    note: "Preparando C1 (CAE), a rendir en 2027. Diego declara sostener una charla técnica en inglés hoy."

@@ -1,0 +1,94 @@
+# Build y deploy del sitio a GitHub Pages.
+#
+# Orden de gates, cada uno bloquea al siguiente:
+#   1. repo-leak-gate   — el repo es público; si algo interno (vault/,
+#      .claude/, capa privada del CV) quedó trackeado por git, no se publica
+#      nada. Ver scripts/check-repo-leak.sh.
+#   2. validate-data    — data/*.yaml tiene que cumplir su JSON Schema antes
+#      de gastar tiempo de build.
+#   3. build            — astro build.
+#   4. deploy           — sólo si build terminó bien.
+#
+# Actions fijadas por tag mayor (no por rama), por regla del proyecto.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita deploys superpuestos; no cancela uno en curso para no dejar Pages
+# en un estado a medio publicar.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24.21.0"
+
+jobs:
+  repo-leak-gate:
+    name: Repo leak gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Check no internal content is tracked by git
+        run: bash scripts/check-repo-leak.sh
+
+  validate-data:
+    name: Validate CV/project data
+    needs: repo-leak-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate data/*.yaml against JSON Schema
+        run: npm run validate:data
+
+  build:
+    name: Build site
+    needs: validate-data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build with Astro
+        run: npm run build
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v6
+      - name: Upload build artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
