@@ -31,7 +31,7 @@
         "name": { "type": "string" },
         "headline": {
           "type": "string",
-          "description": "Titular factual (rol + stack). La copy de marketing final vive en vault/06-contenido/ (narrativa-*), no acá."
+          "description": "Titular factual (rol + stack), no copy de marketing: la versión final de venta se define en el proceso de contenido, no en este campo."
         },
         "location": { "type": "string" },
         "seniority": { "type": "string" },
@@ -73,8 +73,8 @@
             "required": ["sector"],
             "properties": {
               "sector": {
-                "type": "string",
-                "description": "Descripción de rubro/tamaño, sin nombre propio. Es lo que consume el sitio público (ADR-0002). El nombre real del empleador vive en la capa privada (data/private/, gitignored) y se enlaza por este mismo id."
+                "type": ["string", "null"],
+                "description": "Descripción de rubro/tamaño, sin nombre propio. Es lo que consume el sitio público (ADR-0002). El nombre real del empleador vive en la capa privada (data/private/, gitignored) y se enlaza por este mismo id. null = pendiente de confirmar con Diego."
               }
             }
           },

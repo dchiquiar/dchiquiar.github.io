@@ -1,15 +1,177 @@
 # Proyectos con código público a mostrar en el sitio.
-# Ver vault/05-recruiting/recomendaciones.md §1.2 y §3 para criterios de
-# selección y arquetipos. La selección final (F1-C, backlog) todavía no
-# está cerrada — no está en el alcance de F3 decidir qué proyectos entran.
 #
-# Se deja la lista vacía a propósito: no hay que inventar proyectos ni
-# adelantar una decisión de contenido que le corresponde a talent-seeker
-# (F1-C) y a Diego. Cuando F1-C cierre, esta lista se completa con id,
-# título/descripción bilingües, repo y stack, validando contra
-# data/schemas/proyectos.schema.json (máximo 4 items).
+# La selección (F1-C) está cerrada: MCP -> servidor de juego -> este sitio.
+# No agregar un cuarto proyecto ni reordenar sin una decisión nueva del
+# orquestador. `images` sólo existe donde hay capturas/GIF/diagrama
+# aprobados; no inventar rutas de archivos que no existen.
+# Validar contra data/schemas/proyectos.schema.json (máximo 4 items).
 
 meta:
   lastUpdated: "2026-09-18"
 
-projects: []
+projects:
+  - id: mcp-sql-server
+    title:
+      es: >-
+        Un servidor MCP que deja a un asistente de IA leer una base SQL
+        Server — y nada más
+      en: >-
+        An MCP server that lets an AI read your SQL Server — and nothing
+        else
+    description:
+      es: >-
+        Le da a un asistente de IA acceso de sólo lectura a una base SQL
+        Server: puede consultarla y recorrer su estructura, y no puede
+        modificar nada.
+      en: >-
+        Gives an AI assistant read-only access to a SQL Server database:
+        it can query the data and walk the schema, and it cannot change
+        anything.
+    problem:
+      es: >-
+        Lo difícil no es ejecutar la consulta: es garantizar que no haga
+        daño cuando el que la escribe es un modelo que puede equivocarse.
+        Puse cinco controles en capas —un usuario de base con permisos de
+        sólo lectura, validación de la sentencia antes de ejecutarla,
+        tiempo máximo de ejecución, límite de filas devueltas y registro
+        de todo lo que se consultó— partiendo de que cualquiera de ellos
+        puede fallar y de que ninguno confía en el anterior. Es el mismo
+        criterio con el que trabajé en producción: diseñar para el
+        momento en que algo sale mal, no para el caso feliz.
+      en: >-
+        Running the query is the easy part. The hard part is making sure
+        it can't do damage when the thing writing it is a model that can
+        be wrong. There are five layered controls — a database user with
+        read-only permissions, statement validation before execution, an
+        execution timeout, a row-count cap, and a log of every query that
+        ran — built on the assumption that any one of them can fail and
+        that none of them trusts the one before it. It's the same
+        principle I worked with in production: design for the moment
+        something goes wrong, not for the happy path.
+    repoUrl: null
+    liveUrl: null
+    status: planned
+    technologies:
+      - C#
+      - .NET
+      - SQL Server
+      - MCP (Model Context Protocol)
+      - Defensa en capas
+
+  - id: game-server
+    title:
+      es: Servidor de juego multijugador en .NET
+      en: Multiplayer game server in .NET
+    description:
+      es: >-
+        Un servidor propio en .NET con cliente en Unity, donde el
+        servidor es la única fuente de verdad: decide quién se movió,
+        quién golpeó a quién y qué ve cada jugador.
+
+
+        El repositorio es privado: lo construí trabajando con agentes de
+        IA, así que lo que muestro es el sistema funcionando y las
+        decisiones de diseño que hay detrás — el modelo de autoridad, qué
+        valida el servidor y qué anticipa el cliente, y cómo se define
+        qué ve cada jugador. Eso es lo que puedo discutir en detalle.
+      en: >-
+        My own .NET server with a Unity client, where the server is the
+        single source of truth: it decides who moved, who hit whom, and
+        what each player gets to see.
+
+
+        The repository is private. I built this working with AI agents,
+        so what I'm showing is the system running and the design behind
+        it — the authority model, what the server validates and what the
+        client anticipates, and how it's decided what each player sees.
+        That's what I can go into detail on.
+    images:
+      - src: "/projects/urgentum-multiplayer.webp"
+        width: 1280
+        height: 720
+        alt:
+          es: "Tres jugadores con nombres distintos conversando por chat en la entrada del pueblo"
+          en: "Three named players talking over chat at the town gate"
+      - src: "/projects/urgentum-systems.webp"
+        width: 1280
+        height: 720
+        alt:
+          es: "Las ventanas de estadísticas, equipo e inventario del personaje abiertas a la vez"
+          en: "The character's stats, equipment and inventory windows open at once"
+      - src: "/projects/urgentum-hero.webp"
+        width: 1280
+        height: 720
+        alt:
+          es: "El personaje en el pueblo, con las barras de vida, maná y energía y la barra de acciones"
+          en: "The player character in town, with health, mana and stamina bars and the action bar"
+    problem:
+      es: >-
+        En un juego en línea no se le puede creer al cliente: si el
+        jugador dice "estoy acá y te pegué", el servidor tiene que poder
+        verificarlo, o el juego se rompe solo. El servidor valida cada
+        movimiento y cada acción de combate, guarda el estado de los
+        personajes y le manda a cada jugador únicamente lo que está
+        pasando cerca suyo, para no inundar la red con información que
+        nadie va a usar. Es el problema opuesto al de un sistema de
+        gestión: acá todo pasa al mismo tiempo y nada puede esperar.
+      en: >-
+        In an online game you can't take the client's word for anything.
+        If a player says "I'm here and I hit you", the server has to be
+        able to verify it, or the game breaks on its own. The server
+        validates every movement and every combat action, persists
+        character state, and sends each player only what is happening
+        near them, so the network isn't flooded with information nobody
+        will use. It's the opposite of a business system: here
+        everything happens at once and nothing can wait.
+    repoUrl: null
+    liveUrl: null
+    status: in-progress
+    technologies:
+      - C#
+      - .NET
+      - Unity
+      - Tiempo real
+      - TCP
+      - SQL Server
+
+  - id: portfolio-site
+    title:
+      es: Este sitio, construido por un equipo de agentes
+      en: This site, built by a team of agents
+    description:
+      es: >-
+        El sitio y el CV que estás leyendo los produce un equipo de
+        agentes de IA que diseñé: un orquestador y subagentes
+        especializados, cada uno con su alcance, sus permisos y su
+        bitácora.
+      en: >-
+        The site and the CV you're reading are produced by a team of AI
+        agents I designed: an orchestrator and specialised sub-agents,
+        each with its own scope, permissions and log.
+    problem:
+      es: >-
+        El problema no era hacer un sitio: era que varias piezas
+        —estrategia, contenido, interfaz, publicación— avanzaran sin
+        pisarse y sin tener que repetirle el contexto a cada una. Definí
+        qué decide cada agente, qué archivos puede tocar, qué tiene que
+        dejar escrito al terminar y en qué casos tiene que frenar y
+        preguntar en vez de suponer. Las decisiones de fondo se congelan
+        antes de delegar, así nadie las vuelve a discutir a mitad de
+        camino.
+      en: >-
+        Building a site wasn't the problem. The problem was getting
+        several pieces — strategy, content, interface, publishing — to
+        move forward without stepping on each other and without me
+        re-explaining the context to each one. I defined what each agent
+        decides, which files it may touch, what it has to write down
+        when it's done, and when it has to stop and ask rather than
+        assume. Decisions that matter are frozen before anything is
+        delegated, so nobody reopens them halfway through.
+    repoUrl: "https://github.com/dchiquiar/dchiquiar.github.io"
+    liveUrl: "https://dchiquiar.github.io/"
+    status: in-progress
+    technologies:
+      - Claude Code
+      - Diseño de agentes
+      - Spec-driven development
+      - CI/CD

@@ -6,8 +6,9 @@ import Hero from "./Hero.astro";
 import ProjectsSection from "./ProjectsSection.astro";
 import ExperienceSection from "./ExperienceSection.astro";
 import SkillsSection from "./SkillsSection.astro";
+import AboutSection from "./AboutSection.astro";
 import ContactSection from "./ContactSection.astro";
-import { loadCv } from "../lib/content.js";
+import { loadCv, cleanField } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
@@ -15,6 +16,12 @@ interface Props {
 const { lang } = Astro.props;
 const cv = loadCv(lang);
 const { person } = cv;
+
+// person.summary puede no estar confirmado todavía (queda null o con nota
+// TODO en el YAML): si no hay valor limpio, la sección "Sobre mí" no
+// existe — nada de encabezado ni entrada de nav para una sección vacía.
+const summary = cleanField(person.summary);
+const contactNumber = summary ? "05" : "04";
 
 const title = `${person.name} — ${person.headline}`;
 const description =
@@ -45,12 +52,13 @@ const jsonLd = {
 };
 ---
 
-<BaseLayout lang={lang} title={title} description={description} jsonLd={jsonLd}>
+<BaseLayout lang={lang} title={title} description={description} jsonLd={jsonLd} showAbout={Boolean(summary)}>
   <main id="main">
     <Hero lang={lang} person={person} />
     <ProjectsSection lang={lang} />
     <ExperienceSection lang={lang} experience={cv.experience} education={cv.education} />
     <SkillsSection lang={lang} categories={cv.skills.categories} languages={cv.languages} />
-    <ContactSection lang={lang} person={person} />
+    {summary && <AboutSection lang={lang} number="04" summary={summary} />}
+    <ContactSection lang={lang} number={contactNumber} person={person} />
   </main>
 </BaseLayout>

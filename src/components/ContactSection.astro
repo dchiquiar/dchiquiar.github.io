@@ -5,9 +5,10 @@ import { cleanField } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
+  number: string;
   person: Record<string, any>;
 }
-const { lang, person } = Astro.props;
+const { lang, number, person } = Astro.props;
 const t = ui[lang];
 const availability = cleanField(person.availability);
 const linkedin = person.links?.linkedin ?? null;
@@ -17,7 +18,7 @@ const github = person.links?.github ?? null;
 <section id="contact" class="section">
   <div class="container contact">
     <div>
-      <SectionHeading number="04" title={t.sections.contact} id="contact" />
+      <SectionHeading number={number} title={t.sections.contact} id="contact" />
       <div class="contact__lines">
         {availability && <p>{availability}</p>}
         <p>{person.location}</p>

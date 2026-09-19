@@ -17,12 +17,19 @@ person:
   headline: "Software Developer — .NET / C#"
   location: "Montevideo, Uruguay (UTC-3)"
   seniority: "Semi Senior (SSR)"
-  summary: null # TODO: short bio. Copy pending (see vault/06-contenido/narrativa-en.md, out of scope for this data task).
-  availability: null # TODO: <<PREGUNTA in recomendaciones.md §1.1>> accepted work modalities (remote/hybrid/on-site) not yet confirmed.
+  summary: >-
+    .NET developer. In two and a half years I designed and built, from scratch,
+    both of the systems a cash-in-transit company runs on: the one that settles
+    around 1,500 transactions a day with its banks, and the one its crews use to
+    track every shipment from the truck, with no mobile signal. I built each of
+    them end to end — service, database, application and deployment — and both
+    are designed around the moment something fails, which is what seven earlier
+    years running IT support and infrastructure taught me.
+  availability: null # Pending confirmation.
   email: "diegochiquiar@gmail.com"
   links:
-    linkedin: null # TODO: URL missing (not provided in datos-diego.md)
-    github: null # TODO: URL missing (not provided in datos-diego.md)
+    linkedin: null # Pending confirmation.
+    github: null # Pending confirmation.
 
 experience:
   - id: job-1
@@ -59,22 +66,22 @@ experience:
   - id: job-2
     role: "Technical Support Assistant"
     employer:
-      sector: "TODO: industry description pending (not provided in vault/05-recruiting/datos-diego.md)"
+      sector: "Family-run software company for the automotive sector (workshop and parts-inventory management)"
     location: "Montevideo, Uruguay"
     startDate: "2017-05"
-    endDate: "2024-01"
+    endDate: "2023-12"
     current: false
     summary: null
     highlights:
       - "Provided functional and end-user technical support for over 6 years."
-      - "Programmed in GeneXus for approximately 1 year — development experience not reflected in earlier versions of the CV. TODO: confirm which project(s), to describe it with a concrete example (see datos-diego.md, <<PREGUNTA>>)."
+      - "For one year, built and maintained the company's internal business applications on an enterprise 4GL platform (GeneXus) — his first formal development work."
     technologies:
       - "GeneXus"
 
   - id: job-3
     role: "Support Technician"
     employer:
-      sector: "TODO: industry description pending (not provided in vault/05-recruiting/datos-diego.md)"
+      sector: "Multinational travel-technology company"
     location: "Canelones, Uruguay"
     startDate: "2013-01"
     endDate: "2014-01"
@@ -150,7 +157,7 @@ skills:
     - id: ai-assisted
       label: "AI-assisted development"
       items:
-        - "Claude Code, agent & skill creation, spec-driven development. TODO: still missing confirmation of the concrete project(s) behind this, to avoid it reading as a buzzword bullet (see datos-diego.md, <<PREGUNTA>>)."
+        - "Agent-assisted development (Claude Code): designing my own agents and skills, spec-driven workflow"
 
 languages:
   - name: "Spanish"
@@ -158,4 +165,4 @@ languages:
     note: null
   - name: "English"
     level: "B2 (First Certificate, Cambridge, ~2011)"
-    note: "Currently preparing C1 (CAE), targeting 2027. Diego states he can sustain a technical conversation in English today."
+    note: "Currently preparing C1 (CAE), targeting 2027. Comfortable holding a technical conversation in English."

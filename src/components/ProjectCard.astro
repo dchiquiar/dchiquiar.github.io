@@ -1,38 +1,76 @@
 ---
+// Carrusel sin JavaScript (ADR-0008): scroll-snap de CSS, contenedor
+// enfocable con nombre accesible. `images` sólo llega con datos cuando el
+// proyecto los tiene (hoy sólo game-server); si viene vacío no se renderiza
+// nada — ni marco ni hueco (mismo criterio que el resto de la tarjeta).
 import { ui } from "../i18n/ui.js";
+
+interface ProjectImage {
+  src: string;
+  width: number;
+  height: number;
+  alt: { en: string; es: string };
+}
 
 interface Props {
   lang: "en" | "es";
+  variant?: "featured" | "standard";
   title: string;
-  tagline: string;
-  problem?: string | null;
+  description: string;
+  problem: string;
   technologies?: string[];
+  images?: ProjectImage[];
   repoUrl?: string | null;
   liveUrl?: string | null;
-  isPlaceholder?: boolean;
 }
 const {
   lang,
+  variant = "standard",
   title,
-  tagline,
-  problem = null,
+  description,
+  problem,
   technologies = [],
+  images = [],
   repoUrl = null,
   liveUrl = null,
-  isPlaceholder = false,
 } = Astro.props;
 const t = ui[lang];
+const carouselLabel = `${title} — ${t.projects.screenshotsLabel}`;
 ---
 
-<article class="project-card">
-  <div class="project-card__image-placeholder" role="img" aria-label={t.projects.imagePlaceholder}>
-    {t.projects.imagePlaceholder}
-  </div>
+<article class={`project-card project-card--${variant}`}>
+  {images.length > 0 && (
+    <div class="carousel" role="region" aria-label={carouselLabel} tabindex="0">
+      <ul class="carousel__track">
+        {images.map((img, i) => (
+          <li class="carousel__item">
+            <img
+              src={img.src}
+              width={img.width}
+              height={img.height}
+              alt={img.alt[lang]}
+              loading={i === 0 ? undefined : "lazy"}
+              decoding={i === 0 ? undefined : "async"}
+            />
+          </li>
+        ))}
+      </ul>
+      {images.length > 1 && (
+        <div class="carousel__dots" aria-hidden="true">
+          {images.map(() => (
+            <span class="carousel__dot"></span>
+          ))}
+        </div>
+      )}
+    </div>
+  )}
   <div class="project-card__body">
-    {isPlaceholder && <span class="badge">{t.projects.placeholderBadge}</span>}
     <h3>{title}</h3>
-    <p class="project-card__tagline">{tagline}</p>
-    {problem && <p class="project-card__problem">{problem}</p>}
+    <p class="project-card__description">{description}</p>
+    <p class="project-card__problem">
+      <span class="project-card__problem-label">{t.projects.problemLabel}</span>
+      {problem}
+    </p>
     {technologies.length > 0 && (
       <ul class="tag-list">
         {technologies.map((tech) => (
@@ -42,11 +80,11 @@ const t = ui[lang];
     )}
     <div class="project-card__links">
       {repoUrl ? (
-        <a href={repoUrl}>{t.projects.viewCode}</a>
+        <a class="project-card__link" href={repoUrl}>{t.projects.viewCode}</a>
       ) : (
         <span class="project-card__no-repo">{t.projects.noRepoNote}</span>
       )}
-      {liveUrl && <a href={liveUrl}>{t.projects.viewLive}</a>}
+      {liveUrl && <a class="project-card__link" href={liveUrl}>{t.projects.viewLive}</a>}
     </div>
   </div>
 </article>

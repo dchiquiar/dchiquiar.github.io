@@ -11,9 +11,10 @@ interface Props {
   title: string;
   description: string;
   jsonLd: Record<string, unknown>;
+  showAbout?: boolean;
 }
 
-const { lang, title, description, jsonLd } = Astro.props;
+const { lang, title, description, jsonLd, showAbout = false } = Astro.props;
 const t = ui[lang];
 
 const path = lang === "es" ? "/es/" : "/";
@@ -80,7 +81,7 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
   </head>
   <body>
     <a class="skip-link" href="#main">{t.skipToContent}</a>
-    <SiteNav lang={lang} />
+    <SiteNav lang={lang} showAbout={showAbout} />
     <slot />
     <SiteFooter lang={lang} />
   </body>

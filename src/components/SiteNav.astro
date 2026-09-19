@@ -3,8 +3,9 @@ import { ui } from "../i18n/ui.js";
 
 interface Props {
   lang: "en" | "es";
+  showAbout?: boolean;
 }
-const { lang } = Astro.props;
+const { lang, showAbout = false } = Astro.props;
 const t = ui[lang];
 const homeHref = lang === "es" ? "/es/" : "/";
 const isEn = lang === "en";
@@ -17,6 +18,7 @@ const isEn = lang === "en";
       <li><a href="#projects">{t.nav.projects}</a></li>
       <li><a href="#experience">{t.nav.experience}</a></li>
       <li><a href="#stack">{t.nav.stack}</a></li>
+      {showAbout && <li><a href="#about">{t.nav.about}</a></li>}
       <li><a href="#contact">{t.nav.contact}</a></li>
       <li>
         <button

@@ -17,12 +17,20 @@ person:
   headline: "Desarrollador de Software — .NET / C#"
   location: "Montevideo, Uruguay (UTC-3)"
   seniority: "Semi Senior (SSR)"
-  summary: null # TODO: bio corta. Redacción pendiente (ver vault/06-contenido/narrativa-es.md, fuera del alcance de esta tarea de datos).
-  availability: null # TODO: <<PREGUNTA en recomendaciones.md §1.1>> modalidades aceptadas (remoto/híbrido/presencial) sin confirmar.
+  summary: >-
+    Desarrollador .NET. En dos años y medio diseñé y construí desde cero los dos
+    sistemas con los que opera una empresa de transporte de valores: el que
+    acredita a los bancos unas 1.500 operaciones por día y el que le permite al
+    personal rastrear cada remesa desde el camión, aun sin señal. Los hice
+    completos — servicio, base de datos, aplicación y puesta en producción— y
+    los dos están pensados para el momento en que algo falla, que es lo que
+    aprendí en los siete años anteriores sosteniendo el soporte y la
+    infraestructura de otra empresa.
+  availability: null # Pendiente de confirmar.
   email: "diegochiquiar@gmail.com"
   links:
-    linkedin: null # TODO: falta URL (no provista en datos-diego.md)
-    github: null # TODO: falta URL (no provista en datos-diego.md)
+    linkedin: null # Pendiente de confirmar.
+    github: null # Pendiente de confirmar.
 
 experience:
   - id: job-1
@@ -59,22 +67,22 @@ experience:
   - id: job-2
     role: "Auxiliar de Soporte Técnico"
     employer:
-      sector: "TODO: descripción de rubro pendiente (no provista en vault/05-recruiting/datos-diego.md)"
+      sector: "Empresa familiar de desarrollo de software para el rubro automotriz (gestión de taller y de stock de repuestos)"
     location: "Montevideo, Uruguay"
     startDate: "2017-05"
-    endDate: "2024-01"
+    endDate: "2023-12"
     current: false
     summary: null
     highlights:
       - "Brindó soporte técnico funcional y a usuarios durante más de 6 años."
-      - "Programó en GeneXus durante aproximadamente 1 año — experiencia de desarrollo que no figuraba en versiones previas del CV. TODO: confirmar sobre qué proyectos, para poder describirlo con un ejemplo concreto (ver datos-diego.md, <<PREGUNTA>>)."
+      - "Durante un año desarrolló y mantuvo las aplicaciones internas de gestión de la empresa con GeneXus. Fue su primer trabajo formal escribiendo software."
     technologies:
       - "GeneXus"
 
   - id: job-3
     role: "Técnico de Soporte"
     employer:
-      sector: "TODO: descripción de rubro pendiente (no provista en vault/05-recruiting/datos-diego.md)"
+      sector: "Multinacional de tecnología para la industria de viajes"
     location: "Canelones, Uruguay"
     startDate: "2013-01"
     endDate: "2014-01"
@@ -150,7 +158,7 @@ skills:
     - id: ai-assisted
       label: "Desarrollo asistido por IA"
       items:
-        - "Claude Code, creación de agentes y skills, spec-driven development. TODO: falta confirmar sobre qué proyecto(s) concreto(s), para no quedar como un bullet de moda (ver datos-diego.md, <<PREGUNTA>>)."
+        - "Desarrollo asistido por agentes (Claude Code): diseño de agentes y habilidades propias, trabajo spec-driven"
 
 languages:
   - name: "Español"
@@ -158,4 +166,4 @@ languages:
     note: null
   - name: "Inglés"
     level: "B2 (First Certificate, Cambridge, ~2011)"
-    note: "Preparando C1 (CAE), a rendir en 2027. Diego declara sostener una charla técnica en inglés hoy."
+    note: "Preparando C1 (CAE), a rendir en 2027. Nivel suficiente para sostener una charla técnica en inglés."

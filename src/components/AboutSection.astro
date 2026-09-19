@@ -1,0 +1,25 @@
+---
+// Ubicación (entre Stack y Contacto) y contenido fundamentados en
+// vault/05-recruiting/recomendaciones.md §1.5: nadie lee prosa antes de
+// convencerse técnicamente; el que llega hasta acá ya lo hizo.
+//
+// Si person.summary no tiene valor confirmado, HomePage no renderiza este
+// componente — no hay versión vacía de esta sección.
+import { ui } from "../i18n/ui.js";
+import SectionHeading from "./SectionHeading.astro";
+
+interface Props {
+  lang: "en" | "es";
+  number: string;
+  summary: string;
+}
+const { lang, number, summary } = Astro.props;
+const t = ui[lang];
+---
+
+<section id="about" class="section">
+  <div class="container">
+    <SectionHeading number={number} title={t.sections.about} id="about" />
+    <p class="about__summary">{summary}</p>
+  </div>
+</section>

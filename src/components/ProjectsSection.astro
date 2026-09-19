@@ -1,9 +1,14 @@
 ---
-// data/proyectos.yaml todavía está vacío (F1-C sin cerrar, ver backlog).
-// Mientras tanto se muestran 3 fichas de relleno OBVIAMENTE provisorias,
-// por instrucción explícita del brief de F4 — no se inventa contenido real
-// de proyectos. Campos exactos que necesita el schema real están en el
-// reporte de esta tarea.
+// Fuente: data/proyectos.yaml (orden y selección cerrados en F1-C, no
+// reordenar). Los proyectos con status "planned" no se muestran: un
+// proyecto anunciado y no construido confirma la objeción de que no se
+// terminan las cosas (vault/05-recruiting/recomendaciones.md §2). Cuando
+// el MCP deje de estar "planned" reaparece solo, en su lugar en el YAML.
+//
+// Los proyectos visibles no prueban lo mismo entre sí
+// (vault/06-contenido/fichas-proyectos-es.md §5): el primero se renderiza
+// con variant="featured" para que se perciba la jerarquía, no una grilla
+// de clones.
 import { ui } from "../i18n/ui.js";
 import SectionHeading from "./SectionHeading.astro";
 import ProjectCard from "./ProjectCard.astro";
@@ -15,87 +20,25 @@ interface Props {
 const { lang } = Astro.props;
 const t = ui[lang];
 
-const realProjects = loadProjects();
-
-const PLACEHOLDER_PROJECTS = {
-  en: [
-    {
-      title: "[Placeholder] Agent-assisted portfolio pipeline",
-      tagline: "Draft — one-line summary pending.",
-      problem:
-        "Draft — this paragraph will describe the interesting problem this project solves, once talent-seeker closes the project write-ups (backlog F1-C).",
-      technologies: ["Astro", "Node.js", "Claude Code"],
-      repoUrl: "https://github.com/dchiquiar/dchiquiar.github.io",
-      liveUrl: null,
-    },
-    {
-      title: "[Placeholder] Multiplayer game server",
-      tagline: "Draft — one-line summary pending.",
-      problem:
-        "Draft — server-authoritative concurrency problem write-up pending confirmation of what can be shown publicly.",
-      technologies: [".NET", "TCP", "SQL Server"],
-      repoUrl: null,
-      liveUrl: null,
-    },
-    {
-      title: "[Placeholder] Third project — not yet selected",
-      tagline: "Draft — one-line summary pending.",
-      problem: "Draft — pending F1-C project selection.",
-      technologies: ["TBD"],
-      repoUrl: null,
-      liveUrl: null,
-    },
-  ],
-  es: [
-    {
-      title: "[Marcador] Pipeline de portfolio asistido por agentes",
-      tagline: "Borrador — falta la línea resumen.",
-      problem:
-        "Borrador — este párrafo va a describir el problema interesante que resuelve este proyecto, cuando talent-seeker cierre las fichas (backlog F1-C).",
-      technologies: ["Astro", "Node.js", "Claude Code"],
-      repoUrl: "https://github.com/dchiquiar/dchiquiar.github.io",
-      liveUrl: null,
-    },
-    {
-      title: "[Marcador] Servidor de juego multijugador",
-      tagline: "Borrador — falta la línea resumen.",
-      problem:
-        "Borrador — falta confirmar qué parte del problema de concurrencia server-authoritative se puede mostrar públicamente.",
-      technologies: [".NET", "TCP", "SQL Server"],
-      repoUrl: null,
-      liveUrl: null,
-    },
-    {
-      title: "[Marcador] Tercer proyecto — sin definir",
-      tagline: "Borrador — falta la línea resumen.",
-      problem: "Borrador — pendiente de selección en F1-C.",
-      technologies: ["A definir"],
-      repoUrl: null,
-      liveUrl: null,
-    },
-  ],
-};
-
-const cards =
-  realProjects.length > 0
-    ? realProjects.map((p) => ({
-        title: p.title[lang],
-        tagline: p.description[lang],
-        problem: null,
-        technologies: p.technologies ?? [],
-        repoUrl: p.repoUrl,
-        liveUrl: p.liveUrl,
-        isPlaceholder: false,
-      }))
-    : PLACEHOLDER_PROJECTS[lang].map((p) => ({ ...p, isPlaceholder: true }));
+const cards = loadProjects()
+  .filter((p) => p.status !== "planned")
+  .map((p) => ({
+    title: p.title[lang],
+    description: p.description[lang],
+    problem: p.problem[lang],
+    technologies: p.technologies ?? [],
+    images: p.images ?? [],
+    repoUrl: p.repoUrl ?? null,
+    liveUrl: p.liveUrl ?? null,
+  }));
 ---
 
 <section id="projects" class="section">
   <div class="container">
     <SectionHeading number="01" title={t.sections.projects} id="projects" />
     <div class="project-grid">
-      {cards.map((card) => (
-        <ProjectCard lang={lang} {...card} />
+      {cards.map((card, index) => (
+        <ProjectCard lang={lang} variant={index === 0 ? "featured" : "standard"} {...card} />
       ))}
     </div>
   </div>

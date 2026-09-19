@@ -335,11 +335,15 @@ h3 {
 }
 
 /* ── Projects ────────────────────────────────────────────────────── */
+/* Los dos proyectos visibles no prueban lo mismo entre sí
+   (vault/06-contenido/fichas-proyectos-es.md §5): la grilla no puede
+   leerse como una lista de clones. `--featured` (primer proyecto, el más
+   grande) rompe la simetría con más espacio, tipografía mayor y borde de
+   acento; `--standard` queda más angosto y alineado a la izquierda. */
 
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-  gap: 1.5rem;
+  gap: 1.75rem;
 }
 
 .project-card {
@@ -351,32 +355,52 @@ h3 {
   flex-direction: column;
 }
 
-.project-card__image {
-  aspect-ratio: 16 / 9;
-  width: 100%;
-  object-fit: cover;
-  background: repeating-linear-gradient(
-    135deg,
-    var(--color-bg) 0 10px,
-    var(--color-bg-elevated) 10px 20px
-  );
+/* Carrusel sin JS (ADR-0008): `scroll-snap` + contenedor enfocable.
+   Cada slide ocupa el 90% del ancho del carrusel a propósito: el 10%
+   restante deja ver el borde de la imagen siguiente ("peek"), que es la
+   señal de que hay más de una sin necesidad de interactuar ni de JS. */
+.carousel {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
 }
 
-.project-card__image-placeholder {
-  aspect-ratio: 16 / 9;
-  width: 100%;
+@media (prefers-reduced-motion: no-preference) {
+  .carousel {
+    scroll-behavior: smooth;
+  }
+}
+
+.carousel__track {
   display: flex;
-  align-items: center;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.carousel__item {
+  flex: 0 0 90%;
+  scroll-snap-align: start;
+}
+
+.carousel__item img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.carousel__dots {
+  display: flex;
   justify-content: center;
-  background: repeating-linear-gradient(
-    135deg,
-    var(--color-bg) 0 10px,
-    var(--color-border) 10px 20px
-  );
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-  text-align: center;
-  padding: 1rem;
+  gap: 0.4rem;
+  padding: 0.6rem 0;
+}
+
+.carousel__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--color-control-border);
 }
 
 .project-card__body {
@@ -387,19 +411,7 @@ h3 {
   flex: 1;
 }
 
-.badge {
-  align-self: flex-start;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  border: 1px solid var(--color-accent);
-  border-radius: 0.25rem;
-  padding: 0.15rem 0.5rem;
-}
-
-.project-card__tagline {
+.project-card__description {
   color: var(--color-text);
   font-weight: 600;
   margin: 0;
@@ -409,6 +421,40 @@ h3 {
   color: var(--color-text-muted);
   font-size: 0.95rem;
   margin: 0;
+}
+
+.project-card__problem-label {
+  display: block;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.project-card--featured {
+  border-color: var(--color-accent);
+}
+
+.project-card--featured .project-card__body {
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.5rem, 5vw, 2.75rem)
+    clamp(1.75rem, 5vw, 3rem);
+  gap: 1rem;
+}
+
+.project-card--featured h3 {
+  font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+}
+
+.project-card--featured .project-card__description {
+  font-size: 1.05rem;
+}
+
+.project-card--standard {
+  max-width: 34rem;
+  justify-self: start;
 }
 
 .tag-list {
@@ -548,6 +594,15 @@ h3 {
   color: var(--color-text-muted);
   font-size: 0.85rem;
   max-width: 26rem;
+}
+
+/* ── About ───────────────────────────────────────────────────────── */
+
+.about__summary {
+  max-width: 42rem;
+  font-size: 1.05rem;
+  color: var(--color-text);
+  margin: 0;
 }
 
 /* ── Contact ─────────────────────────────────────────────────────── */

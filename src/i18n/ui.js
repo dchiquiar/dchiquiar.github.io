@@ -14,6 +14,7 @@ export const ui = {
       projects: "Projects",
       experience: "Experience",
       stack: "Stack",
+      about: "About",
       contact: "Contact",
     },
     hero: {
@@ -24,14 +25,15 @@ export const ui = {
       projects: "Projects",
       experience: "Experience",
       stack: "Stack",
+      about: "About",
       contact: "Contact",
     },
     projects: {
-      placeholderBadge: "Placeholder — final write-up pending",
+      problemLabel: "The hard part",
+      screenshotsLabel: "Screenshots",
       viewCode: "View code",
       viewLive: "Live demo",
       noRepoNote: "Code not public",
-      imagePlaceholder: "Demo image pending",
     },
     experience: {
       downloadCv: "Download CV (PDF)",
@@ -64,6 +66,7 @@ export const ui = {
       projects: "Proyectos",
       experience: "Experiencia",
       stack: "Stack",
+      about: "Sobre mí",
       contact: "Contacto",
     },
     hero: {
@@ -74,14 +77,15 @@ export const ui = {
       projects: "Proyectos",
       experience: "Experiencia",
       stack: "Stack",
+      about: "Sobre mí",
       contact: "Contacto",
     },
     projects: {
-      placeholderBadge: "Marcador de posición — texto final pendiente",
+      problemLabel: "La parte difícil",
+      screenshotsLabel: "Capturas de pantalla",
       viewCode: "Ver código",
       viewLive: "Demo en vivo",
       noRepoNote: "Código no público",
-      imagePlaceholder: "Imagen de demostración pendiente",
     },
     experience: {
       downloadCv: "Descargar CV (PDF)",
