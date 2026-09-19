@@ -7,7 +7,7 @@
 # Validar contra data/schemas/proyectos.schema.json (máximo 4 items).
 
 meta:
-  lastUpdated: "2026-09-18"
+  lastUpdated: "2026-09-19"
 
 projects:
   - id: mcp-sql-server
@@ -133,45 +133,3 @@ projects:
       - Tiempo real
       - TCP
       - SQL Server
-
-  - id: portfolio-site
-    title:
-      es: Este sitio, construido por un equipo de agentes
-      en: This site, built by a team of agents
-    description:
-      es: >-
-        El sitio y el CV que estás leyendo los produce un equipo de
-        agentes de IA que diseñé: un orquestador y subagentes
-        especializados, cada uno con su alcance, sus permisos y su
-        bitácora.
-      en: >-
-        The site and the CV you're reading are produced by a team of AI
-        agents I designed: an orchestrator and specialised sub-agents,
-        each with its own scope, permissions and log.
-    problem:
-      es: >-
-        El problema no era hacer un sitio: era que varias piezas
-        —estrategia, contenido, interfaz, publicación— avanzaran sin
-        pisarse y sin tener que repetirle el contexto a cada una. Definí
-        qué decide cada agente, qué archivos puede tocar, qué tiene que
-        dejar escrito al terminar y en qué casos tiene que frenar y
-        preguntar en vez de suponer. Las decisiones de fondo se congelan
-        antes de delegar, así nadie las vuelve a discutir a mitad de
-        camino.
-      en: >-
-        Building a site wasn't the problem. The problem was getting
-        several pieces — strategy, content, interface, publishing — to
-        move forward without stepping on each other and without me
-        re-explaining the context to each one. I defined what each agent
-        decides, which files it may touch, what it has to write down
-        when it's done, and when it has to stop and ask rather than
-        assume. Decisions that matter are frozen before anything is
-        delegated, so nobody reopens them halfway through.
-    repoUrl: "https://github.com/dchiquiar/dchiquiar.github.io"
-    liveUrl: "https://dchiquiar.github.io/"
-    status: in-progress
-    technologies:
-      - Claude Code
-      - Diseño de agentes
-      - Spec-driven development
-      - CI/CD

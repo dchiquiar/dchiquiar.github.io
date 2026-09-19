@@ -7,10 +7,15 @@
 # Employers: each experience entry only carries employer.sector (industry
 # description, no proper name). The employer's real name lives in the
 # private layer, linked by the experience id. See ADR-0002-identidad-publicada.
+#
+# Voice: all public content speaks in first person (Diego's own voice). No
+# highlight or bio is written in the third person, as if by someone else
+# (a system can still be described in third person: "consumes",
+# "generates", "lets").
 
 meta:
   language: en
-  lastUpdated: "2026-09-18"
+  lastUpdated: "2026-09-19"
 
 person:
   name: "Diego Chiquiar"
@@ -42,12 +47,12 @@ experience:
     current: false
     summary: null
     highlights:
-      - "Designed and built from scratch a WPF desktop application (.NET Core, MVVM) that works as an operations console and hosts Quartz.NET jobs for automatic bank reconciliation: it consumes the smart-safe web services, processes deposits, and generates the reconciliation files sent to the banks. Over 1 year in production, ~1,500 reconciliations per day with no manual intervention, integrating 6 banks."
-      - "Redesigned the job-scheduling engine: replaced fixed-schedule jobs with a database-configurable architecture built on Quartz.NET. Uses a mutex to enforce a single running instance and a local SQLite database to persist the day's job state, so a restart doesn't lose what already ran. Lets client schedules change without new deployments."
-      - "Rebuilt, end to end, in .NET for Android, a geolocated valuables-tracking app that was originally built in Xamarin.Forms. Published on Google Play Console, with ~20 operational users."
-      - "Built a remittance-tracking system for clients with online status and location lookups, reducing manual inquiries to the customer service team."
-      - "Maintained an internal WinForms ERP used by the HR, Sales, Billing and Treasury departments, distributed via installer."
-      - "Built internal REST APIs and their interfaces following SOLID principles, and trained end users."
+      - "I designed and built from scratch a WPF desktop application (.NET Core, MVVM) that works as an operations console and hosts Quartz.NET jobs for automatic bank reconciliation: it consumes the smart-safe web services, processes deposits, and generates the reconciliation files sent to the banks. Over 1 year in production, ~1,500 reconciliations per day with no manual intervention, integrating 6 banks."
+      - "I redesigned the job-scheduling engine, replacing fixed-schedule jobs with a database-configurable architecture built on Quartz.NET. Uses a mutex to enforce a single running instance and a local SQLite database to persist the day's job state, so a restart doesn't lose what already ran. Lets client schedules change without new deployments."
+      - "I rebuilt, end to end, in .NET for Android, a geolocated valuables-tracking app that was originally built in Xamarin.Forms. Published on Google Play Console, with ~20 operational users."
+      - "I built a remittance-tracking system for clients with online status and location lookups, reducing manual inquiries to the customer service team."
+      - "I maintained an internal WinForms ERP used by the HR, Sales, Billing and Treasury departments, distributed via installer."
+      - "I built internal REST APIs and their interfaces following SOLID principles, and trained end users."
     technologies:
       - "C#"
       - ".NET Core"
@@ -73,8 +78,8 @@ experience:
     current: false
     summary: null
     highlights:
-      - "Provided functional and end-user technical support for over 6 years."
-      - "For one year, built and maintained the company's internal business applications on an enterprise 4GL platform (GeneXus) — his first formal development work."
+      - "I provided functional and end-user technical support for over 6 years."
+      - "For one year, I built and maintained the company's internal business applications on an enterprise 4GL platform (GeneXus) — my first formal development work."
     technologies:
       - "GeneXus"
 
@@ -88,7 +93,7 @@ experience:
     current: false
     summary: null
     highlights:
-      - "Provided technical support at an operations center."
+      - "I provided technical support at an operations center."
     technologies: []
 
 education:

@@ -2,8 +2,8 @@
 //
 // process.cwd(), no import.meta.url: Vite reubica el frontmatter compilado
 // a una profundidad de carpetas distinta a la del código fuente, así que una
-// ruta relativa anclada al módulo se rompe en `astro build` (precedente:
-// src/pages/index.astro de F3b, mismo problema, misma solución).
+// ruta relativa anclada al módulo se rompe en `astro build` (mismo problema
+// resuelto de la misma forma en src/pages/index.astro).
 import fs from "node:fs";
 import path from "node:path";
 import { load } from "js-yaml";

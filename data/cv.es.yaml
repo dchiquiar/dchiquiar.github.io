@@ -7,10 +7,15 @@
 # Empleadores: cada experiencia sólo lleva employer.sector (descripción de
 # rubro, sin nombre propio). El nombre real de cada empleador vive en la capa
 # privada, enlazado por el id de la experiencia. Ver ADR-0002-identidad-publicada.
+#
+# Voz: todo el contenido público habla en primera persona (la voz de Diego).
+# Ningún highlight ni bio habla de él en tercera persona, como si lo
+# describiera otro (sí puede describirse un sistema en tercera:
+# "consume", "genera", "permite").
 
 meta:
   language: es
-  lastUpdated: "2026-09-18"
+  lastUpdated: "2026-09-19"
 
 person:
   name: "Diego Chiquiar"
@@ -43,12 +48,12 @@ experience:
     current: false
     summary: null
     highlights:
-      - "Diseñó y construyó desde cero una aplicación de escritorio en WPF (.NET Core, patrón MVVM) que funciona como consola de operación y aloja jobs de Quartz.NET para la acreditación bancaria automática: consume los web services de los buzones inteligentes, procesa los depósitos y genera los archivos de acreditación enviados a los bancos. Más de 1 año en producción, ~1.500 acreditaciones diarias sin intervención manual, con 6 bancos integrados."
-      - "Rediseñó el motor de programación horaria: reemplazó jobs de horario fijo por una arquitectura configurable desde base de datos con Quartz.NET. Usa un mutex para garantizar instancia única y una base SQLite local para persistir el estado de los jobs del día, de forma que un reinicio no pierde qué corrió. Permite cambiar los horarios de los clientes sin nuevos despliegues."
-      - "Reconstruyó de punta a punta, en .NET for Android, una app de rastreo de valores con geolocalización que originalmente era Xamarin.Forms. Publicada en Google Play Console, con ~20 usuarios operativos."
-      - "Desarrolló un sistema de trazabilidad de remesas para clientes, con consulta en línea de estado y ubicación del dinero, que redujo las consultas manuales al área de atención."
-      - "Mantuvo un ERP interno en WinForms usado por las áreas de RRHH, Comercial, Facturación y Tesorería, distribuido mediante instalador."
-      - "Construyó APIs REST internas y sus interfaces siguiendo principios SOLID, y capacitó a usuarios finales."
+      - "Diseñé y construí desde cero una aplicación de escritorio en WPF (.NET Core, patrón MVVM) que funciona como consola de operación y aloja jobs de Quartz.NET para la acreditación bancaria automática: consume los web services de los buzones inteligentes, procesa los depósitos y genera los archivos de acreditación enviados a los bancos. Más de 1 año en producción, ~1.500 acreditaciones diarias sin intervención manual, con 6 bancos integrados."
+      - "Rediseñé el motor de programación horaria: reemplacé jobs de horario fijo por una arquitectura configurable desde base de datos con Quartz.NET. Usa un mutex para garantizar instancia única y una base SQLite local para persistir el estado de los jobs del día, de forma que un reinicio no pierde qué corrió. Permite cambiar los horarios de los clientes sin nuevos despliegues."
+      - "Reconstruí de punta a punta, en .NET for Android, una app de rastreo de valores con geolocalización que originalmente era Xamarin.Forms. Publicada en Google Play Console, con ~20 usuarios operativos."
+      - "Desarrollé un sistema de trazabilidad de remesas para clientes, con consulta en línea de estado y ubicación del dinero, que redujo las consultas manuales al área de atención."
+      - "Mantuve un ERP interno en WinForms usado por las áreas de RRHH, Comercial, Facturación y Tesorería, distribuido mediante instalador."
+      - "Construí APIs REST internas y sus interfaces siguiendo principios SOLID, y capacité a usuarios finales."
     technologies:
       - "C#"
       - ".NET Core"
@@ -74,8 +79,8 @@ experience:
     current: false
     summary: null
     highlights:
-      - "Brindó soporte técnico funcional y a usuarios durante más de 6 años."
-      - "Durante un año desarrolló y mantuvo las aplicaciones internas de gestión de la empresa con GeneXus. Fue su primer trabajo formal escribiendo software."
+      - "Brindé soporte técnico funcional y a usuarios durante más de 6 años."
+      - "Durante un año desarrollé y mantuve las aplicaciones internas de gestión de la empresa con GeneXus. Fue mi primer trabajo formal escribiendo software."
     technologies:
       - "GeneXus"
 
@@ -89,7 +94,7 @@ experience:
     current: false
     summary: null
     highlights:
-      - "Brindó soporte técnico en un centro de operaciones."
+      - "Brindé soporte técnico en un centro de operaciones."
     technologies: []
 
 education:

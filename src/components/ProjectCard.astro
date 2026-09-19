@@ -51,6 +51,7 @@ const carouselLabel = `${title} — ${t.projects.screenshotsLabel}`;
               alt={img.alt[lang]}
               loading={i === 0 ? undefined : "lazy"}
               decoding={i === 0 ? undefined : "async"}
+              fetchpriority={i === 0 ? "high" : undefined}
             />
           </li>
         ))}

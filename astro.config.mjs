@@ -1,6 +1,6 @@
 // Configuracion de Astro para dchiquiar.github.io.
 //
-// Decisiones fijadas por ADR (ver vault/02-decisiones/):
+// Decisiones fijadas por ADR:
 // - ADR-0001: repo `dchiquiar.github.io` -> el sitio vive en la RAIZ del
 //   dominio. Por eso no hay `base` configurado: agregar uno rompería todos
 //   los links y assets en producción.

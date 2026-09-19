@@ -1,10 +1,98 @@
-/* Paleta: negro/blanco + un único acento violeta, en dos temas (F4b).
+/* Tipografía: IBM Plex Sans + IBM Plex Mono, alojadas en /fonts (SIL OFL,
+   ver /fonts/LICENSE-OFL.txt), no pedidas a Google Fonts ni a ningún
+   tercero. Sólo los pesos que el sitio usa de verdad: 400/600/700 en Sans
+   (el 800 de títulos no existe en la familia — el peso más pesado
+   disponible es 700/Bold, y el navegador ya hace ese match automáticamente
+   sin necesidad de declarar nada especial) y 400/700 en Mono. Recortadas
+   al latino que usa el contenido en español e inglés (Basic Latin +
+   Latin-1 Supplement + raya/en dash), ~46 KB los 5 archivos juntos.
+
+   `font-display: block` a propósito, no `swap`: con `swap` medí un CLS de
+   ~0.015 real (Lighthouse lo marcó como causado por el propio swap) — el
+   ajuste de métricas de respaldo iguala el PROMEDIO de ancho de carácter,
+   pero un párrafo largo puede igual cambiar dónde corta una línea al
+   pasar de una fuente a otra, y eso mueve todo lo que viene después. Con
+   fuentes propias, chicas (~10 KB) y de origen local (mismo dominio, ya
+   con la conexión abierta por el CSS), el período de bloqueo de `block`
+   se resuelve en unos pocos milisegundos: el texto pinta directamente con
+   IBM Plex, sin pasar nunca por el respaldo, así que no hay swap que
+   pueda mover nada. La "Fallback" de abajo queda como red de seguridad
+   para el caso límite de una red muy lenta, no como mecanismo principal. */
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("/fonts/ibm-plex-sans-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url("/fonts/ibm-plex-sans-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url("/fonts/ibm-plex-sans-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("/fonts/ibm-plex-mono-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url("/fonts/ibm-plex-mono-700.woff2") format("woff2");
+}
+
+/* Métricas calculadas con fontTools comparando IBM Plex Sans Regular
+   contra Segoe UI (el respaldo que efectivamente pinta Chrome/Windows
+   detrás de `system-ui` en este sitio) con el método estándar de
+   size-adjust por ancho promedio de carácter (xAvgCharWidth/unitsPerEm). */
+@font-face {
+  font-family: "IBM Plex Sans Fallback";
+  font-style: normal;
+  font-weight: 400 700;
+  src: local("Segoe UI"), local("Arial");
+  size-adjust: 109.73%;
+  ascent-override: 93.41%;
+  descent-override: 25.06%;
+  line-gap-override: 0%;
+}
+
+/* Mismo método, IBM Plex Mono Regular contra Consolas (respaldo real de
+   `ui-monospace` en Chrome/Windows). */
+@font-face {
+  font-family: "IBM Plex Mono Fallback";
+  font-style: normal;
+  font-weight: 400 700;
+  src: local("Consolas"), local("Cascadia Mono");
+  size-adjust: 109.13%;
+  ascent-override: 93.92%;
+  descent-override: 25.2%;
+  line-gap-override: 0%;
+}
+
+/* Paleta: negro/blanco + un único acento violeta, en dos temas.
    El violeta necesita dos tonos distintos —uno por tema— porque un
    violeta legible sobre negro pierde luminancia sobre blanco. Sigue
    siendo un único acento: misma familia de color, no un segundo color.
    Tema oscuro es el default (ver script anti-flash en BaseLayout).
    Contraste verificado con WCAG 2.2 relative luminance (script ad hoc,
-   ver reporte de F4b) — todos los pares por encima de 4.5:1 en texto y
+   no estimado a ojo) — todos los pares por encima de 4.5:1 en texto y
    de 3:1 en bordes de controles interactivos:
 
    Oscuro   texto/fondo 17.60:1 · muted/fondo 8.17:1 · acento/fondo 7.19:1
@@ -38,9 +126,10 @@ html[data-theme="light"] {
 }
 
 :root {
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif;
-  --font-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  --font-sans: "IBM Plex Sans", "IBM Plex Sans Fallback", system-ui,
+    -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace,
+    "Cascadia Code", "Consolas", monospace;
 
   --container-width: 72rem;
 }
@@ -335,11 +424,12 @@ h3 {
 }
 
 /* ── Projects ────────────────────────────────────────────────────── */
-/* Los dos proyectos visibles no prueban lo mismo entre sí
-   (vault/06-contenido/fichas-proyectos-es.md §5): la grilla no puede
-   leerse como una lista de clones. `--featured` (primer proyecto, el más
-   grande) rompe la simetría con más espacio, tipografía mayor y borde de
-   acento; `--standard` queda más angosto y alineado a la izquierda. */
+/* Los proyectos visibles no son equivalentes: cada uno prueba algo
+   distinto, y si las tarjetas se leen como clones el lector promedia y
+   el más débil arrastra a los otros. La grilla no puede leerse como una
+   lista de clones. `--featured` (primer proyecto, el más grande) rompe
+   la simetría con más espacio, tipografía mayor y borde de acento;
+   `--standard` queda más angosto y alineado a la izquierda. */
 
 .project-grid {
   display: grid;
@@ -362,6 +452,20 @@ h3 {
 .carousel {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  /* Scrollbar oculta a propósito: en Chrome de escritorio (incluido el
+     emulado "mobile" de Lighthouse, que sigue siendo Chrome de
+     escritorio con el viewport simulado) la scrollbar clásica reserva
+     alto en el eje horizontal, y ese alto sólo se sabe una vez que el
+     contenido overflowea — eso corría todo lo de abajo un puñado de
+     píxeles y era la causa real del único layout shift medible del
+     sitio. El "peek" + los puntos ya avisan que hay más de una imagen;
+     la scrollbar nativa no hacía falta para eso. Sigue siendo
+     recorrible con teclado y rueda/gesto: esto sólo la esconde. */
+  scrollbar-width: none;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -387,6 +491,7 @@ h3 {
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 16 / 9;
 }
 
 .carousel__dots {

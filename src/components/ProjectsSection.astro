@@ -1,13 +1,13 @@
 ---
-// Fuente: data/proyectos.yaml (orden y selección cerrados en F1-C, no
-// reordenar). Los proyectos con status "planned" no se muestran: un
-// proyecto anunciado y no construido confirma la objeción de que no se
-// terminan las cosas (vault/05-recruiting/recomendaciones.md §2). Cuando
-// el MCP deje de estar "planned" reaparece solo, en su lugar en el YAML.
+// Fuente: data/proyectos.yaml (orden y selección son una decisión de
+// contenido cerrada, no reordenar). Los proyectos con status "planned" no
+// se muestran: un proyecto anunciado y no construido se lee como que no
+// se terminan las cosas, y eso resta más de lo que suma. Cuando el MCP
+// deje de estar "planned" reaparece solo, en su lugar en el YAML.
 //
-// Los proyectos visibles no prueban lo mismo entre sí
-// (vault/06-contenido/fichas-proyectos-es.md §5): el primero se renderiza
-// con variant="featured" para que se perciba la jerarquía, no una grilla
+// Los proyectos visibles no prueban lo mismo entre sí (uno prueba código
+// auditable, otro prueba escala): el primero se renderiza con
+// variant="featured" para que se perciba esa jerarquía, no una grilla
 // de clones.
 import { ui } from "../i18n/ui.js";
 import SectionHeading from "./SectionHeading.astro";
