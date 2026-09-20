@@ -62,9 +62,26 @@ const isEn = lang === "en";
     if (!btn) return;
     var root = document.documentElement;
 
+    // Mismos dos <meta name="theme-color"> de BaseLayout.astro (uno por
+    // media). El toggle gana sobre la preferencia del sistema: en vez de
+    // detectar cuál de los dos está "activo" según el sistema, se
+    // sincronizan los dos al color del tema resuelto — así el que el
+    // navegador use ya tiene el valor correcto sin importar el
+    // prefers-color-scheme real del dispositivo. Colores calcados de
+    // --color-bg en global.css (ver comentario en BaseLayout.astro).
+    var metaLight = document.querySelector(
+      'meta[name="theme-color"][media="(prefers-color-scheme: light)"]',
+    );
+    var metaDark = document.querySelector(
+      'meta[name="theme-color"][media="(prefers-color-scheme: dark)"]',
+    );
+
     function sync() {
       var dark = root.getAttribute("data-theme") !== "light";
       btn.setAttribute("aria-pressed", dark ? "true" : "false");
+      var color = dark ? "#0f121f" : "#f6ecd3";
+      if (metaLight) metaLight.setAttribute("content", color);
+      if (metaDark) metaDark.setAttribute("content", color);
     }
 
     sync();

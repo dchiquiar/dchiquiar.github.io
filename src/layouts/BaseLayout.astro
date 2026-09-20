@@ -95,7 +95,25 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0f121f" />
+    <!--
+      Dos metas, una por esquema (F-3, auditoría apple-design): antes
+      había una sola fija en oscuro, así que en tema claro la barra del
+      navegador quedaba azul noche sobre papel crema. Valores calcados
+      de --color-bg de cada tema en global.css (no se pueden referenciar
+      variables CSS desde un atributo HTML) — si esos dos hex cambian,
+      actualizar acá y en el script de SiteNav.astro que los sincroniza
+      cuando el toggle gana sobre la preferencia del sistema.
+    -->
+    <meta
+      name="theme-color"
+      content="#f6ecd3"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0f121f"
+      media="(prefers-color-scheme: dark)"
+    />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 

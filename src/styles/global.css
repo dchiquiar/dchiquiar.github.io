@@ -193,6 +193,35 @@ html[data-theme="light"] {
   color-scheme: light;
 }
 
+/* "Aumentar contraste" (F-3, auditoría apple-design): todo por token,
+   ninguna literal de color nueva. Las tres declaraciones viven en el
+   mismo bloque, y las custom properties se resuelven por el valor final
+   en cascada, no por el valor que tenían antes de este bloque: como acá
+   mismo se redefine --color-control-border: var(--color-text), la línea
+   --color-border: var(--color-control-border) no se queda en un
+   escalón intermedio — también resuelve a --color-text. Las tres
+   (--color-text-muted, --color-border, --color-control-border) colapsan
+   a la tinta plena (--color-text). Verificado con getComputedStyle en
+   los dos temas: #f6ecd3 en oscuro, #233066 en claro, las tres iguales.
+   Es el comportamiento querido (máxima diferenciación cuando se pide
+   más contraste, aceptado tras revisión visual), no un bug — y no
+   depende del orden de las líneas de abajo: reordenarlas no cambia el
+   resultado, así que no "arreglarlo" reordenando. */
+@media (prefers-contrast: more) {
+  :root,
+  html[data-theme="dark"] {
+    --color-text-muted: var(--color-text);
+    --color-border: var(--color-control-border);
+    --color-control-border: var(--color-text);
+  }
+
+  html[data-theme="light"] {
+    --color-text-muted: var(--color-text);
+    --color-border: var(--color-control-border);
+    --color-control-border: var(--color-text);
+  }
+}
+
 :root {
   /* Serif para todo el cuerpo del sitio (nav, botones, texto corrido,
      títulos) — es la elección editorial completa, no sólo para párrafos.
@@ -365,6 +394,15 @@ section[id] {
 }
 
 .site-nav__brand {
+  /* min-height 1.75rem/28px (F-3, auditoría apple-design): medía
+     120,6 x 26,0px, por debajo del mínimo de destino táctil. display:flex
+     + align-items:center crece el alto sin mover el texto de tamaño ni
+     de posición horizontal (es flex item de .site-nav__inner: "inline"
+     se blockifica a "flex" igual, así que declararlo flex es explícito,
+     no un cambio de comportamiento). */
+  display: flex;
+  align-items: center;
+  min-height: 1.75rem;
   font-weight: 800;
   color: var(--color-text);
   text-decoration: none;
@@ -423,10 +461,18 @@ section[id] {
 .lang-switch__link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   /* 44px de alto (mismo criterio que .site-nav__links a). El span del
      idioma activo no es clicable, pero se le da el mismo alto que el
      link para que los tres segmentos ("EN", "/", "ES") sigan alineados. */
   padding-block: 0.72rem;
+  /* min-width 1.75rem/28px (F-3): .lang-switch__link medía 18,5px de
+     ancho, sólo el glyph. min-width en vez de padding horizontal
+     (mismo criterio que la nota de arriba sobre padding vertical: acá
+     no hay límite de alto que respetar, pero min-width + justify-content
+     centra el texto sin tocar su tamaño). Se aplica también a __current
+     para que los dos segmentos del selector midan lo mismo. */
+  min-width: 1.75rem;
 }
 
 .lang-switch__current {
@@ -678,6 +724,71 @@ h3 {
   background: var(--color-control-border);
 }
 
+/* Dot activo por scroll (F-3, decidido por Diego): CSS puro, sin JS
+   (ADR-0008 no se toca). `view-timeline-name` en cada slide crea una
+   línea de tiempo de progreso de visibilidad ligada a ESE elemento
+   dentro del scroller (.carousel); `timeline-scope` en el propio
+   .carousel se la presta a los dots, que son hermanos del track, no
+   descendientes del slide, y por default no la verían. Hasta 4 slides
+   porque data/schemas/proyectos.schema.json no permite más imágenes
+   por proyecto. Envuelto en @supports: sin soporte (Safari estable a
+   esta fecha) la regla entera no aplica y los dots quedan exactamente
+   como estaban — fallback explícito, no bug. Siguen aria-hidden y no
+   clicables. */
+@supports (animation-timeline: view()) {
+  .carousel__item:nth-child(1) {
+    view-timeline-name: --carousel-slide-1;
+    view-timeline-axis: inline;
+  }
+  .carousel__item:nth-child(2) {
+    view-timeline-name: --carousel-slide-2;
+    view-timeline-axis: inline;
+  }
+  .carousel__item:nth-child(3) {
+    view-timeline-name: --carousel-slide-3;
+    view-timeline-axis: inline;
+  }
+  .carousel__item:nth-child(4) {
+    view-timeline-name: --carousel-slide-4;
+    view-timeline-axis: inline;
+  }
+
+  .carousel {
+    timeline-scope: --carousel-slide-1, --carousel-slide-2,
+      --carousel-slide-3, --carousel-slide-4;
+  }
+
+  .carousel__dot {
+    animation-name: carousel-dot-active;
+    animation-duration: 1ms;
+    animation-fill-mode: both;
+    animation-timing-function: linear;
+  }
+
+  .carousel__dot:nth-child(1) {
+    animation-timeline: --carousel-slide-1;
+  }
+  .carousel__dot:nth-child(2) {
+    animation-timeline: --carousel-slide-2;
+  }
+  .carousel__dot:nth-child(3) {
+    animation-timeline: --carousel-slide-3;
+  }
+  .carousel__dot:nth-child(4) {
+    animation-timeline: --carousel-slide-4;
+  }
+
+  @keyframes carousel-dot-active {
+    0%,
+    100% {
+      background: var(--color-control-border);
+    }
+    50% {
+      background: var(--color-accent);
+    }
+  }
+}
+
 .project-card__body {
   padding: 1.25rem 1.4rem 1.5rem;
   display: flex;
@@ -690,12 +801,18 @@ h3 {
   color: var(--color-text);
   font-weight: 600;
   margin: 0;
+  /* Medida de línea (F-3, auditoría apple-design): sin tope, la tarjeta
+     featured llega a 108 caracteres por línea a 1440px — muy por
+     encima del rango cómodo de lectura continua (45-75). El límite va
+     en el bloque de texto, no en la tarjeta ni en --container-width. */
+  max-width: 68ch;
 }
 
 .project-card__problem {
   color: var(--color-text-muted);
   font-size: 0.95rem;
   margin: 0;
+  max-width: 68ch;
 }
 
 /* .eyebrow: label chica en mono, mayúsculas y acento — promovida desde
@@ -834,9 +951,10 @@ h3 {
 .job__summary {
   color: var(--color-text);
   margin: 0 0 0.85rem;
-  /* Mismo ancho de lectura que .about__paragraph (T-I): sin tope, a
-     1440px un párrafo de puesto se estira a >1000px de ancho. */
-  max-width: 42rem;
+  /* Mismo ancho de lectura que .about__paragraph (T-I). 68ch (F-3):
+     rango cómodo de lectura continua, sin tope a 1440px un párrafo de
+     puesto se estira muy por encima de eso. */
+  max-width: 68ch;
 }
 
 /* Proyectos con nombre dentro de un puesto (ADR-0010): mismo lenguaje
@@ -875,8 +993,8 @@ h3 {
   margin: 0;
   /* A 1440px, sin este tope, el párrafo de TAS mide 1028px de ancho y 6
      líneas — muy por encima de lo cómodo para seguir la línea al leer.
-     Mismo valor que ya usa .about__paragraph en todo el sitio. */
-  max-width: 42rem;
+     68ch (F-3): mismo criterio que .about__paragraph en todo el sitio. */
+  max-width: 68ch;
 }
 
 .job__highlights {
@@ -1046,14 +1164,14 @@ h3 {
   line-height: 1.4;
   color: var(--color-text);
   margin: 0;
-  max-width: 42rem;
+  max-width: 68ch;
 }
 
 .about__paragraph {
   font-size: 1.05rem;
   color: var(--color-text);
   margin: 0;
-  max-width: 42rem;
+  max-width: 68ch;
 }
 
 /* Sin usar todavía (no hay foto: ver AboutSection.astro). Preparada para
@@ -1097,6 +1215,13 @@ h3 {
 
 .site-footer a {
   color: var(--color-text-muted);
+  /* min-height 1.75rem/28px (F-3): el link a GitHub medía 43,7 x 19,0px,
+     por debajo del mínimo de destino táctil en el eje vertical.
+     inline-flex + align-items:center crece el alto sin tocar el tamaño
+     del texto ni el ancho. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
 }
 
 .site-footer a:hover {

@@ -8,7 +8,11 @@ export const ui = {
       groupLabel: "Language",
     },
     theme: {
-      toggleLabel: "Toggle dark theme",
+      // Nombra el ESTADO, no la acción (F-3): es un botón con
+      // aria-pressed, así que el lector de pantalla ya agrega "activado/
+      // desactivado" — con un verbo acá quedaba "Toggle dark theme,
+      // button, pressed", redundante y confuso.
+      toggleLabel: "Dark theme",
     },
     nav: {
       projects: "Projects",
@@ -61,7 +65,7 @@ export const ui = {
       groupLabel: "Idioma",
     },
     theme: {
-      toggleLabel: "Alternar tema oscuro",
+      toggleLabel: "Tema oscuro",
     },
     nav: {
       projects: "Proyectos",
