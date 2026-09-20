@@ -528,7 +528,12 @@ h3 {
   margin: 0;
 }
 
-.project-card__problem-label {
+/* .eyebrow: label chica en mono, mayúsculas y acento — promovida desde
+   project-card__problem-label (T-C) para reusarse fuera de las tarjetas
+   de proyecto sin duplicar la regla. El markup de ProjectCard no cambió;
+   sigue usando su propio nombre de clase, por eso el selector doble. */
+.project-card__problem-label,
+.eyebrow {
   display: block;
   color: var(--color-accent);
   font-family: var(--font-mono);
@@ -578,6 +583,9 @@ h3 {
   border: 1px solid var(--color-border);
   border-radius: 0.25rem;
   padding: 0.15rem 0.5rem;
+  /* Hay items largos ("Consumo de web services de terceros (SOAP/REST)")
+     que sin esto desbordan la tarjeta a 375px. */
+  overflow-wrap: break-word;
 }
 
 .project-card__links {
@@ -632,6 +640,16 @@ h3 {
   white-space: nowrap;
 }
 
+/* Nombre del empleador (ADR-0009): más peso visual que el rubro a
+   propósito — es lo que un recruiter busca y cruza con LinkedIn, no un
+   dato más de metadatos. Negrita y color de texto pleno (no muted),
+   entre el rol y la línea de rubro/ubicación que sí sigue apagada. */
+.job__employer {
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 0.3rem;
+}
+
 .job__meta {
   color: var(--color-text-muted);
   margin: 0 0 0.85rem;
@@ -668,18 +686,83 @@ h3 {
 }
 
 /* ── Skills ──────────────────────────────────────────────────────── */
+/* Tarjetas con borde en vez de nubes de tags sueltas, grilla de dos
+   columnas fija (nunca fluida a 3+), numeración por categoría y el mismo
+   ritmo de tag en todas — las cuatro razones por las que la referencia
+   de Diego se ve ordenada y la grilla vieja no. */
 
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 1.75rem;
+.stack__intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 2rem;
 }
 
-.skills-grid h3 {
-  color: var(--color-accent);
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.stack__intro .section-heading {
+  margin-bottom: 0.5rem;
+}
+
+.stack__lead {
+  color: var(--color-text-muted);
+  max-width: 28rem;
+  margin: 0 0 1.5rem;
+}
+
+/* `minmax(min(23rem, 100%), 1fr)`: con --container-width: 72rem esto da
+   exactamente dos columnas y nunca tres, y el `min(…, 100%)` evita el
+   desborde a 375px sin necesidad de una media query (el sitio no usa
+   ninguna salvo prefers-reduced-motion). */
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(23rem, 100%), 1fr));
+  gap: 1.5rem;
+}
+
+.stack-card {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1.25rem 1.4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stack-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.stack-card__title {
+  margin: 0;
+}
+
+.stack-card__num {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* `learning` no se ve como las que domina: sin fondo elevado y con borde
+   punteado (en --color-control-border, no el --color-border decorativo,
+   para sostener ≥3:1 incluso sobre el fondo plano de la página). El
+   rótulo queda a contraste pleno a propósito — es justo lo que tiene que
+   leerse ("En formación (autodidacta)"), no lo que hay que esconder. */
+.stack-card--learning {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--color-control-border);
+}
+
+.stack-card--learning .stack-card__title {
+  color: var(--color-text);
+}
+
+.stack__languages {
+  margin-top: 2.5rem;
 }
 
 .languages-list {
@@ -702,12 +785,58 @@ h3 {
 }
 
 /* ── About ───────────────────────────────────────────────────────── */
+/* Dos columnas (flex wrap): `.about__text` y, cuando exista, una
+   `.about__media` hermana — ver el comentario en AboutSection.astro con
+   el markup exacto. Sin imagen, `.about__text` ocupa el ancho completo
+   por `flex-grow`, así que no queda un hueco a la derecha que se lea
+   como foto faltante. */
 
-.about__summary {
+.about__layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.about__text {
+  flex: 1 1 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* El primer párrafo sólo es "lead" cuando hay más abajo (AboutSection.astro
+   decide la clase): ocho líneas a 1.5rem sin nada después no es un lead,
+   es una pared de texto grande. */
+.about__lead {
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text);
+  margin: 0;
   max-width: 42rem;
+}
+
+.about__paragraph {
   font-size: 1.05rem;
   color: var(--color-text);
   margin: 0;
+  max-width: 42rem;
+}
+
+/* Sin usar todavía (no hay foto: ver AboutSection.astro). Preparada para
+   cuando exista, con las reglas ya escritas en vez de improvisarlas ese
+   día. */
+.about__media {
+  flex: 1 1 16rem;
+  max-width: 20rem;
+}
+
+.about__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
 }
 
 /* ── Contact ─────────────────────────────────────────────────────── */

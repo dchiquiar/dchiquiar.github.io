@@ -23,6 +23,7 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
     </p>
 
     {experience.map((job) => {
+      const employerName = cleanField(job.employer?.name);
       const sector = cleanField(job.employer?.sector);
       const highlights = cleanList(job.highlights);
       const technologies = job.technologies ?? [];
@@ -32,6 +33,7 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
             <h3 class="job__role">{job.role}</h3>
             <span class="job__dates">{formatDateRange(job, lang)}</span>
           </div>
+          {employerName && <p class="job__employer">{employerName}</p>}
           {(sector || job.location) && (
             <p class="job__meta">
               {[sector, job.location].filter(Boolean).join(" · ")}

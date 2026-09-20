@@ -70,11 +70,15 @@
           "employer": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["sector"],
+            "required": ["name", "sector"],
             "properties": {
+              "name": {
+                "type": "string",
+                "description": "Nombre real del empleador. Público desde ADR-0009: identifica y es verificable. Convive con sector, no lo reemplaza."
+              },
               "sector": {
                 "type": ["string", "null"],
-                "description": "Descripción de rubro/tamaño, sin nombre propio. Es lo que consume el sitio público (ADR-0002). El nombre real del empleador vive en la capa privada (data/private/, gitignored) y se enlaza por este mismo id. null = pendiente de confirmar con Diego."
+                "description": "Descripción de rubro/tamaño. Da el contexto técnico que el nombre solo no da. null = pendiente de confirmar con Diego."
               }
             }
           },
@@ -125,6 +129,10 @@
       "additionalProperties": false,
       "required": ["categories"],
       "properties": {
+        "intro": {
+          "type": ["string", "null"],
+          "description": "Párrafo corto que describe el conjunto del stack, en primera persona. Se renderiza al lado del título de la sección. null mientras no haya copy aprobada."
+        },
         "categories": {
           "type": "array",
           "items": {

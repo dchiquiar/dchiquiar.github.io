@@ -5,8 +5,14 @@
 //
 // Si person.summary no tiene valor confirmado, HomePage no renderiza este
 // componente — no hay versión vacía de esta sección.
+//
+// Props sin cambios (lang/number/summary): HomePage depende de esta forma
+// para la numeración y para decidir showAbout. `summary` sigue siendo el
+// string crudo del YAML; separarlo en párrafos es responsabilidad de este
+// componente, no de quien lo llama.
 import { ui } from "../i18n/ui.js";
 import SectionHeading from "./SectionHeading.astro";
+import { splitParagraphs } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
@@ -15,11 +21,45 @@ interface Props {
 }
 const { lang, number, summary } = Astro.props;
 const t = ui[lang];
+
+const paragraphs = splitParagraphs(summary);
+const hasMultipleParagraphs = paragraphs.length > 1;
 ---
 
 <section id="about" class="section">
   <div class="container">
     <SectionHeading number={number} title={t.sections.about} id="about" />
-    <p class="about__summary">{summary}</p>
+    <div class="about__layout">
+      <div class="about__text">
+        {paragraphs.map((paragraph, i) => (
+          <p class={i === 0 && hasMultipleParagraphs ? "about__lead" : "about__paragraph"}>
+            {paragraph}
+          </p>
+        ))}
+      </div>
+      {/*
+        El track del retrato no existe en el DOM todavía: no hay foto, y
+        el proyecto prohíbe cualquier placeholder a la vista (ver
+        recomendaciones — "nada de coming soon"). Cuando haya una imagen,
+        entra como hermana de `.about__text` dentro de `.about__layout`,
+        así (el `.about__media` de global.css ya está escrito y esperando
+        esta clase):
+
+        <div class="about__media">
+          <img
+            src="/images/diego-portrait.jpg"
+            width="..."
+            height="..."
+            alt="..."
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+
+        `width`/`height` son obligatorios ahí, no opcionales: son los que
+        mantienen el CLS en 0 (mismo criterio que las imágenes del
+        carrusel de proyectos).
+      */}
+    </div>
   </div>
 </section>

@@ -2,10 +2,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://dchiquiar.github.io/schemas/cv.private.schema.json",
   "title": "CV private data",
-  "description": "Capa privada del CV: teléfono y nombre real de cada empleador. Nunca se publica (data/private/, gitignored — ver .gitignore). No depende del idioma: un solo archivo cubre cv.en.yaml y cv.es.yaml. employers[].id enlaza con experience[].id de la capa pública (data/schemas/cv.schema.json). La consume la generación del PDF, no el sitio.",
+  "description": "Capa privada del CV: sólo el teléfono. Nunca se publica (data/private/, gitignored — ver .gitignore). Los nombres de empleadores ya no viven acá: desde ADR-0009 son públicos, en employer.name de la capa pública (data/schemas/cv.schema.json). La consume la generación del PDF, no el sitio.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["phone", "employers"],
+  "required": ["phone"],
   "properties": {
     "phone": {
       "type": "object",
@@ -14,25 +14,6 @@
       "properties": {
         "value": { "type": "string" },
         "publishInPdf": { "type": "boolean" }
-      }
-    },
-    "employers": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["id", "name"],
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Debe coincidir con experience[].id en cv.en.yaml / cv.es.yaml."
-          },
-          "name": {
-            "type": "string",
-            "description": "Nombre real del empleador. Sólo va en el PDF (ADR-0002)."
-          }
-        }
       }
     }
   }

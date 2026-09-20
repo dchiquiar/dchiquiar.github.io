@@ -22,16 +22,39 @@ person:
   headline: "Desarrollador de Software — .NET / C#"
   location: "Montevideo, Uruguay (UTC-3)"
   seniority: "Semi Senior (SSR)"
+  # CONTRATO con el código (src/lib/content.js, splitParagraphs): este campo
+  # puede tener varios párrafos, separados por una línea en blanco. El
+  # bloque plegado YAML (`>-`) es OBLIGATORIO para eso — no es preferencia
+  # de formato. Si se cambia a bloque literal (`|`), cada línea del wrap se
+  # renderiza como un párrafo suelto en vez de uno solo.
   summary: >-
-    Desarrollador .NET. En dos años y medio diseñé y construí desde cero los dos
-    sistemas con los que opera una empresa de transporte de valores: el que
-    acredita a los bancos unas 1.500 operaciones por día y el que le permite al
-    personal rastrear cada remesa desde el camión, aun sin señal. Los hice
-    completos — servicio, base de datos, aplicación y puesta en producción— y
-    los dos están pensados para el momento en que algo falla, que es lo que
-    aprendí en los siete años anteriores sosteniendo el soporte y la
-    infraestructura de otra empresa.
-  availability: null # Pendiente de confirmar.
+    Antes de escribir software estuve años del otro lado: atendiendo cuando un
+    sistema se caía y había gente parada esperando para poder trabajar. De ahí
+    sale la forma en que escribo backend hoy. Cuando diseño algo, la primera
+    pregunta no es cómo funciona si todo sale bien, sino qué pasa cuando falla:
+    qué se pierde, quién se entera y cómo se arregla sin frenar la operación.
+
+    Lo que mejor hago es backend en .NET sobre SQL Server, y los problemas que me
+    atraen se parecen bastante entre sí: hacer que dos sistemas que nunca fueron
+    pensados para hablarse terminen de acuerdo, y que eso después corra solo todos
+    los días sin que nadie lo esté mirando. Me importa menos el lenguaje que el
+    problema, que casi siempre es el mismo: un proceso que hoy alguien sostiene a
+    mano y que no debería depender de que esa persona esté.
+
+    Ahora quiero llevar eso a un contexto más amplio que el nicho .NET. No para
+    dejarlo atrás, sino porque el criterio con el que se decide cómo construir
+    algo viaja entre stacks mucho mejor que las herramientas, y quiero trabajar en
+    equipos donde eso se discuta. En paralelo estoy entrando al lado web y a
+    DevOps, y tengo claro qué de eso ya usé en producción y qué todavía no. Estoy
+    buscando trabajo y disponible para empezar de inmediato, en híbrido o remoto
+    desde Montevideo, y tomo remoto para el exterior.
+
+    Fuera del horario construyo cosas que no tienen ninguna justificación
+    comercial, sólo porque el problema me queda dando vueltas: lo que ves acá
+    arriba salió de ahí. Es también donde pruebo lo que todavía no puedo usar en
+    el trabajo, y donde aprendo más rápido. Si estás buscando a alguien así, mi
+    mail está abajo.
+  availability: "Híbrido o remoto en Uruguay; remoto para el exterior"
   email: "diegochiquiar@gmail.com"
   links:
     linkedin: null # Pendiente de confirmar.
@@ -41,6 +64,7 @@ experience:
   - id: job-1
     role: "Desarrollador de Software"
     employer:
+      name: "Tecnisegur"
       sector: "Empresa de transporte de valores (cash-in-transit)"
     location: "Montevideo, Uruguay"
     startDate: "2024-04"
@@ -72,6 +96,7 @@ experience:
   - id: job-2
     role: "Auxiliar de Soporte Técnico"
     employer:
+      name: "Advansys — Cars Solutions"
       sector: "Empresa familiar de desarrollo de software para el rubro automotriz (gestión de taller y de stock de repuestos)"
     location: "Montevideo, Uruguay"
     startDate: "2017-05"
@@ -87,6 +112,7 @@ experience:
   - id: job-3
     role: "Técnico de Soporte"
     employer:
+      name: "Sabre Holdings"
       sector: "Multinacional de tecnología para la industria de viajes"
     location: "Canelones, Uruguay"
     startDate: "2013-01"
@@ -118,6 +144,7 @@ education:
     detail: "Cursado lunes y miércoles, 19:30–22:30."
 
 skills:
+  intro: "Esto está ordenado por lo que puedo sostener. El núcleo es .NET sobre SQL Server: ahí puedo explicar por qué cada decisión es la que es y discutirla diez minutos. Alrededor hay tecnologías que usé lo suficiente como para ser útil con ellas, y al final, separado a propósito, lo que estoy aprendiendo por mi cuenta. Prefiero decirte dónde estoy parado a que lo descubras en la entrevista."
   categories:
     - id: backend
       label: "Backend"
@@ -143,6 +170,20 @@ skills:
         - "WinForms"
         - "JavaScript"
         - "Ionic"
+    - id: ai-assisted
+      label: "Desarrollo asistido por IA"
+      items:
+        - "Claude Code"
+        - "Diseño de agentes y skills propias"
+        - "Trabajo spec-driven"
+    - id: other
+      label: "Otros"
+      items:
+        - "Java"
+        - "GeneXus"
+        - "Google Play Console"
+        - "Ciberseguridad (OWASP Top 10, ISO, NIST)"
+        - "Redes e infraestructura, nociones"
     - id: learning
       label: "En formación (autodidacta)"
       items:
@@ -152,18 +193,6 @@ skills:
         - "HTML"
         - "CSS"
         - "Bootstrap"
-    - id: other
-      label: "Otros"
-      items:
-        - "Java"
-        - "GeneXus"
-        - "Google Play Console"
-        - "Ciberseguridad (OWASP Top 10, ISO, NIST)"
-        - "Redes e infraestructura, nociones"
-    - id: ai-assisted
-      label: "Desarrollo asistido por IA"
-      items:
-        - "Desarrollo asistido por agentes (Claude Code): diseño de agentes y habilidades propias, trabajo spec-driven"
 
 languages:
   - name: "Español"

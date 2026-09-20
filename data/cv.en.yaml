@@ -22,15 +22,40 @@ person:
   headline: "Software Developer — .NET / C#"
   location: "Montevideo, Uruguay (UTC-3)"
   seniority: "Semi Senior (SSR)"
+  # CONTRACT with the code (src/lib/content.js, splitParagraphs): this field
+  # can hold several paragraphs, separated by a blank line. The YAML folded
+  # block (`>-`) is REQUIRED for that — it's not a formatting preference.
+  # If changed to a literal block (`|`), every wrapped line renders as its
+  # own paragraph instead of one.
   summary: >-
-    .NET developer. In two and a half years I designed and built, from scratch,
-    both of the systems a cash-in-transit company runs on: the one that settles
-    around 1,500 transactions a day with its banks, and the one its crews use to
-    track every shipment from the truck, with no mobile signal. I built each of
-    them end to end — service, database, application and deployment — and both
-    are designed around the moment something fails, which is what seven earlier
-    years running IT support and infrastructure taught me.
-  availability: null # Pending confirmation.
+    Before I wrote software I spent years on the other side of it: picking up the
+    phone when a system went down and people were standing around, unable to work.
+    That is where the way I build backends comes from. When I design something,
+    the first question is not how it behaves when everything goes right, but what
+    happens when it does not: what gets lost, who finds out, and how it gets fixed
+    without stopping the operation.
+
+    What I am strongest at is .NET backend work over SQL Server, and the problems
+    I keep going back to look alike: getting two systems that were never meant to
+    talk to each other to agree, and then making that run on its own, every day,
+    with nobody watching it. The language matters less to me than the problem,
+    which is usually the same one: a process someone is holding together by hand
+    that should not depend on that person showing up.
+
+    I am looking to take that into a wider context than the .NET niche. Not to
+    leave it behind, but because the judgment about how to build something travels
+    between stacks far better than the tooling does, and I want to work with
+    people who argue about that. Alongside it I am working my way into the web
+    side and into DevOps, and I am clear about which of those I have run in
+    production and which I have not. I am looking for my next role and available
+    to start immediately, remote or hybrid, working from Montevideo on UTC-3 —
+    which overlaps almost entirely with US business hours.
+
+    Outside working hours I build things with no commercial justification at all,
+    just because a problem stays with me: what you see above came out of that. It
+    is also where I try what I cannot use at work yet, and where I learn fastest.
+    If that sounds like the person you need, my email is right below.
+  availability: "Hybrid or remote in Uruguay; open to remote work abroad"
   email: "diegochiquiar@gmail.com"
   links:
     linkedin: null # Pending confirmation.
@@ -40,6 +65,7 @@ experience:
   - id: job-1
     role: "Software Developer"
     employer:
+      name: "Tecnisegur"
       sector: "Cash-in-transit / valuables transport company"
     location: "Montevideo, Uruguay"
     startDate: "2024-04"
@@ -71,6 +97,7 @@ experience:
   - id: job-2
     role: "Technical Support Assistant"
     employer:
+      name: "Advansys — Cars Solutions"
       sector: "Family-run software company for the automotive sector (workshop and parts-inventory management)"
     location: "Montevideo, Uruguay"
     startDate: "2017-05"
@@ -86,6 +113,7 @@ experience:
   - id: job-3
     role: "Support Technician"
     employer:
+      name: "Sabre Holdings"
       sector: "Multinational travel-technology company"
     location: "Canelones, Uruguay"
     startDate: "2013-01"
@@ -117,6 +145,7 @@ education:
     detail: "Mondays and Wednesdays, 7:30–10:30 PM."
 
 skills:
+  intro: "This is ordered by what I can stand behind. The core is .NET over SQL Server: there I can explain why each decision is what it is and defend it for ten minutes. Around it are tools I have used enough to be useful with, and at the end, kept separate on purpose, what I am still learning on my own. I would rather tell you where I stand than have you find it out in the interview."
   categories:
     - id: backend
       label: "Backend"
@@ -142,6 +171,20 @@ skills:
         - "WinForms"
         - "JavaScript"
         - "Ionic"
+    - id: ai-assisted
+      label: "AI-assisted development"
+      items:
+        - "Claude Code"
+        - "Designing my own agents and skills"
+        - "Spec-driven workflow"
+    - id: other
+      label: "Other"
+      items:
+        - "Java"
+        - "GeneXus"
+        - "Google Play Console"
+        - "Cybersecurity (OWASP Top 10, ISO, NIST)"
+        - "Networking & infrastructure basics"
     - id: learning
       label: "Currently learning (self-taught)"
       items:
@@ -151,18 +194,6 @@ skills:
         - "HTML"
         - "CSS"
         - "Bootstrap"
-    - id: other
-      label: "Other"
-      items:
-        - "Java"
-        - "GeneXus"
-        - "Google Play Console"
-        - "Cybersecurity (OWASP Top 10, ISO, NIST)"
-        - "Networking & infrastructure basics"
-    - id: ai-assisted
-      label: "AI-assisted development"
-      items:
-        - "Agent-assisted development (Claude Code): designing my own agents and skills, spec-driven workflow"
 
 languages:
   - name: "Spanish"

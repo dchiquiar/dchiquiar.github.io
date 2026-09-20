@@ -22,6 +22,7 @@ const { person } = cv;
 // existe — nada de encabezado ni entrada de nav para una sección vacía.
 const summary = cleanField(person.summary);
 const contactNumber = summary ? "05" : "04";
+const stackIntro = cleanField(cv.skills?.intro ?? null);
 
 const title = `${person.name} — ${person.headline}`;
 const description =
@@ -57,7 +58,7 @@ const jsonLd = {
     <Hero lang={lang} person={person} />
     <ProjectsSection lang={lang} />
     <ExperienceSection lang={lang} experience={cv.experience} education={cv.education} />
-    <SkillsSection lang={lang} categories={cv.skills.categories} languages={cv.languages} />
+    <SkillsSection lang={lang} categories={cv.skills.categories} languages={cv.languages} intro={stackIntro} />
     {summary && <AboutSection lang={lang} number="04" summary={summary} />}
     <ContactSection lang={lang} number={contactNumber} person={person} />
   </main>

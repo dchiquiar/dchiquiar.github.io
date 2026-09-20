@@ -7,8 +7,9 @@ interface Props {
   lang: "en" | "es";
   categories: Array<{ id: string; label: string; items: string[] }>;
   languages: Array<{ name: string; level: string; note: string | null }>;
+  intro?: string | null;
 }
-const { lang, categories, languages } = Astro.props;
+const { lang, categories, languages, intro = null } = Astro.props;
 const t = ui[lang];
 
 // Filtra items marcados como TODO/pendiente de confirmación y descarta
@@ -20,11 +21,20 @@ const cleanCategories = categories
 
 <section id="stack" class="section">
   <div class="container">
-    <SectionHeading number="03" title={t.sections.stack} id="stack" />
-    <div class="skills-grid">
-      {cleanCategories.map((cat) => (
-        <div>
-          <h3>{cat.label}</h3>
+    <div class="stack__intro">
+      <SectionHeading number="03" title={t.sections.stack} id="stack" />
+      {intro && <p class="stack__lead">{intro}</p>}
+    </div>
+
+    <div class="stack-grid">
+      {cleanCategories.map((cat, i) => (
+        <div class={`stack-card${cat.id === "learning" ? " stack-card--learning" : ""}`}>
+          <div class="stack-card__header">
+            <h3 class="stack-card__title">{cat.label}</h3>
+            <span class="stack-card__num" aria-hidden="true">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+          </div>
           <ul class="tag-list">
             {cat.items.map((item) => (
               <li class="tag">{item}</li>
@@ -35,8 +45,8 @@ const cleanCategories = categories
     </div>
 
     {languages.length > 0 && (
-      <>
-        <h3 style="margin-top: 2.5rem;">{t.skills.languages}</h3>
+      <div class="stack__languages">
+        <h3>{t.skills.languages}</h3>
         <ul class="languages-list">
           {languages.map((l) => (
             <li>
@@ -46,7 +56,7 @@ const cleanCategories = categories
             </li>
           ))}
         </ul>
-      </>
+      </div>
     )}
   </div>
 </section>
