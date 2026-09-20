@@ -94,6 +94,23 @@
           },
           "current": { "type": "boolean" },
           "summary": { "type": ["string", "null"] },
+          "projects": {
+            "type": "array",
+            "description": "Proyectos con nombre propio dentro de este empleo (ADR-0010). Opcional: sólo lo lleva el empleo que los tiene. No confundir con data/proyectos.yaml (proyectos personales de la vitrina, otra fuente).",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "description", "technologies"],
+              "properties": {
+                "name": { "type": "string" },
+                "description": { "type": "string" },
+                "technologies": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
           "highlights": {
             "type": "array",
             "items": { "type": "string" }

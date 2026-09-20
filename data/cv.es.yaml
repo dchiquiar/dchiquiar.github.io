@@ -15,7 +15,7 @@
 
 meta:
   language: es
-  lastUpdated: "2026-09-19"
+  lastUpdated: "2026-09-20"
 
 person:
   name: "Diego Chiquiar"
@@ -70,14 +70,28 @@ experience:
     startDate: "2024-04"
     endDate: "2026-09"
     current: false
-    summary: null
+    summary: "Diseñé y construí los dos sistemas propios con los que opera la empresa."
+    projects:
+      - name: "TAS — Tecnisegur Automatic Accreditation System"
+        description: "Sistema que acredita automáticamente a los bancos el dinero que los clientes depositan en los buzones inteligentes de sus locales — las principales cadenas de retail del país. Consulta los buzones a través del web service de un proveedor externo, baja los depósitos a la base propia y arma la acreditación de cada banco: seis bancos con cuatro formas distintas de recibirla, desde un archivo dejado en una carpeta compartida hasta un web service. Unas 1.500 acreditaciones por día sin intervención manual, más de un año en producción. Lo construí como aplicación de escritorio y no como servicio desatendido por una razón operativa: si una acreditación falla, un operador tiene que poder rehacerla a mano en el momento."
+        technologies:
+          - "C#"
+          - "ASP.NET Core"
+          - "WPF con MVVM"
+          - "Quartz.NET"
+          - "SQL Server"
+          - "SQLite"
+          - "Servidor Windows en Azure"
+      - name: "App de rastreo de valores"
+        description: "App Android con la que el personal operativo sigue cada remesa desde que sale hasta que llega a destino. Se escanea el precinto en cada paso y eso cambia el estado, dejando registrado quién lo hizo, cuándo y dónde. Funciona sin señal: un camión de caudales pasa buena parte del día sin cobertura, así que la app guarda todo localmente y reconcilia contra el servidor al recuperar conexión. Publicada en Google Play."
+        technologies:
+          - ".NET for Android"
+          - "Migrada desde Xamarin.Forms"
+          - "SQLite"
+          - "Geolocalización"
     highlights:
-      - "Diseñé y construí desde cero una aplicación de escritorio en WPF (.NET Core, patrón MVVM) que funciona como consola de operación y aloja jobs de Quartz.NET para la acreditación bancaria automática: consume los web services de los buzones inteligentes, procesa los depósitos y genera los archivos de acreditación enviados a los bancos. Más de 1 año en producción, ~1.500 acreditaciones diarias sin intervención manual, con 6 bancos integrados."
-      - "Rediseñé el motor de programación horaria: reemplacé jobs de horario fijo por una arquitectura configurable desde base de datos con Quartz.NET. Usa un mutex para garantizar instancia única y una base SQLite local para persistir el estado de los jobs del día, de forma que un reinicio no pierde qué corrió. Permite cambiar los horarios de los clientes sin nuevos despliegues."
-      - "Reconstruí de punta a punta, en .NET for Android, una app de rastreo de valores con geolocalización que originalmente era Xamarin.Forms. Publicada en Google Play Console, con ~20 usuarios operativos."
-      - "Desarrollé un sistema de trazabilidad de remesas para clientes, con consulta en línea de estado y ubicación del dinero, que redujo las consultas manuales al área de atención."
-      - "Mantuve un ERP interno en WinForms usado por las áreas de RRHH, Comercial, Facturación y Tesorería, distribuido mediante instalador."
-      - "Construí APIs REST internas y sus interfaces siguiendo principios SOLID, y capacité a usuarios finales."
+      - "Integración de pagos con MercadoPago — Construí la API interna que usa el vendedor para generar una suscripción desde la web de cotización, y que se hace cargo de todo lo que pasa después: pagos que se acreditan, fallan, se revierten o vencen, y suscripciones que renuevan o se dan de baja. (API REST propia sobre la de MercadoPago; suscripciones y checkout de compra directa.)"
+      - "ERP interno — Mantuve el ERP de gestión de la empresa y le desarrollé formularios nuevos para RRHH, Comercial, Facturación y Tesorería. (WinForms.)"
     technologies:
       - "C#"
       - ".NET Core"
@@ -104,8 +118,8 @@ experience:
     current: false
     summary: null
     highlights:
-      - "Brindé soporte técnico funcional y a usuarios durante más de 6 años."
       - "Durante un año desarrollé y mantuve las aplicaciones internas de gestión de la empresa con GeneXus. Fue mi primer trabajo formal escribiendo software."
+      - "Sostuve toda la operación de IT durante casi siete años: soporte a usuarios, redes, infraestructura y continuidad de los sistemas internos."
     technologies:
       - "GeneXus"
 

@@ -31,42 +31,43 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
   <head>
     <meta charset="utf-8" />
     <!--
-      Precarga de los 3 pesos de IBM Plex Sans que se usan por encima del
-      pliegue (nav, hero, botones): 400 cuerpo, 600 hero__role/botones,
-      700 nombre del hero/marca del nav (el 800 de CSS no existe en la
-      familia y el navegador ya hace match a este archivo). Se declara
-      acá, antes que nada, porque el <link rel="stylesheet"> con las
-      reglas @font-face lo genera Astro al final del <head> — para
-      cuando el navegador lo descubre ya perdimos tiempo. El preload no
-      depende de que el CSS se haya parseado.
+      Precarga de los 3 estilos de Source Serif 4 que se usan por encima
+      del pliegue (nav, hero, botones): 400 cuerpo/nav/botones, 700
+      nombre del hero/marca del nav, 400 itálica (hero__role — el "dek"
+      editorial bajo el título grande). Se declara acá, antes que nada,
+      porque el <link rel="stylesheet"> con las reglas @font-face lo
+      genera Astro al final del <head> — para cuando el navegador lo
+      descubre ya perdimos tiempo. El preload no depende de que el CSS
+      se haya parseado.
 
-      No es sólo una optimización de velocidad: sin esto medí un CLS
-      real de ~0.015 — con las tres fuentes ya en caché del navegador
-      antes de que el CSS pida usarlas, el primer layout ya se hace con
-      las métricas reales de IBM Plex y no hay una segunda pasada que
-      pueda mover nada (con textos que están justo en el límite de
-      envolver una línea más, hasta un ajuste de métricas de respaldo
-      bien calculado puede fallar por una fracción de carácter).
+      No es sólo una optimización de velocidad: en F-4, sin esto medí un
+      CLS real de ~0.015 con la fuente sans anterior — con las fuentes ya
+      en caché del navegador antes de que el CSS pida usarlas, el primer
+      layout ya se hace con las métricas reales de la fuente y no hay una
+      segunda pasada que pueda mover nada (con textos que están justo en
+      el límite de envolver una línea más, hasta un ajuste de métricas de
+      respaldo bien calculado puede fallar por una fracción de carácter).
+      Mismo patrón acá con la serif nueva (T-K).
     -->
     <link
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/ibm-plex-sans-400.woff2"
+      href="/fonts/source-serif4-400.woff2"
       crossorigin
     />
     <link
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/ibm-plex-sans-600.woff2"
+      href="/fonts/source-serif4-700.woff2"
       crossorigin
     />
     <link
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/ibm-plex-sans-700.woff2"
+      href="/fonts/source-serif4-400-italic.woff2"
       crossorigin
     />
     <script is:inline>
@@ -94,7 +95,7 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0b0d10" />
+    <meta name="theme-color" content="#0f121f" />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 

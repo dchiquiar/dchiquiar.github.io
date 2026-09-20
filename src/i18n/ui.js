@@ -40,6 +40,7 @@ export const ui = {
       education: "Education",
       statusCompleted: "Completed",
       statusInProgress: "In progress",
+      roleStackLabel: "Stack for this role",
     },
     skills: {
       languages: "Languages",
@@ -92,6 +93,7 @@ export const ui = {
       education: "Formación",
       statusCompleted: "Completado",
       statusInProgress: "En curso",
+      roleStackLabel: "Stack del puesto",
     },
     skills: {
       languages: "Idiomas",

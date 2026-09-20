@@ -25,8 +25,20 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
     {experience.map((job) => {
       const employerName = cleanField(job.employer?.name);
       const sector = cleanField(job.employer?.sector);
+      const summary = cleanField(job.summary);
       const highlights = cleanList(job.highlights);
       const technologies = job.technologies ?? [];
+      // `projects` es nuevo y opcional (ADR-0010): sólo algunos empleos lo
+      // traen. Cada proyecto pasa por el mismo filtro que cualquier otro
+      // campo del YAML; si falta nombre o descripción, ese proyecto no se
+      // muestra (mismo criterio defensivo que el resto del sitio).
+      const projects = (job.projects ?? [])
+        .map((p) => ({
+          name: cleanField(p?.name),
+          description: cleanField(p?.description),
+          technologies: cleanList(p?.technologies),
+        }))
+        .filter((p) => p.name && p.description);
       return (
         <div class="job">
           <div class="job__header">
@@ -39,6 +51,24 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
               {[sector, job.location].filter(Boolean).join(" · ")}
             </p>
           )}
+          {summary && <p class="job__summary">{summary}</p>}
+          {projects.length > 0 && (
+            <div class="job__projects">
+              {projects.map((project) => (
+                <div class="job__project">
+                  <h4 class="job__project-name">{project.name}</h4>
+                  <p class="job__project-description">{project.description}</p>
+                  {project.technologies.length > 0 && (
+                    <ul class="tag-list">
+                      {project.technologies.map((tech) => (
+                        <li class="tag">{tech}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           {highlights.length > 0 && (
             <ul class="job__highlights">
               {highlights.map((h) => (
@@ -47,11 +77,21 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
             </ul>
           )}
           {technologies.length > 0 && (
-            <ul class="tag-list">
-              {technologies.map((tech) => (
-                <li class="tag">{tech}</li>
-              ))}
-            </ul>
+            <>
+              {/* Dos niveles de tags conviven cuando hay proyectos: éstos
+                  son el stack agregado de TODO el puesto, los de arriba
+                  son de cada proyecto puntual. El eyebrow lo deja explícito
+                  sólo cuando hace falta desambiguar; sin proyectos, esta
+                  lista es la única señal de stack y no necesita etiqueta. */}
+              {projects.length > 0 && (
+                <span class="eyebrow">{t.experience.roleStackLabel}</span>
+              )}
+              <ul class="tag-list">
+                {technologies.map((tech) => (
+                  <li class="tag">{tech}</li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       );
