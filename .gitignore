@@ -19,6 +19,13 @@ archive/
 # Instrucciones internas del proyecto
 CLAUDE.md
 
+# Contexto de diseño de Impeccable: describe lector, estrategia y
+# situación de búsqueda. Privado como el vault.
+PRODUCT.md
+DESIGN.md
+DESIGN.*.json
+.impeccable/
+
 # ─── Capa privada del CV: NUNCA se publica ─────────────────────
 # Teléfono y nombres reales de empleadores (ver ADR-0002). Sólo la consume
 # la generación del PDF, en local. Ver data/schemas/cv.private.schema.json.
