@@ -11,47 +11,58 @@ const homeHref = lang === "es" ? "/es/" : "/";
 const isEn = lang === "en";
 ---
 
+<!--
+  Estructura en dos partes (F-11): `.site-nav__bar` (marca + toggle de tema +
+  selector de idioma) y `.site-nav__anchors` (las anclas de sección). En
+  mobile son dos elementos independientes -- sólo la barra queda `sticky`,
+  las anclas se van con el scroll -- y en desktop `.site-nav` (el `<header>`)
+  es el único elemento sticky, con `.site-nav__bar` colapsado vía
+  `display: contents` para que sus hijos se acomoden como ítems directos de
+  la misma fila que las anclas (ver global.css, sección "Nav"). Esto
+  reemplaza el `<ul>` único que antes mezclaba anclas + toggle + selector de
+  idioma en la misma lista.
+-->
 <header class="site-nav">
-  <nav class="container site-nav__inner" aria-label={lang === "es" ? "Navegación principal" : "Main navigation"}>
+  <div class="site-nav__bar">
     <a class="site-nav__brand" href={homeHref}>Diego Chiquiar</a>
+    <div class="site-nav__controls">
+      <button
+        id="theme-toggle"
+        class="theme-toggle"
+        type="button"
+        aria-pressed="true"
+        aria-label={t.theme.toggleLabel}
+      >
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M20.742 13.045a8.088 8.088 0 0 1-2.077.273c-4.464 0-8.08-3.616-8.08-8.08 0-.72.096-1.42.273-2.077a.75.75 0 0 0-.988-.876A10.5 10.5 0 1 0 21.618 14.033a.75.75 0 0 0-.876-.988Z"></path>
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+        </svg>
+      </button>
+      <div class="lang-switch" role="group" aria-label={t.lang.groupLabel}>
+        {isEn ? (
+          <span class="lang-switch__current" aria-current="page">EN</span>
+        ) : (
+          <a class="lang-switch__link" href="/" hreflang="en">EN</a>
+        )}
+        <span class="lang-switch__sep" aria-hidden="true">/</span>
+        {isEn ? (
+          <a class="lang-switch__link" href="/es/" hreflang="es">ES</a>
+        ) : (
+          <span class="lang-switch__current" aria-current="page">ES</span>
+        )}
+      </div>
+    </div>
+  </div>
+  <nav class="site-nav__anchors" aria-label={t.nav.sectionsLabel}>
     <ul class="site-nav__links">
       <li><a href="#projects">{t.nav.projects}</a></li>
       <li><a href="#experience">{t.nav.experience}</a></li>
       <li><a href="#stack">{t.nav.stack}</a></li>
       {showAbout && <li><a href="#about">{t.nav.about}</a></li>}
       <li><a href="#contact">{t.nav.contact}</a></li>
-      <li>
-        <button
-          id="theme-toggle"
-          class="theme-toggle"
-          type="button"
-          aria-pressed="true"
-          aria-label={t.theme.toggleLabel}
-        >
-          <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M20.742 13.045a8.088 8.088 0 0 1-2.077.273c-4.464 0-8.08-3.616-8.08-8.08 0-.72.096-1.42.273-2.077a.75.75 0 0 0-.988-.876A10.5 10.5 0 1 0 21.618 14.033a.75.75 0 0 0-.876-.988Z"></path>
-          </svg>
-          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="4"></circle>
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-          </svg>
-        </button>
-      </li>
-      <li>
-        <div class="lang-switch" role="group" aria-label={t.lang.groupLabel}>
-          {isEn ? (
-            <span class="lang-switch__current" aria-current="page">EN</span>
-          ) : (
-            <a class="lang-switch__link" href="/" hreflang="en">EN</a>
-          )}
-          <span class="lang-switch__sep" aria-hidden="true">/</span>
-          {isEn ? (
-            <a class="lang-switch__link" href="/es/" hreflang="es">ES</a>
-          ) : (
-            <span class="lang-switch__current" aria-current="page">ES</span>
-          )}
-        </div>
-      </li>
     </ul>
   </nav>
 </header>

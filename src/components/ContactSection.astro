@@ -22,6 +22,9 @@ const github = person.links?.github ?? null;
       <div class="contact__lines">
         {availability && <p>{availability}</p>}
         <p>{person.location}</p>
+        <p>
+          <a class="contact__email" href={`mailto:${person.email}`}>{person.email}</a>
+        </p>
       </div>
     </div>
     <div class="cta-group">

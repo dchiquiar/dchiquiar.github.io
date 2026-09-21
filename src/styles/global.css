@@ -359,80 +359,171 @@ a:not(.btn) {
   padding-inline: clamp(1.25rem, 4vw, 2.5rem);
 }
 
-/* El nav es sticky y envuelve a varias filas en mobile (flex-wrap), así
-   que su alto real no es constante: 63px de ~760px para arriba, 101px
-   entre 600-759px, 165px entre 340-599px, 229px por debajo de 340px
-   (medido con Puppeteer, T-J). scroll-margin-top tiene que seguir esa
-   altura o los anclajes dejan el título tapado bajo la barra — pasaba
-   con el valor único de 5rem antes de este ajuste. Es la única
-   media query de ancho del sitio (el resto sólo usa
-   prefers-reduced-motion/-transparency): un valor fijo no alcanza
-   porque el alto del nav no es constante y no hay JS para medirlo en
-   vivo. */
+/* El nav ya no varía de alto por breakpoint (F-11, reemplaza el esquema de
+   4 tiers de T-J): la barra sticky (marca + controles) es una sola fila
+   siempre, mobile y desktop, así que scroll-margin-top sólo necesita dos
+   valores — el de la barra sola (mobile, sin las anclas, que ya no viven
+   ahí) y el del header completo (desktop, una sola fila con todo). Sigue
+   siendo la única media query de ancho del sitio junto a la de layout del
+   nav, más abajo. */
 section[id] {
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 4.5rem;
 }
 
-@media (max-width: 759px) {
+@media (min-width: 768px) {
   section[id] {
-    scroll-margin-top: 7rem;
-  }
-}
-
-@media (max-width: 599px) {
-  section[id] {
-    scroll-margin-top: 11rem;
-  }
-}
-
-@media (max-width: 339px) {
-  section[id] {
-    scroll-margin-top: 15rem;
+    scroll-margin-top: 4rem;
   }
 }
 
 /* ── Nav ─────────────────────────────────────────────────────────── */
+/* F-11: la barra sticky en mobile medía hasta 167px (3-4 filas por
+   flex-wrap, T-J) — 21% de una pantalla de 812px, fija todo el scroll.
+   Se separa en dos elementos: `.site-nav__bar` (marca + tema + idioma,
+   sticky, una sola fila siempre) y `.site-nav__anchors` (las anclas de
+   sección, NO sticky, se va con el scroll). En mobile son eso: dos cajas
+   independientes. En desktop, `.site-nav__bar` colapsa con
+   `display: contents` para que sus hijos se acomoden como ítems directos
+   de `.site-nav` (que pasa a ser el único elemento sticky, una fila,
+   igual que antes de F-11) — así el desktop no cambia ni un píxel, sólo
+   cambió qué elemento del DOM es el que efectivamente sticky-ea.
+
+   Por qué el div intermedio no puede simplemente "no ser sticky" en
+   mobile sin el display:contents: `.site-nav__bar`, si quedara anidado
+   dentro de un `.site-nav` de alto fijo (barra + anclas, sin sticky
+   propio), sólo podría permanecer pegado mientras el scroll está dentro
+   de esa caja chica (el "containing block" de un sticky es el padding
+   box de su ancestro de bloque más cercano) — se despegaría apenas se
+   scrollea más allá del alto total del header. `display: contents` en
+   `.site-nav` a nivel mobile saca esa caja de en medio: `.site-nav__bar`
+   pasa a pertenecer, a efectos de layout, al `<body>` (el padre real de
+   `<SiteNav />` en BaseLayout.astro), que sí abarca toda la página. */
 
 .site-nav {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--color-nav-bg);
   border-bottom: 1px solid var(--color-border);
-  backdrop-filter: blur(6px);
+}
+
+@media (min-width: 768px) {
+  .site-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    /* Recortado de 0.85rem: con los links y el selector de idioma en
+       44px de alto (T-J), 0.85rem hubiera dejado la barra en ~72px, por
+       encima del límite de 4rem/64px. Con 0.5rem el total queda en
+       ~61px (44px del hijo más alto + 0.5rem arriba y abajo + 1px de
+       borde) — sin cambios respecto de la barra pre-F-11. */
+    padding-block: 0.5rem;
+    max-width: var(--container-width);
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+    background: var(--color-nav-bg);
+    backdrop-filter: blur(6px);
+  }
+
+  /* Colapsa la caja: marca y controles pasan a ser ítems directos de la
+     fila de `.site-nav`, intercalados con `.site-nav__anchors` vía
+     `order` (más abajo) — visualmente indistinguible de un único <ul>
+     con todo adentro, que es lo que había antes de F-11. */
+  .site-nav__bar {
+    display: contents;
+  }
+
+  .site-nav__brand {
+    order: 1;
+  }
+
+  .site-nav__anchors {
+    order: 2;
+  }
+
+  .site-nav__controls {
+    order: 3;
+  }
+
+  .site-nav__links {
+    font-size: 0.95rem;
+  }
 }
 
 /* accessibility.md › Cognitive: "Reduce Transparency" es un ajuste real del
    sistema (mencionado también en dark-mode.md al testear ambos temas). El
-   único elemento translúcido del sitio es este nav; sin blur ni alfa cuando
-   se pide, el texto queda sobre un color sólido y sigue siendo legible. */
+   único elemento translúcido del sitio es la barra sticky (`.site-nav` en
+   desktop, `.site-nav__bar` en mobile — cuál de los dos tiene caja depende
+   del breakpoint, el otro es `display: contents` y esta regla no hace nada
+   sobre él); sin blur ni alfa cuando se pide, el texto queda sobre un color
+   sólido y sigue siendo legible. */
 @media (prefers-reduced-transparency: reduce) {
-  .site-nav {
+  .site-nav,
+  .site-nav__bar {
     background: var(--color-bg);
     backdrop-filter: none;
   }
 }
 
-.site-nav__inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1.5rem;
-  /* Recortado de 0.85rem: con los links y el selector de idioma ahora en
-     44px de alto (T-J), 0.85rem hubiera dejado la barra en ~72px, por
-     encima del límite de 4rem/64px. Con 0.5rem el total queda en ~61px
-     (44px del hijo más alto + 0.5rem arriba y abajo + 1px de borde). */
-  padding-block: 0.5rem;
+@media (max-width: 767px) {
+  /* Sin esto, `.site-nav` (el <header>) queda como caja normal (no
+     sticky, alto = barra + anclas, ~108px) y `.site-nav__bar` — sticky
+     dentro de ella — se despega apenas el scroll supera esos ~108px (el
+     "containing block" de un sticky es el padding box de su ancestro de
+     bloque más cercano, no la página entera). `display: contents` saca
+     al header de en medio: `.site-nav__bar` pasa a pertenecer, a
+     efectos de layout, a `<body>` (el padre real, ver BaseLayout.astro),
+     que sí abarca toda la página — recién ahí el sticky se sostiene en
+     cualquier punto del scroll. Verificado con scroll real hasta el
+     final del documento, no sólo leyendo la regla (ver log F-11). */
+  .site-nav {
+    display: contents;
+  }
+
+  /* La caja real y sticky en mobile: marca + controles, una sola fila,
+     siempre — a diferencia del header viejo (flex-wrap con hasta 4
+     filas), acá no hay nada que pueda envolver: son sólo 2 ítems y el
+     tercero (las anclas) ya no vive en esta caja. */
+  .site-nav__bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-block: 0.5rem;
+    padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+    background: var(--color-nav-bg);
+    border-bottom: 1px solid var(--color-border);
+    backdrop-filter: blur(6px);
+  }
+
+  .site-nav__controls {
+    flex-shrink: 0;
+  }
+
+  /* NO sticky: se va con el scroll (F-11). Scroll horizontal si las
+     anclas no entran, sin scrollbar nativa visible (mismo criterio que
+     `.carousel` — el peek de la última ancla ya avisa que hay más). */
+  .site-nav__anchors {
+    max-width: var(--container-width);
+    margin-inline: auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .site-nav__anchors::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .site-nav__brand {
   /* min-height 1.75rem/28px (F-3, auditoría apple-design): medía
      120,6 x 26,0px, por debajo del mínimo de destino táctil. display:flex
      + align-items:center crece el alto sin mover el texto de tamaño ni
-     de posición horizontal (es flex item de .site-nav__inner: "inline"
-     se blockifica a "flex" igual, así que declararlo flex es explícito,
-     no un cambio de comportamiento). */
+     de posición horizontal. */
   display: flex;
   align-items: center;
   min-height: 1.75rem;
@@ -443,34 +534,60 @@ section[id] {
   letter-spacing: 0.02em;
 }
 
+.site-nav__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .site-nav__links {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 1.25rem;
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.95rem;
 }
 
-/* `>` a propósito, no descendiente: `.lang-switch__link` vive dos
-   niveles más abajo dentro del mismo <ul> (li > div.lang-switch > a) y
-   necesita su propio padding (0.72rem, más abajo) — con un selector
-   descendiente esta regla le ganaba por especificidad y lo dejaba en
-   41px en vez de 44px. */
-.site-nav__links > li > a {
+@media (max-width: 767px) {
+  /* `inline-flex`, no `flex` (F-11): con `display:flex` la lista es un
+     bloque normal que SIEMPRE ocupa el ancho disponible completo (375px),
+     sin importar cuánto pida su contenido — cuando el contenido real pide
+     más (o incluso pide un poco menos pero lleva padding/margin en los
+     extremos), lo que excede esos 375px se recorta en vez de extender el
+     `scrollWidth` de `.site-nav__anchors`, así que el padding/margin del
+     borde derecho quedaba comido por el propio desborde (probado con
+     Puppeteer: mismo resultado incorrecto tanto con `padding-inline` acá
+     como en `.site-nav__anchors`, y también con `margin` sólo en el
+     último `<li>` — los tres dieron el mismo gutter derecho recortado).
+     `inline-flex` hace que la lista tenga ancho intrínseco (se ajusta a
+     su contenido + su propio padding, como cualquier caja "shrink to
+     fit"), así que cuando ese ancho supera el de `.site-nav__anchors`,
+     el desborde es real y measurable por el contenedor con `overflow-x`
+     — recién ahí el padding del final entra en el cálculo. Verificado:
+     gutter izquierdo y derecho iguales, con y sin scroll, en los dos
+     idiomas (ver log F-11). */
+  .site-nav__links {
+    display: inline-flex;
+    white-space: nowrap;
+    font-size: 0.95rem;
+    padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+  }
+}
+
+.site-nav__links a {
   display: inline-flex;
   align-items: center;
   /* 44px de alto de área clicable (accessibility.md › Mobility, default
-     de destino táctil en mobile): antes 20px, sólo la línea de texto,
-     sin padding. */
+     de destino táctil en mobile). Selector sin `>` (F-11): a diferencia
+     de antes, `.lang-switch` ya no vive dentro de este <ul> — no hay
+     conflicto de especificidad que evitar con un hijo directo. */
   padding-block: 0.64rem;
   color: var(--color-text-muted);
   text-decoration: none;
 }
 
-.site-nav__links > li > a:hover {
+.site-nav__links a:hover {
   color: var(--color-text);
 }
 
@@ -482,8 +599,7 @@ section[id] {
   border-radius: 0.25rem;
   /* Padding vertical en 0, a propósito: el alto de destino táctil lo
      dan los 0.72rem de .lang-switch__link/__current de abajo. Sumar
-     padding acá encima apilaría dos veces la altura y volvería a
-     pasar el límite de la barra (ver nota en .site-nav__inner). */
+     padding acá encima apilaría dos veces la altura. */
   padding: 0 0.55rem;
   font-weight: 700;
   font-size: 0.85rem;
@@ -569,6 +685,24 @@ html[data-theme="light"] .theme-toggle .icon-moon {
 
 .hero {
   padding-block: clamp(3.5rem, 12vh, 7rem) clamp(2.5rem, 8vh, 5rem);
+}
+
+/* F-11: a 375×812 con el nav viejo (hasta 167px de barra sticky) el botón
+   "Descargar CV" quedaba en y=909, fuera del primer pantallazo. El fix del
+   nav (baja a ~63px) recupera la mayor parte de eso solo, pero medido de
+   nuevo con el nav ya arreglado el botón seguía en y=833,4 (EN y ES,
+   idéntico: person.intro tiene el mismo alto de bloque en los dos
+   idiomas) — todavía fuera de los 812px. El resto del ajuste de ritmo
+   vertical (padding-top, gap retrato↔texto, margin-bottom entre h1/rol/
+   intro/meta) está al final de esta sección, no acá — tiene que venir
+   DESPUÉS de las reglas base de esos elementos en el archivo: con la
+   misma especificidad (una sola clase), el orden de aparición en la hoja
+   decide, y una regla de esta media query escrita ANTES de la base
+   pierde contra ella aunque la condición de la media query se cumpla. */
+@media (max-width: 767px) {
+  .hero {
+    padding-block: clamp(1.25rem, 4vh, 2.5rem) clamp(1.5rem, 5vh, 3rem);
+  }
 }
 
 /* Dos columnas (flex wrap, mismo criterio que .about__layout): texto y,
@@ -775,6 +909,38 @@ html[data-theme="dark"] .hero__media img {
 
 .btn-secondary:hover {
   border-color: var(--color-accent);
+}
+
+/* F-11: recorte de ritmo vertical del hero en mobile, para que el botón
+   del CV entre en los primeros 812px de alto (ver el comentario junto a
+   `.hero { padding-block }` más arriba, con las medidas). Tiene que venir
+   DESPUÉS de las reglas base de cada elemento (mismo archivo, más arriba)
+   para ganarles en el cascade con igual especificidad — ver ese mismo
+   comentario para el porqué. Sólo margin-bottom y gap, nunca font-size:
+   no toca la tipografía de cuerpo ni el ancho del retrato (que ya está en
+   su piso de 120px, sin bajar de ahí). Medido con Puppeteer real: botón
+   en 796,2px, idéntico en EN y ES, con margen bajo el límite de 812. El
+   hero de escritorio no se toca (fuera de este breakpoint). */
+@media (max-width: 767px) {
+  .hero__layout {
+    gap: clamp(0.75rem, 3vw, 3.5rem);
+  }
+
+  .hero__name {
+    margin-bottom: 0.35rem;
+  }
+
+  .hero__role {
+    margin-bottom: 0.5rem;
+  }
+
+  .hero__intro {
+    margin-bottom: 1rem;
+  }
+
+  .hero__meta {
+    margin-bottom: 1.25rem;
+  }
 }
 
 /* ── Section heading ─────────────────────────────────────────────── */
@@ -1043,7 +1209,11 @@ h3 {
   display: block;
   color: var(--color-accent);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  /* 0.85rem/13,6px (F-11): antes 0.72rem/11,52px, por debajo del piso de
+     13px. Mismo valor que ya usan .lang-switch, .job__dates,
+     .stack-card__num, etc. — no un tamaño nuevo, reusa el escalón "chico"
+     ya establecido en el sitio. */
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1084,7 +1254,10 @@ h3 {
 }
 
 .tag {
-  font-size: 0.78rem;
+  /* 0.85rem/13,6px (F-11): antes 0.78rem/12,48px, por debajo del piso de
+     13px. Mismo valor que .eyebrow/.project-card__problem-label — el
+     escalón "chico" ya establecido en el sitio, no uno nuevo. */
+  font-size: 0.85rem;
   color: var(--color-text-muted);
   background: var(--color-bg);
   border: 1px solid var(--color-border);

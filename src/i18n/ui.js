@@ -20,6 +20,12 @@ export const ui = {
       stack: "Stack",
       about: "About",
       contact: "Contact",
+      // Nombra el <nav> de anclas de sección (F-11) — reemplaza el
+      // aria-label que antes vivía hardcodeado en SiteNav.astro y describía
+      // el header entero (marca + anclas + toggle + selector de idioma).
+      // Ahora el toggle y el selector de idioma no son navegación, así que
+      // el <nav> sólo envuelve las anclas y el label pasa a describir eso.
+      sectionsLabel: "Section navigation",
     },
     hero: {
       downloadCv: "Download CV (PDF)",
@@ -73,6 +79,7 @@ export const ui = {
       stack: "Stack",
       about: "Sobre mí",
       contact: "Contacto",
+      sectionsLabel: "Navegación de secciones",
     },
     hero: {
       downloadCv: "Descargar CV (PDF)",
