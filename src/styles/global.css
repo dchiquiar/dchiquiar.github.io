@@ -911,18 +911,15 @@ html[data-theme="dark"] .hero__media img {
   filter: brightness(0.75) saturate(0.9);
 }
 
-/* F-14: entrada palabra por palabra, CSS puro (equivalente a
-   gsap.from(".word", {opacity:0, y:40, rotateX:-50, duration:0.8,
-   stagger:0.06, ease:"back.out(1.4)"})). `perspective` va acá, en el
-   PADRE de los `.hero__name-word` (no `transform: perspective()` en cada
-   palabra): es el punto de fuga de las dos, así que las dos rotan hacia
-   el mismo centro en vez de tener cada una su propio eje — más parecido a
-   cómo se ve un `rotateX` real de cámara. 800px = el `transformPerspective`
-   por defecto de GSAP (no hay un valor propio del brief que igualar). No
-   toca ninguna métrica de la caja (no es `transform`, no dispara reflow
-   del texto): font-size/line-height/margin siguen exactamente iguales.
-   La regla de este selector NO cambia nada más — todo el resto del
-   bloque, sin tocar. */
+/* F-16: entrada letra por letra desde arriba, con cursor de máquina de
+   escribir (reemplaza F-14, que animaba palabra por palabra — el
+   `perspective` y la curva de abajo son los mismos, ver el porqué
+   detallado en esa entrada del log). `perspective` sigue en el PADRE de
+   las letras (no por letra): comparten un único punto de fuga, así que
+   todas rotan hacia el mismo centro en vez de cada una tener su propio
+   eje. 800px = el `transformPerspective` default de GSAP (no hay un
+   valor propio del brief que igualar). No toca ninguna métrica de la
+   caja: font-size/line-height/margin siguen exactamente iguales. */
 .hero__name {
   font-size: clamp(2.5rem, 9vw, 5.25rem);
   font-weight: 800;
@@ -932,36 +929,49 @@ html[data-theme="dark"] .hero__media img {
   perspective: 800px;
 }
 
-/* `inline-block`, no `inline` (el `display` por defecto de un <span>):
-   los transforms de CSS no aplican a cajas inline no-reemplazadas (spec de
-   CSS Transforms), así que sin esto `translateY`/`rotateX` de abajo no
-   harían nada. El espacio entre "Diego" y "Chiquiar" queda FUERA de los
-   <span> (nodo de texto suelto en Hero.astro) a propósito: un
-   inline-block sigue participando como palabra normal en el flujo de
-   línea, así que el punto de wrap sigue siendo ese espacio, igual que con
-   el string plano de antes — verificado sin cambio de líneas a 320/375/
-   1440px, ES y EN (ver log F-14). Sin padding/margin/border propios: cero
-   diferencia de métrica contra el <span> implícito que había antes.
-
-   `animation-fill-mode: both` (shorthand, el último valor) cubre los dos
-   extremos sin animation-fill-mode aparte: "backwards" aplica el opacity:0
-   del keyframe `from` ANTES de que arranque la animación (evita un flash
-   de texto a opacity:1 en el primer frame, antes de que el navegador
-   procese el delay) y "forwards" deja el resultado final (opacity:1) una
-   vez que termina, en vez de volver al valor de `.hero__name-word` sin
-   animar. Sólo `opacity`+`transform`: ninguna de las dos participa del
-   cálculo de layout (CLS 0, confirmado con Lighthouse — ver log F-14).
-
-   `animation-delay` con `calc(var(--word-index) * 0.06s)`, no
-   `:nth-child()`: el índice viene del propio dato (`person.name.split()`
-   en Hero.astro), así que esto no asume que el nombre tiene exactamente
-   2 palabras — si mañana cambia a 3, el stagger sigue funcionando sin
-   tocar el CSS. */
+/* Contenedor de agrupación por palabra, ya sin animación propia (F-14 la
+   tenía acá; ahora anima cada letra adentro). Sigue existiendo por dos
+   motivos: 1) `white-space: nowrap` evita que una palabra se parta entre
+   líneas si el wrap cayera justo en medio de sus letras — pedido
+   explícito del brief; 2) el espacio entre "Diego" y "Chiquiar" sigue
+   siendo un nodo de texto SUELTO entre estos `<span>` (Hero.astro), no
+   dentro, así que el punto de wrap entre palabras sigue siendo ese
+   espacio, igual que en F-14 — verificado sin cambio de líneas a 320/
+   375/1440px, ES y EN (ver reporte F-16). `inline-block` (no el `inline`
+   por defecto) para que participe como palabra normal en el flujo de
+   línea sin heredar comportamiento de bloque. */
 .hero__name-word {
   display: inline-block;
-  animation: hero-name-word-in 0.8s var(--ease-back-out-1-4, cubic-bezier(0.34, 1.47, 0.64, 1))
-    both;
-  animation-delay: calc(var(--word-index, 0) * 0.06s);
+  white-space: nowrap;
+}
+
+/* `inline-block`: los transforms de CSS no aplican a cajas inline no
+   reemplazadas, así que sin esto `translateY`/`rotateX` no harían nada.
+   `position: relative` es el ancla del cursor (`::after` de abajo), que
+   se posiciona `left: 100%` de CADA letra.
+
+   `animation-fill-mode: both` cubre los dos extremos: "backwards" aplica
+   el `opacity:0` del `from` ANTES de que arranque la animación (evita un
+   flash a opacity:1 en el primer frame, antes de que el navegador procese
+   el delay) y "forwards" deja el resultado final puesto una vez que
+   termina. Sólo `opacity`+`transform`: ninguna participa del cálculo de
+   layout (CLS 0, confirmado con Lighthouse — ver reporte F-16).
+
+   `animation-delay` con `calc(var(--letter-step) * 0.08s)`, no
+   `:nth-child()`: el índice viene del propio dato (Hero.astro cuenta las
+   letras Y los espacios entre palabras como "pasos" del mismo ritmo), así
+   que esto no asume ni una cantidad fija de palabras ni de letras — si el
+   nombre cambia mañana, el tipeo sigue funcionando sin tocar el CSS.
+   "Diego Chiquiar" usa 14 pasos en total (5 letras + 1 espacio-pausa + 8
+   letras, pasos 0 a 13): la última letra (step=13) arranca a
+   13×0,08s=1,04s y termina de caer a 1,84s — el "~2s en total" pedido
+   (medido igual en el navegador real, ver reporte F-16). */
+.hero__name-letter {
+  display: inline-block;
+  position: relative;
+  animation: hero-name-letter-in 0.8s
+    var(--ease-back-out-1-4, cubic-bezier(0.34, 1.47, 0.64, 1)) both;
+  animation-delay: calc(var(--letter-step, 0) * 0.08s);
 }
 
 /* Overshoot calibrado contra la fórmula real de Penner que usa GSAP para
@@ -994,22 +1004,38 @@ html[data-theme="dark"] .hero__media img {
      y1=1.40 → 5.29%   y1=1.47 → 7.15% ← elegido (más cercano a 7.06%)
      y1=1.50 → 8.00%
 
-   Verificado en el navegador real, no sólo en el solver: barriendo
-   `animation.currentTime` de la palabra "Diego" cuadro a cuadro con la
-   curva final (y1=1.47), el `translateY` más negativo medido es
-   -2,86px en t≈480ms de 800ms (progreso≈60%, cerca del 61% que predice
-   el solver) — el signo negativo (pasa de largo la posición de reposo
-   Y=0 antes de asentar) es la firma visual del overshoot. -2,86px sobre
-   un recorrido de 40px es 7,15% de pico, prácticamente el 7,06% de
-   `back.out(1.4)` calculado arriba. */
+   Verificado en el navegador real, no sólo en el solver (F-14, palabra
+   "Diego" cayendo desde ABAJO): barriendo `animation.currentTime` cuadro
+   a cuadro con la curva final (y1=1.47), el `translateY` más negativo
+   medido fue -2,86px en t≈480ms de 800ms (progreso≈60%, cerca del 61%
+   que predice el solver) — el signo negativo (pasa de largo la posición
+   de reposo Y=0 antes de asentar) es la firma visual del overshoot.
+   -2,86px sobre un recorrido de 40px es 7,15% de pico, prácticamente el
+   7,06% de `back.out(1.4)` calculado arriba. F-16 reusa esta MISMA curva
+   sin recalibrar: el porcentaje de pico es una propiedad de la curva de
+   Bézier en sí (independiente de qué `transform` conduzca o de su
+   signo), así que sigue valiendo para el nuevo `translateY(-40px)` de
+   abajo — sólo que ahora el overshoot pasa de largo por ENCIMA de Y=0
+   (la letra cae desde arriba, así que "pasarse" es ir más abajo del
+   reposo antes de asentar, el espejo exacto de F-14). */
 :root {
   --ease-back-out-1-4: cubic-bezier(0.34, 1.47, 0.64, 1);
 }
 
-@keyframes hero-name-word-in {
+/* F-16: la letra cae desde arriba (mismo módulo que F-14, dirección
+   invertida por pedido de Diego). `translateY(-40px)`: arranca 40px más
+   ARRIBA de su lugar final, en vez de 40px más abajo. `rotateX(50deg)`
+   (positivo, era -50deg en F-14): con `perspective` en el padre, un
+   `rotateX` positivo inclina el borde SUPERIOR de la letra hacia el
+   fondo (se aleja de cámara) y el borde inferior hacia el frente — el
+   efecto visual es el de una letra cayendo/abriéndose hacia abajo sobre
+   su eje horizontal inferior, coherente con "cae hacia su lugar" del
+   brief (el espejo geométrico exacto de F-14, que con -50deg simulaba
+   una letra viniendo desde abajo/atrás). */
+@keyframes hero-name-letter-in {
   from {
     opacity: 0;
-    transform: translateY(40px) rotateX(-50deg);
+    transform: translateY(-40px) rotateX(50deg);
   }
   to {
     opacity: 1;
@@ -1017,20 +1043,190 @@ html[data-theme="dark"] .hero__media img {
   }
 }
 
+/* Cursor de máquina de escribir, CSS puro, sin JS ni medida de ancho por
+   letra (no hay forma de saber cuánto mide cada glifo sin layout/JS, así
+   que no se intenta): es un `::after` que CADA letra ya trae consigo,
+   pero sólo una está visible a la vez — la de la última letra que
+   "aterrizó". Esto funciona porque todas las letras comparten la misma
+   `animation-duration` (0.8s) y el mismo stagger (0.08s de `--letter-
+   step`): el momento en que cada letra TERMINA de caer
+   (`--letter-step × 0.08s + 0.8s`) mantiene el mismo espaciado de 0,08s
+   que sus inicios, así que las ventanas en que cada cursor está visible
+   encajan una detrás de la otra sin superponerse ni dejar huecos — no
+   hace falta JS para calcular el avance.
+
+   Tamaño: `1cap` (alto real de una mayúscula de la fuente activa, CSS
+   Values 4 — Chrome/Firefox/Safari recientes) con fallback en `em` para
+   navegadores sin soporte. `bottom: 0` lo asienta contra el borde
+   inferior de la propia letra (aproximación al baseline: sin una API de
+   métricas de fuente en CSS, no hay forma exacta de leerlo — calibrado a
+   ojo contra capturas reales, ver reporte F-16). Sin sombra, sin
+   `pointer-events` (puramente decorativo). */
+.hero__name-letter::after {
+  content: "";
+  position: absolute;
+  left: 100%;
+  bottom: 0;
+  width: 0.06em;
+  height: 0.72em;
+  height: 1cap;
+  background: var(--color-accent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Letra que NO es la última de su palabra: su cursor sólo "pasa" durante
+   1 paso de ritmo (0,08s) — el tiempo hasta que la siguiente letra
+   aterriza y hereda el turno.
+
+   `forwards`, NO `both`/`backwards`: acá SÍ importa la diferencia (a
+   diferencia de `.hero__name-letter` arriba). Con `backwards`, el estado
+   del keyframe `from` (`opacity:1`) se aplicaría durante TODO el delay,
+   antes de que el cursor de esta letra le toque el turno — exactamente
+   al revés de lo buscado (se verían todos los cursores encendidos desde
+   el arranque). El `opacity:0` de la regla de arriba (`::after` base) ya
+   cubre el "todavía no me toca": sin fill-mode backwards, mientras el
+   delay no llegó, el elemento usa ese valor normal de la cascada, no el
+   del keyframe. `forwards` sólo se necesita para el final: al terminar
+   la ventana, se queda en `opacity:0` (el `to` del keyframe) en vez de
+   volver al `opacity:0` de base — mismo valor en este caso, pero
+   `forwards` es el que lo garantiza formalmente.
+
+   SIN `steps(1, jump-end)` (bug real, encontrado por Diego en el dev
+   server y reproducido con tiempo real, no scrubbeado: con `steps(1)` el
+   valor pintado depende de que el navegador cruce EXACTAMENTE
+   progreso=1.0 para saltar de opacity:1 a 0; en reproducción real
+   (`document.getAnimations()` con timing real, no `currentTime` asignado
+   a mano) esa animación se "congela" en `fill:forwards` con el progreso
+   que tenía la animación en el último frame antes de terminar, y ese
+   valor puede quedar en 0,999999999994 en vez de 1,0 exacto por cómo el
+   navegador arrastra el `currentTime` real internamente — un pelo por
+   debajo del borde del salto, así que el cursor queda pegado en
+   `opacity:1` PARA SIEMPRE (confirmado con
+   `effect.getComputedTiming().progress` = 0.9999999999999994 en una
+   letra atascada). El `verify.mjs` original no lo agarró porque
+   scrubbeaba `currentTime` a mano con valores redondos bien lejos del
+   borde, nunca exactamente sobre el instante del salto — no era
+   equivalente a la reproducción real. En vez de un salto discreto en un
+   único punto, dos keyframes con un hueco de 90%→100% (interpolación
+   lineal por defecto, sin timing-function propia): si el progreso
+   congelado cae un pelo antes de 100%, pinta un `opacity` finísimo por
+   encima de 0 (prácticamente invisible), nunca 1 — el error de punto
+   flotante ya no puede dejarlo pegado del lado equivocado porque no hay
+   un borde único que cruzar, sólo una rampa. */
+.hero__name-letter:not(:last-child)::after {
+  animation: hero-cursor-pass 0.08s linear forwards;
+  animation-delay: calc(var(--letter-step, 0) * 0.08s + 0.8s);
+}
+
+/* Última letra de una palabra que NO es la última del nombre: el cursor
+   sostiene 2 pasos (0,16s) en vez de 1 — cubre también el paso-pausa del
+   espacio antes de que la palabra siguiente empiece a aparecer. Selector
+   puramente estructural (`:not(:last-child)` sobre `.hero__name-word`,
+   `:last-child` sobre la letra): no depende de que el nombre tenga
+   exactamente 2 palabras. Mismos motivos que arriba (`forwards`, sin
+   `steps()`). */
+.hero__name-word:not(:last-child) .hero__name-letter:last-child::after {
+  animation: hero-cursor-pass 0.16s linear forwards;
+  animation-delay: calc(var(--letter-step, 0) * 0.08s + 0.8s);
+}
+
+@keyframes hero-cursor-pass {
+  0%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Última letra del nombre completo: el cursor no "pasa" a nadie más, así
+   que en vez de `hero-cursor-pass` queda un ciclo de parpadeo que se
+   DETIENE solo a los 5s desde que carga la página (WCAG 2.2.2: nada
+   parpadea más de 5s sin control del usuario) y termina fijo/visible, sin
+   volver a animar. Sin `steps()` acá tampoco, mismo motivo que en
+   `hero-cursor-pass` de arriba: los pares de keyframes (15%/16%, 31%/32%,
+   etc.) ya dejan un hueco de 1% entre el valor "prendido" y el
+   "apagado" — con interpolación lineal por defecto eso alcanza para una
+   rampa cortita (imperceptible como tal) que no depende de cruzar un
+   único borde exacto. El tramo final, 96%→100% con el MISMO valor
+   (opacity:1) en las dos puntas, ya era robusto de por sí: cualquier
+   error de punto flotante ahí cae dentro de una meseta, no un borde.
+
+   `animation-delay` es el momento en que ESTA letra aterriza (igual
+   fórmula que arriba). `animation-duration` es `calc(5s - delay)`: el
+   tiempo que queda hasta el corte de 5s ABSOLUTOS desde el load, no desde
+   que aterriza la letra — por eso depende del delay, no es un valor
+   fijo. Con esto, el corte a los 5s es EXACTO y generado desde el dato
+   (`--letter-step`) sin importar cuántas letras tenga el nombre: si
+   mañana el nombre fuera más largo, la ÚLTIMA letra aterriza más tarde y
+   la ventana de parpadeo se acorta sola, pero siempre termina a los 5s en
+   punto. Lo único que NO es data-driven es el ritmo del parpadeo en sí
+   (los porcentajes del `@keyframes`, más abajo): están calibrados a ojo
+   para los ~3,16s que le tocan hoy a "Diego Chiquiar" (14 pasos, última
+   letra aterriza a 1,84s → quedan 3,16s de los 5s). Si el nombre cambiara
+   mucho de largo, el parpadeo se vería más rápido o más lento, pero el
+   corte a los 5s exactos (lo que pide WCAG) no se rompe nunca porque no
+   depende de esos porcentajes. */
+.hero__name-word:last-child .hero__name-letter:last-child::after {
+  animation: hero-cursor-hold-then-blink calc(5s - (var(--letter-step, 0) * 0.08s + 0.8s)) linear
+    forwards;
+  animation-delay: calc(var(--letter-step, 0) * 0.08s + 0.8s);
+}
+
+@keyframes hero-cursor-hold-then-blink {
+  0%,
+  15% {
+    opacity: 1;
+  }
+  16%,
+  31% {
+    opacity: 0;
+  }
+  32%,
+  47% {
+    opacity: 1;
+  }
+  48%,
+  63% {
+    opacity: 0;
+  }
+  64%,
+  79% {
+    opacity: 1;
+  }
+  80%,
+  95% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+
 /* Kill-switch global (arriba de este archivo, `* { animation-duration:
    0.01ms !important }`) fuerza la DURACIÓN a casi cero pero no toca
-   `animation-delay` — con el delay de 0.06s de Chiquiar sin tocar, ese
-   `<span>` seguiría en `opacity:0` (fill-mode "backwards") durante esos
-   60ms antes de aparecer de golpe: no es exactamente "sin animación,
-   visible de inmediato", que es lo que pide WCAG 2.3.3/el brief. Esta
-   regla apaga la animación entera para las dos palabras (no sólo acorta
-   su duración) y dejar el estado final puesto a mano — ninguna palabra
-   pasa por `opacity:0` en ningún momento, ni siquiera 60ms. */
+   `animation-delay` — con el delay de cada letra sin tocar, cada `<span>`
+   seguiría en `opacity:0` (fill-mode "backwards") un rato antes de
+   aparecer de golpe: no es exactamente "sin animación, visible de
+   inmediato", que es lo que pide WCAG 2.3.3/el brief. Esta regla apaga la
+   animación entera para todas las letras (no sólo acorta su duración) y
+   deja el estado final puesto a mano — ninguna letra pasa por
+   `opacity:0` en ningún momento. El cursor se oculta del todo
+   (`display: none`, no "fijo sin parpadeo"): el brief permite cualquiera
+   de las dos opciones y esta es la que no depende de ningún cálculo de
+   tiempo — cero riesgo de que quede parpadeando. */
 @media (prefers-reduced-motion: reduce) {
-  .hero__name-word {
+  .hero__name-letter {
     animation: none;
     opacity: 1;
     transform: none;
+  }
+
+  .hero__name-letter::after {
+    display: none;
   }
 }
 

@@ -34,32 +34,65 @@ const portraitAlt =
     ? "Retrato de Diego Chiquiar, con buzo oscuro"
     : "Portrait of Diego Chiquiar, wearing a dark hoodie";
 
-// F-14: entrada palabra por palabra del nombre (CSS puro, ver global.css
-// ".hero__name-word"). Se separa por espacios en vez de hardcodear
-// "Diego"/"Chiquiar": person.name es el mismo string en los dos idiomas
-// (es un nombre propio, no se traduce — confirmado en data/cv.*.yaml), así
-// que esto no duplica contenido entre ES/EN, sólo reparte lo que ya llega
-// de los datos. Cada <span> lleva --word-index para el stagger (0.06s por
-// palabra) vía `calc()` en CSS — no depende de que haya exactamente 2
-// palabras. El espacio entre palabras queda como nodo de texto SUELTO
-// entre los <span>, no dentro de ellos: así el punto de wrap entre
-// palabras es el mismo que con el string plano de antes (ver el porqué en
-// el comentario de `.hero__name-word` en global.css).
-const nameWords = person.name.trim().split(/\s+/);
+// F-16: entrada letra por letra, cayendo desde arriba, con cursor de
+// máquina de escribir (reemplaza F-14, que animaba palabra por palabra —
+// ver esa entrada en el log para el porqué de la curva y el perspective,
+// que siguen vigentes). Se sigue partiendo `person.name` en vez de
+// hardcodear "Diego"/"Chiquiar": es el mismo string en los dos idiomas
+// (nombre propio, no se traduce), así que esto no duplica contenido
+// ES/EN, sólo reparte el dato.
+//
+// `letterStep` es la posición de cada letra en el RITMO de tipeo (0.08s
+// por paso, ver global.css), no su índice dentro de la palabra: crece de
+// a 1 por letra y +1 extra por cada espacio entre palabras, porque Diego
+// pidió que el espacio cuente como un paso pausado del ritmo sin
+// animarse. El espacio en sí sigue sin tener <span> propio — nodo de
+// texto SUELTO entre los `.hero__name-word`, igual que en F-14, para no
+// tocar el punto de wrap entre palabras. `Array.from(word)` en vez de
+// `word.split("")`: recorre por punto de código Unicode, no por unidad
+// UTF-16, así que no partiría mal un carácter compuesto si el nombre
+// cambiara a futuro (no aplica a "Diego Chiquiar" hoy, pero no cuesta
+// nada hacerlo bien).
+let letterStep = 0;
+const nameWordsData = person.name
+  .trim()
+  .split(/\s+/)
+  .map((word, wi, words) => {
+    const letters = Array.from(word).map((ch) => {
+      const step = letterStep;
+      letterStep += 1;
+      return { ch, step };
+    });
+    if (wi < words.length - 1) letterStep += 1; // paso del espacio, sin animar
+    return { letters };
+  });
 ---
 
 <section id="top" class="hero">
   <div class="container hero__layout">
     <div class="hero__content">
-      <h1 class="hero__name">
-        {nameWords.map((word, i) => (
-          <>
-            <span class="hero__name-word" style={`--word-index: ${i}`}>
-              {word}
-            </span>
-            {i < nameWords.length - 1 && " "}
-          </>
-        ))}
+      {/* Nombre accesible fijado por `aria-label` en el propio h1: con el
+         nombre partido en <span> por letra, algunos lectores de pantalla
+         (ej. VoiceOver) deletrean en vez de leer la palabra completa. El
+         `<span aria-hidden="true">` interno saca todo el markup de letras
+         del árbol de accesibilidad — el h1 queda con su único nombre
+         accesible siendo el texto plano de `aria-label`, verificado en el
+         árbol de accesibilidad (ver reporte F-16). */}
+      <h1 class="hero__name" aria-label={person.name}>
+        <span class="hero__name-letters" aria-hidden="true">
+          {nameWordsData.map((word, wi) => (
+            <>
+              <span class="hero__name-word">
+                {word.letters.map((l) => (
+                  <span class="hero__name-letter" style={`--letter-step: ${l.step}`}>
+                    {l.ch}
+                  </span>
+                ))}
+              </span>
+              {wi < nameWordsData.length - 1 && " "}
+            </>
+          ))}
+        </span>
       </h1>
       <p class="hero__role">{person.headline}</p>
       {intro && <p class="hero__intro">{intro}</p>}
