@@ -333,6 +333,35 @@ function renderInline(text) {
   return out;
 }
 
+// ── Enlaces en la línea de contacto del encabezado ───────────────────────
+//
+// Genérico a propósito: no hardcodea "linkedin.com" ni "github.com" ni
+// ninguna URL concreta, detecta la FORMA (email o dominio/URL) de cada
+// segmento entre "·" de una meta-línea. Así cualquier dominio que el vault
+// agregue a futuro a esa línea sale ya clicable, sin tocar este script.
+
+const EMAIL_SEGMENT_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DOMAIN_SEGMENT_RE = /^(?:https?:\/\/)?(?:www\.)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/\S*)?$/i;
+
+function linkifySegment(segment) {
+  const trimmed = segment.trim();
+  if (EMAIL_SEGMENT_RE.test(trimmed)) {
+    return `<a href="mailto:${trimmed}">${renderInline(trimmed)}</a>`;
+  }
+  if (DOMAIN_SEGMENT_RE.test(trimmed)) {
+    const href = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    return `<a href="${escapeHtml(href)}">${renderInline(trimmed)}</a>`;
+  }
+  return renderInline(segment);
+}
+
+// Las meta-líneas del encabezado (ubicación, contacto) separan sus datos con
+// " · " — mismo separador que ya asume PHONE_SEGMENT_RE más arriba. Cada
+// segmento se evalúa por separado para no linkificar la línea entera.
+function renderMetaLine(line) {
+  return line.split(" · ").map(linkifySegment).join(" · ");
+}
+
 function renderJobHeading(rawText) {
   const parts = rawText.split("|").map((p) => p.trim());
   if (parts.length === 3) {
@@ -508,6 +537,11 @@ function documentCss() {
       margin: 0 0 0.75pt;
     }
 
+    .cv-meta-line a {
+      color: inherit;
+      text-decoration: none;
+    }
+
     .section-title {
       font-size: 10.6pt;
       font-weight: 700;
@@ -585,7 +619,7 @@ function buildDocument(rawMarkdown, lang) {
   const bodyHtml = blocks.map(renderBlock).join("\n");
 
   const metaHtml = header.metaLines
-    .map((l) => `<p class="cv-meta-line">${renderInline(l)}</p>`)
+    .map((l) => `<p class="cv-meta-line">${renderMetaLine(l)}</p>`)
     .join("");
 
   const headerHtml =

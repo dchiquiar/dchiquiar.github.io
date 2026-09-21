@@ -50,8 +50,8 @@ person:
   availability: "Hybrid or remote in Uruguay"
   email: "diegochiquiar@gmail.com"
   links:
-    linkedin: null # Pending confirmation.
-    github: null # Pending confirmation.
+    linkedin: "https://www.linkedin.com/in/diego-chiquiar/"
+    github: "https://github.com/dchiquiar"
 
 experience:
   - id: job-1
