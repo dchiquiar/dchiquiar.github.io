@@ -55,6 +55,14 @@ export const ui = {
     skills: {
       languages: "Languages",
     },
+    about: {
+      // Columna lateral de datos (F-12): mismo rol "data"/"label" de
+      // DESIGN.md, reusa el contenido de person.* -- no agrega dato nuevo.
+      sidebarLabel: "Key facts",
+      availabilityLabel: "Availability",
+      locationLabel: "Location",
+      emailLabel: "Email",
+    },
     contact: {
       emailCta: "Email me",
       heading: "Let's talk",
@@ -108,6 +116,12 @@ export const ui = {
     },
     skills: {
       languages: "Idiomas",
+    },
+    about: {
+      sidebarLabel: "Datos clave",
+      availabilityLabel: "Disponibilidad",
+      locationLabel: "Ubicación",
+      emailLabel: "Email",
     },
     contact: {
       emailCta: "Escribime",

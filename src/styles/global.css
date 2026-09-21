@@ -279,6 +279,10 @@ html {
   font-family: var(--font-serif);
   line-height: 1.55;
   -webkit-text-size-adjust: 100%;
+  /* F-12, "más táctiles": el flash gris/azul por defecto de un `<a>`/
+     `<button>` en un tap es la señal más ruidosa de "esto es una web";
+     con `:active` propio (más abajo, en cada control) no hace falta. */
+  -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
 }
 
@@ -303,6 +307,16 @@ img,
 svg {
   max-width: 100%;
   display: block;
+}
+
+/* F-12: elimina el delay táctil residual de ~300ms que algunos navegadores
+   todavía aplican antes de disparar `click`, a la espera de un posible
+   segundo tap (doble-tap-para-zoom). Ningún link ni botón del sitio
+   necesita ese gesto. No toca `.carousel` (scroll horizontal real, no es
+   `a`/`button`) ni ningún otro scroller. */
+a,
+button {
+  touch-action: manipulation;
 }
 
 /* Títulos, nombre y nombres de proyecto llevan la tinta de énfasis
@@ -480,17 +494,25 @@ section[id] {
     display: contents;
   }
 
-  /* La caja real y sticky en mobile: marca + controles, una sola fila,
-     siempre — a diferencia del header viejo (flex-wrap con hasta 4
-     filas), acá no hay nada que pueda envolver: son sólo 2 ítems y el
-     tercero (las anclas) ya no vive en esta caja. */
+  /* La caja real y sticky en mobile: marca + controles. A zoom normal,
+     una sola fila de 63px, igual que siempre (F-11) — `flex-wrap: wrap`
+     no cambia nada mientras los dos ítems entren en el ancho disponible.
+     Se activa recién a 200% de zoom de texto (F-12, decisión del
+     orquestador sobre el hallazgo de F-12): `.theme-toggle` (2.75rem
+     fijo) y el padding de `.lang-switch` escalan con la fuente igual que
+     el nombre, y sin ruta de escape el conjunto no entraba en 375px
+     (overflow real de página, no de un scroller propio como
+     `.site-nav__anchors`). Con `wrap`, cuando no entran, los controles
+     bajan a un segundo renglón en vez de desbordar — la barra crece de
+     alto sólo en ese caso, nunca a zoom normal. */
   .site-nav__bar {
     position: sticky;
     top: 0;
     z-index: 50;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 0.75rem;
     padding-block: 0.5rem;
     padding-inline: clamp(1.25rem, 4vw, 2.5rem);
@@ -501,6 +523,14 @@ section[id] {
 
   .site-nav__controls {
     flex-shrink: 0;
+    /* Reemplaza el `justify-content: space-between` que tenía el padre
+       (ahora `flex-start`, para que `flex-wrap` pueda envolver): con
+       `margin-inline-start: auto` los controles quedan pegados al borde
+       derecho tanto si entran en la fila de la marca (caso normal) como
+       si bajan solos a su propio renglón (200% de zoom) — en los dos
+       casos el margen izquierdo automático se come todo el espacio
+       sobrante de ESA línea. */
+    margin-inline-start: auto;
   }
 
   /* NO sticky: se va con el scroll (F-11). Scroll horizontal si las
@@ -585,6 +615,11 @@ section[id] {
   padding-block: 0.64rem;
   color: var(--color-text-muted);
   text-decoration: none;
+  /* F-12: control, no contenido — nunca en los párrafos/nombres de
+     proyecto, que alguien puede querer seleccionar o copiar. */
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: color 120ms ease;
 }
 
 .site-nav__links a:hover {
@@ -631,6 +666,9 @@ section[id] {
 .lang-switch__link {
   color: var(--color-text-muted) !important;
   text-decoration: none !important;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: color 120ms ease;
 }
 
 .lang-switch__link:hover {
@@ -657,6 +695,13 @@ section[id] {
   color: var(--color-text);
   cursor: pointer;
   line-height: 0;
+  /* Ancla de posición para el crossfade de los dos SVG, más abajo. */
+  position: relative;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: border-color 150ms ease, color 150ms ease,
+    transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .theme-toggle:hover {
@@ -664,21 +709,45 @@ section[id] {
   color: var(--color-accent);
 }
 
-.theme-toggle svg {
-  width: 1.1rem;
-  height: 1.1rem;
+/* F-12, "más táctiles": control chico, squeeze un poco mayor que el de
+   `.btn` (0.93 vs 0.97) — se nota más a ese tamaño. */
+.theme-toggle:active {
+  transform: scale(0.93);
 }
 
-.theme-toggle .icon-sun {
-  display: none;
+/* Crossfade sol/luna, no swap por `display` (F-12): `display` no se puede
+   animar, así que los dos SVG quedan apilados uno sobre el otro (mismo
+   `grid-area` de facto vía `inset:0; margin:auto`, centrado sin pelear
+   con el `transform: scale()` propio de cada ícono) y se cruzan con
+   `opacity` + `scale(0.9→1)` — nunca desde `scale(0)` (regla de
+   `emil-design-eng`: un ícono nunca colapsa a la nada). El script inline
+   de SiteNav.astro no cambia: sigue alternando sólo `data-theme`, el
+   crossfade lo resuelve este CSS por selector, igual que el swap viejo. */
+.theme-toggle svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 150ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.theme-toggle .icon-moon {
+  opacity: 1;
+  transform: scale(1);
 }
 
 html[data-theme="light"] .theme-toggle .icon-sun {
-  display: block;
+  opacity: 1;
+  transform: scale(1);
 }
 
 html[data-theme="light"] .theme-toggle .icon-moon {
-  display: none;
+  opacity: 0;
+  transform: scale(0.9);
 }
 
 /* ── Hero ────────────────────────────────────────────────────────── */
@@ -767,8 +836,21 @@ html[data-theme="light"] .theme-toggle .icon-moon {
    hasta `max-width` apenas quedaba solo en su propia línea — esa, no
    sólo el tamaño de base, era la otra causa de que se viera grande en
    mobile. */
+/* F-12, corrige el hallazgo P0-1 de analisis-taste.md: el piso y el
+   techo del clamp() estaban en `rem` (siguen el tamaño de fuente raíz),
+   mezclados con un preferido en `vw` (sigue el ancho de VENTANA) — los
+   dos ejes no coinciden. A 200% de zoom de texto (WCAG 1.4.4) el piso
+   pasaba de 120px a 240px, superaba al preferido (75px a 375px de
+   ventana) y clamp() devolvía el piso: el retrato pedía 240px dentro de
+   un viewport visual de 375px que WCAG 1.4.4 no permite ensanchar.
+   Piso y techo en `px` (unidad absoluta, no depende de la fuente raíz,
+   mismo eje que `vw`): a zoom normal da exactamente los mismos valores
+   de siempre (120px a 375px de ventana, 288px a 1440px), pero deja de
+   moverse cuando sólo cambia el tamaño de fuente. Verificado con el
+   mismo método que encontró el bug (root font-size x2, scrollWidth vs
+   clientWidth): sin overflow horizontal en los 4 combos. */
 .hero__media {
-  flex: 0 0 clamp(7.5rem, 20vw, 18rem);
+  flex: 0 0 clamp(120px, 20vw, 288px);
 }
 
 /* Retrato: foto real (1932x2576 original, F-9 reemplaza la primera
@@ -891,6 +973,20 @@ html[data-theme="dark"] .hero__media img {
   font-size: 0.95rem;
   text-decoration: none !important;
   border: 1px solid transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-touch-callout: none;
+  /* F-12, "más táctiles": propiedades explícitas, nunca `transition: all`
+     (así un cambio no animado no queda atrapado por accidente en la
+     misma transición). `prefers-reduced-motion` ya fuerza
+     `transition-duration: 0.01ms` sobre `*` (arriba en este archivo);
+     esto no necesita su propio carve-out. */
+  transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1),
+    filter 150ms ease, border-color 150ms ease, background-color 140ms ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 .btn-primary {
@@ -909,6 +1005,15 @@ html[data-theme="dark"] .hero__media img {
 
 .btn-secondary:hover {
   border-color: var(--color-accent);
+}
+
+/* Se invierte al presionar (F-12, DESIGN.md "rellenar, invertir, engrosar
+   o desplazar"): mismos dos tokens que ya usa `.btn-primary` — ningún
+   color nuevo. Vuelve al soltar porque `:active` deja de aplicar. */
+.btn-secondary:active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast) !important;
 }
 
 /* F-11: recorte de ritmo vertical del hero en mobile, para que el botón
@@ -1029,6 +1134,9 @@ h3 {
   max-width: calc((25vh - 1.6rem) * 16 / 9 / 0.9);
   margin-inline: auto;
   overflow-x: auto;
+  /* F-12: consistencia con `.site-nav__anchors`, el otro scroller
+     horizontal del sitio — momentum scroll defensivo en WebKit viejo. */
+  -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
   /* Scrollbar oculta a propósito: en Chrome de escritorio (incluido el
      emulado "mobile" de Lighthouse, que sigue siendo Chrome de
@@ -1244,6 +1352,34 @@ h3 {
   justify-self: start;
 }
 
+/* Dos columnas en desktop (F-12, corrige P0-2 de analisis-taste.md): con
+   un único proyecto visible, `--featured` apilado (carrusel arriba,
+   texto abajo) dejaba ~45% de la tarjeta vacío a la derecha del texto,
+   topado en la medida de lectura (ADR-0013) dentro de una caja de ancho
+   completo. El carrusel pasa a ser una columna propia en vez de
+   centrarse arriba; el texto sigue respetando `--medida-lectura` (no se
+   estira para "llenar" el resto). Sigue siendo el mismo `scroll-snap`
+   sin JS (ADR-0008): sólo cambia el layout del contenedor, no el
+   carrusel en sí. Sólo `--featured`: `--standard` ya está topado a
+   34rem y no tiene el mismo vacío. */
+@media (min-width: 768px) {
+  .project-card--featured {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .project-card--featured .carousel {
+    flex: 0 0 44%;
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  .project-card--featured .project-card__body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
 .tag-list {
   display: flex;
   flex-wrap: wrap;
@@ -1279,6 +1415,7 @@ h3 {
 
 .project-card__links a {
   font-weight: 600;
+  transition: color 120ms ease;
 }
 
 .project-card__no-repo {
@@ -1526,11 +1663,11 @@ h3 {
 }
 
 /* ── About ───────────────────────────────────────────────────────── */
-/* Dos columnas (flex wrap): `.about__text` y, cuando exista, una
-   `.about__media` hermana — ver el comentario en AboutSection.astro con
-   el markup exacto. Sin imagen, `.about__text` ocupa el ancho completo
-   por `flex-grow`, así que no queda un hueco a la derecha que se lea
-   como foto faltante. */
+/* Dos columnas (flex wrap): `.about__text` y, desde 768px, la
+   `.about__sidebar` de datos (F-12, corrige P0-3 de analisis-taste.md —
+   ver el comentario de AboutSection.astro con el markup exacto). Sin la
+   columna de datos (mobile), `.about__text` ocupa el ancho completo por
+   `flex-grow`, así que no queda un hueco a la derecha. */
 
 .about__layout {
   display: flex;
@@ -1547,9 +1684,7 @@ h3 {
   /* Medida de lectura (ADR-0013): va en el contenedor que agrupa
      `.about__lead` y `.about__paragraph`, no en cada uno — si no, el lead
      (fuente más grande) queda con una columna más ancha que los párrafos
-     que introduce y "Sobre mí" toma forma de T. max-width en un ítem
-     flex es válido; sin `.about__media` en el DOM (no hay foto todavía),
-     este es el único ítem de `.about__layout` y no compite por espacio. */
+     que introduce y "Sobre mí" toma forma de T. */
   max-width: var(--medida-lectura);
 }
 
@@ -1570,19 +1705,71 @@ h3 {
   margin: 0;
 }
 
-/* Sin usar todavía (no hay foto: ver AboutSection.astro). Preparada para
-   cuando exista, con las reglas ya escritas en vez de improvisarlas ese
-   día. */
-.about__media {
-  flex: 1 1 16rem;
-  max-width: 20rem;
+/* Columna de datos (F-12): oculta por defecto -- en mobile repetiría
+   disponibilidad, ubicación y el botón de CV que ya están en el primer
+   pantallazo del hero (ver AboutSection.astro), así que se omite ahí en
+   vez de alargar el mobile. Desde 768px pasa a visible, con el mismo
+   lenguaje de tarjeta de datos que `.stack-card`/`.job__project` (fondo
+   elevado, filete, radio 0.5rem) -- se lee como una unidad de datos, no
+   como texto corrido. `flex-grow` con un `max-width` (no un `flex-basis`
+   fijo): crece para achicar el vacío a la derecha de `.about__text` sin
+   pasar de un ancho que se sienta como columna de datos, no como
+   segundo bloque de lectura. */
+.about__sidebar {
+  display: none;
 }
 
-.about__media img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 0.5rem;
+@media (min-width: 768px) {
+  .about__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    flex: 1 1 20rem;
+    max-width: 22rem;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 1.25rem 1.4rem 1.5rem;
+  }
+}
+
+.about__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 0;
+}
+
+/* Tipografía de datos (DESIGN.md rol "data"): mono, 0.9rem/14,4px, por
+   encima del piso de 13px. La etiqueta reusa `.eyebrow` (rol "label") en
+   vez de duplicar la regla -- mismo componente que ya usa
+   `.project-card__problem-label`. */
+.about__fact dt {
+  margin-bottom: 0.2rem;
+}
+
+.about__fact dd {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+/* Link de texto, no `.btn`: DESIGN.md reserva un botón primario por
+   bloque ("Descargar CV (PDF)" en el hero); acá es una segunda vía al
+   mismo PDF, con el mismo peso visual que el resto de la columna de
+   datos, no un segundo CTA compitiendo con el del hero. min-height
+   28px (mismo criterio que `.site-footer a`) para el destino táctil. */
+.about__cv-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: color 120ms ease;
 }
 
 /* ── Contact ─────────────────────────────────────────────────────── */
@@ -1595,9 +1782,26 @@ h3 {
   gap: 1.5rem;
 }
 
+/* F-12: encontrado al verificar el P0-1 de zoom (mismo método, barrido
+   completo del documento, no sólo el hero) -- a 200% de texto la
+   dirección de mail, un token sin espacios, empujaba el `min-content` de
+   este ítem flex por encima del ancho disponible y desbordaba la página
+   125px (`.contact__email` no tenía `overflow-wrap`, a diferencia de
+   `.tag`, que ya resuelve el mismo caso para tecnologías largas).
+   `min-width: 0` permite que el ítem flex se achique por debajo de su
+   contenido más ancho; `overflow-wrap` en el link (mismo criterio que
+   `.tag`) deja partir la dirección si hace falta en vez de desbordar. */
+.contact__info {
+  min-width: 0;
+}
+
 .contact__lines p {
   margin: 0.3rem 0;
   color: var(--color-text-muted);
+}
+
+.contact__email {
+  overflow-wrap: break-word;
 }
 
 /* ── Footer ──────────────────────────────────────────────────────── */
@@ -1618,6 +1822,7 @@ h3 {
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
+  transition: color 120ms ease;
 }
 
 .site-footer a:hover {

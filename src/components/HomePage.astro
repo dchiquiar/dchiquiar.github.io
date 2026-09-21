@@ -59,7 +59,7 @@ const jsonLd = {
     <ProjectsSection lang={lang} />
     <ExperienceSection lang={lang} experience={cv.experience} education={cv.education} />
     <SkillsSection lang={lang} categories={cv.skills.categories} languages={cv.languages} intro={stackIntro} />
-    {summary && <AboutSection lang={lang} number="04" summary={summary} />}
+    {summary && <AboutSection lang={lang} number="04" summary={summary} person={person} />}
     <ContactSection lang={lang} number={contactNumber} person={person} />
   </main>
 </BaseLayout>

@@ -6,24 +6,29 @@
 // Si person.summary no tiene valor confirmado, HomePage no renderiza este
 // componente — no hay versión vacía de esta sección.
 //
-// Props sin cambios (lang/number/summary): HomePage depende de esta forma
-// para la numeración y para decidir showAbout. `summary` sigue siendo el
-// string crudo del YAML; separarlo en párrafos es responsabilidad de este
-// componente, no de quien lo llama.
+// Props: `person` se suma en F-12 para la columna lateral de datos
+// (disponibilidad, ubicación, email, link al CV) -- todo sale de
+// person.*/ui.js, HomePage ya lo tenía cargado para el resto de la
+// página. `summary` sigue siendo el string crudo del YAML; separarlo en
+// párrafos es responsabilidad de este componente, no de quien lo llama.
 import { ui } from "../i18n/ui.js";
 import SectionHeading from "./SectionHeading.astro";
-import { splitParagraphs } from "../lib/content.js";
+import { splitParagraphs, cleanField } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
   number: string;
   summary: string;
+  person: Record<string, any>;
 }
-const { lang, number, summary } = Astro.props;
+const { lang, number, summary, person } = Astro.props;
 const t = ui[lang];
 
 const paragraphs = splitParagraphs(summary);
 const hasMultipleParagraphs = paragraphs.length > 1;
+
+const availability = cleanField(person.availability);
+const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
 ---
 
 <section id="about" class="section">
@@ -38,28 +43,35 @@ const hasMultipleParagraphs = paragraphs.length > 1;
         ))}
       </div>
       {/*
-        El track del retrato no existe en el DOM todavía: no hay foto, y
-        el proyecto prohíbe cualquier placeholder a la vista (ver
-        recomendaciones — "nada de coming soon"). Cuando haya una imagen,
-        entra como hermana de `.about__text` dentro de `.about__layout`,
-        así (el `.about__media` de global.css ya está escrito y esperando
-        esta clase):
-
-        <div class="about__media">
-          <img
-            src="/images/diego-portrait.jpg"
-            width="..."
-            height="..."
-            alt="..."
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
-
-        `width`/`height` son obligatorios ahí, no opcionales: son los que
-        mantienen el CLS en 0 (mismo criterio que las imágenes del
-        carrusel de proyectos).
+        Columna de datos (F-12): el retrato real ya existe y se usa en el
+        Hero desde F-9 -- no se repite acá (dos veces la misma foto se
+        leería raro). En su lugar, una columna con disponibilidad,
+        ubicación, email y el link al CV, sólo desde 768px (ver
+        `.about__sidebar` en global.css); en mobile se omite en vez de
+        duplicar el primer pantallazo del hero, que ya muestra
+        disponibilidad, ubicación y el botón de CV.
       */}
+      <aside class="about__sidebar" aria-label={t.about.sidebarLabel}>
+        <dl class="about__facts">
+          {availability && (
+            <div class="about__fact">
+              <dt class="eyebrow">{t.about.availabilityLabel}</dt>
+              <dd>{availability}</dd>
+            </div>
+          )}
+          <div class="about__fact">
+            <dt class="eyebrow">{t.about.locationLabel}</dt>
+            <dd>{person.location}</dd>
+          </div>
+          <div class="about__fact">
+            <dt class="eyebrow">{t.about.emailLabel}</dt>
+            <dd><a href={`mailto:${person.email}`}>{person.email}</a></dd>
+          </div>
+        </dl>
+        <a class="about__cv-link" href={cvHref} download>
+          {t.hero.downloadCv}
+        </a>
+      </aside>
     </div>
   </div>
 </section>
