@@ -1,6 +1,7 @@
 ---
 import { ui } from "../i18n/ui.js";
 import SectionHeading from "./SectionHeading.astro";
+import StackOrbit from "./StackOrbit.astro";
 import { cleanList } from "../lib/content.js";
 
 interface Props {
@@ -22,8 +23,11 @@ const cleanCategories = categories
 <section id="stack" class="section">
   <div class="container">
     <div class="stack__intro">
-      <SectionHeading number="03" title={t.sections.stack} id="stack" />
-      {intro && <p class="stack__lead">{intro}</p>}
+      <div class="stack__intro-text">
+        <SectionHeading number="03" title={t.sections.stack} id="stack" />
+        {intro && <p class="stack__lead">{intro}</p>}
+      </div>
+      <StackOrbit />
     </div>
 
     <div class="stack-grid">

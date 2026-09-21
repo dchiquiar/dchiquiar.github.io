@@ -1569,12 +1569,26 @@ h3 {
    ritmo de tag en todas — las cuatro razones por las que la referencia
    de Diego se ve ordenada y la grilla vieja no. */
 
+/* F-13 (ADR-0018): `.stack__intro` pasa a envolver dos bloques — el texto
+   (título + lead, que entre ellos conservan el mismo flex baseline de
+   antes) y la órbita decorativa. En mobile, `flex-wrap` hace que la
+   órbita cae a su propia fila, encima de `.stack-grid`, sin breakpoint
+   dedicado; en desktop ancho queda al lado del texto. */
 .stack__intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
+}
+
+.stack__intro-text {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem 2rem;
+  flex: 1 1 18rem;
 }
 
 .stack__intro .section-heading {
@@ -1585,6 +1599,184 @@ h3 {
   color: var(--color-text-muted);
   max-width: 28rem;
   margin: 0 0 1.5rem;
+}
+
+/* ── Órbita de tecnologías (F-13, ADR-0018) ─────────────────────────
+   Decorativa, aria-hidden, CSS puro. Un centro ("STACK") y 4 anillos
+   punteados concéntricos con 2 tecnologías cada uno, cada anillo con su
+   propia velocidad (el más interno, más rápido), en sentido antihorario.
+   Cada ítem contra-rota a la misma velocidad para quedar siempre
+   derecho — la posición la da `.orbit-ring` (que gira) más el `--angle`
+   estático de `.orbit-pos`; la orientación la cancela `.orbit-item` (que
+   gira exactamente al revés). Sólo `transform` está animado, en el
+   compositor. `prefers-reduced-motion` no necesita reglas propias: el
+   kill-switch global (`animation-duration: 0.01ms !important;
+   animation-iteration-count: 1 !important;`, arriba en este archivo) ya
+   deja los keyframes en su fotograma final — y ese fotograma final es
+   una vuelta completa (360deg), visualmente idéntico al de arranque, así
+   que la órbita queda quieta con los ítems en la misma disposición
+   legible con la que carga, no a mitad de giro. Verificado con
+   Puppeteer (`prefers-reduced-motion: reduce` emulado).
+
+   Tokens en rem, sin `vw` ni mezcla de ejes en un mismo valor (ver nota
+   de F-12 sobre `clamp()` con ejes mixtos): el tamaño cambia sólo en el
+   único breakpoint explícito del sitio (768px), redefiniendo las custom
+   properties, nunca con `clamp()`. El centro (3rem / 48px) se mantiene
+   igual en los dos tamaños porque el texto "STACK" no puede bajar de
+   13px (piso tipográfico de DESIGN.md) y 48px es el mínimo que lo aloja
+   con margen — lo que se achica en mobile son los anillos y los ítems.
+
+   Monocroma: ítems y anillos en `--color-border` / `--color-control-
+   border`, ícono y centro en `--color-accent` / `--color-accent-
+   contrast` (mismo par que usan los botones sólidos, ya verificado
+   ≥6.59:1 en claro y ≥9.5:1 en oscuro). Sin sombras, sin gradientes, sin
+   color de marca — enmienda de ADR-0018 a "Don't" de DESIGN.md, sólo
+   para esta pieza. */
+/* El achicamiento vive en el flex item (`flex-basis` + `flex-shrink`),
+   no en un `width: min(Xrem, 100%)` dentro de `.orbit-stage`: ese `100%`
+   necesita un contenedor con ancho propio, y `.stack-orbit` sin `width`
+   explícito (auto, por contenido) lo dejaba circular — Chromium lo
+   resolvía a 0 (encontrado con Puppeteer: la órbita desaparecía en
+   mobile a tamaño normal, no sólo en el caso límite de zoom). Con
+   `flex-basis` en rem + `flex-shrink: 1` el ancho final es siempre un
+   valor concreto (lo resuelve flexbox antes que nada), y `aspect-ratio`
+   deriva la altura de ese ancho ya resuelto — sin ciclo. */
+.stack-orbit {
+  flex: 0 1 var(--orbit-stage);
+  min-width: 0;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  --orbit-stage: 15rem;
+  --orbit-center: 3rem;
+  --orbit-r1: 3rem;
+  --orbit-r2: 4.2rem;
+  --orbit-r3: 5.4rem;
+  --orbit-r4: 6.6rem;
+  --orbit-item: 1.75rem;
+  --orbit-icon: 1rem;
+}
+
+.orbit-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.orbit-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--orbit-center);
+  height: var(--orbit-center);
+  margin: calc(var(--orbit-center) / -2) 0 0 calc(var(--orbit-center) / -2);
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  line-height: 1;
+}
+
+.orbit-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1);
+  border: 1px dashed var(--color-border);
+  border-radius: 50%;
+  animation: orbit-ring-spin var(--duration) linear infinite;
+}
+
+.orbit-ring--1 {
+  --r: var(--orbit-r1);
+  --duration: 42s;
+}
+
+.orbit-ring--2 {
+  --r: var(--orbit-r2);
+  --duration: 58s;
+}
+
+.orbit-ring--3 {
+  --r: var(--orbit-r3);
+  --duration: 74s;
+}
+
+.orbit-ring--4 {
+  --r: var(--orbit-r4);
+  --duration: 90s;
+}
+
+/* Posición fija sobre el anillo (sin animar): rota al ángulo del ítem,
+   se desplaza el radio y deshace su propia rotación, para que el
+   cuadrado quede en el punto correcto, ya derecho en reposo. La rotación
+   continua del anillo padre es lo que después lo hace revolucionar. */
+.orbit-pos {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--orbit-item);
+  height: var(--orbit-item);
+  transform: translate(-50%, -50%) rotate(var(--angle))
+    translateX(var(--r)) rotate(calc(var(--angle) * -1));
+}
+
+.orbit-item {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 25%;
+  color: var(--color-accent);
+  animation: orbit-item-spin var(--duration) linear infinite;
+}
+
+.orbit-item svg {
+  width: var(--orbit-icon);
+  height: var(--orbit-icon);
+  fill: currentColor;
+}
+
+@keyframes orbit-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes orbit-item-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .stack-orbit {
+    --orbit-stage: 11rem;
+    --orbit-r1: 2.4rem;
+    --orbit-r2: 3.1rem;
+    --orbit-r3: 3.8rem;
+    --orbit-r4: 4.5rem;
+    --orbit-item: 1.4rem;
+    --orbit-icon: 0.875rem;
+  }
 }
 
 /* `minmax(min(23rem, 100%), 1fr)`: con --container-width: 72rem esto da
