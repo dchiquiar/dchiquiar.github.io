@@ -911,12 +911,127 @@ html[data-theme="dark"] .hero__media img {
   filter: brightness(0.75) saturate(0.9);
 }
 
+/* F-14: entrada palabra por palabra, CSS puro (equivalente a
+   gsap.from(".word", {opacity:0, y:40, rotateX:-50, duration:0.8,
+   stagger:0.06, ease:"back.out(1.4)"})). `perspective` va acá, en el
+   PADRE de los `.hero__name-word` (no `transform: perspective()` en cada
+   palabra): es el punto de fuga de las dos, así que las dos rotan hacia
+   el mismo centro en vez de tener cada una su propio eje — más parecido a
+   cómo se ve un `rotateX` real de cámara. 800px = el `transformPerspective`
+   por defecto de GSAP (no hay un valor propio del brief que igualar). No
+   toca ninguna métrica de la caja (no es `transform`, no dispara reflow
+   del texto): font-size/line-height/margin siguen exactamente iguales.
+   La regla de este selector NO cambia nada más — todo el resto del
+   bloque, sin tocar. */
 .hero__name {
   font-size: clamp(2.5rem, 9vw, 5.25rem);
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: -0.01em;
   margin: 0 0 0.5rem;
+  perspective: 800px;
+}
+
+/* `inline-block`, no `inline` (el `display` por defecto de un <span>):
+   los transforms de CSS no aplican a cajas inline no-reemplazadas (spec de
+   CSS Transforms), así que sin esto `translateY`/`rotateX` de abajo no
+   harían nada. El espacio entre "Diego" y "Chiquiar" queda FUERA de los
+   <span> (nodo de texto suelto en Hero.astro) a propósito: un
+   inline-block sigue participando como palabra normal en el flujo de
+   línea, así que el punto de wrap sigue siendo ese espacio, igual que con
+   el string plano de antes — verificado sin cambio de líneas a 320/375/
+   1440px, ES y EN (ver log F-14). Sin padding/margin/border propios: cero
+   diferencia de métrica contra el <span> implícito que había antes.
+
+   `animation-fill-mode: both` (shorthand, el último valor) cubre los dos
+   extremos sin animation-fill-mode aparte: "backwards" aplica el opacity:0
+   del keyframe `from` ANTES de que arranque la animación (evita un flash
+   de texto a opacity:1 en el primer frame, antes de que el navegador
+   procese el delay) y "forwards" deja el resultado final (opacity:1) una
+   vez que termina, en vez de volver al valor de `.hero__name-word` sin
+   animar. Sólo `opacity`+`transform`: ninguna de las dos participa del
+   cálculo de layout (CLS 0, confirmado con Lighthouse — ver log F-14).
+
+   `animation-delay` con `calc(var(--word-index) * 0.06s)`, no
+   `:nth-child()`: el índice viene del propio dato (`person.name.split()`
+   en Hero.astro), así que esto no asume que el nombre tiene exactamente
+   2 palabras — si mañana cambia a 3, el stagger sigue funcionando sin
+   tocar el CSS. */
+.hero__name-word {
+  display: inline-block;
+  animation: hero-name-word-in 0.8s var(--ease-back-out-1-4, cubic-bezier(0.34, 1.47, 0.64, 1))
+    both;
+  animation-delay: calc(var(--word-index, 0) * 0.06s);
+}
+
+/* Overshoot calibrado contra la fórmula real de Penner que usa GSAP para
+   `back.out(s)`, no contra el "easeOutBack" default (`s = 1.70158`) que
+   suelen listar easings.net/las tablas de cubic-bezier de referencia.
+   `back.out(1.4)` pedido en el brief ≠ `back.out()` sin argumento.
+
+   Fórmula de Penner (la que usa GSAP internamente):
+     f(x) = 1 + (s+1)·(x-1)³ + s·(x-1)²
+   Resolviendo f'(x)=0 (el pico del rebote) dio, con cálculo exacto:
+     s=1.70158 (default) → pico ≈ 10.00% más allá del valor final
+     s=1.4     (pedido)  → pico ≈  7.06%
+   (script ad hoc, no a ojo — mismo criterio que la nota de contraste WCAG
+   más arriba en este archivo).
+
+   Un `cubic-bezier()` de CSS no puede reproducir esa fórmula polinómica
+   exacta (son curvas distintas), pero SÍ puede aproximar la MISMA
+   magnitud de pico si se calibra el control `y1` (el que gobierna cuánto
+   se pasa la curva del 100% antes de asentar) evaluando la curva de
+   Bézier real con De Casteljau —no escalando `y1` a ojo ni por
+   proporción lineal con `s`, que da un resultado distinto (probado:
+   escalar 1.56 × 1.4/1.70158 ≈ 1.3 da sólo ~3% de pico medido en el
+   navegador, muy por debajo del 7.06% buscado; la relación entre `y1` y
+   el pico de la curva no es lineal). Barrido de `y1` con el mismo
+   solver, en x=[0.34, ·, 0.64, 1] fijo (esos dos no tienen un
+   equivalente que derivar de la fórmula de Penner, y moverlos no está
+   pedido):
+
+     y1=1.30 → 2.99%   y1=1.45 → 6.60%   y1=1.56 → 9.78% (≈ default)
+     y1=1.40 → 5.29%   y1=1.47 → 7.15% ← elegido (más cercano a 7.06%)
+     y1=1.50 → 8.00%
+
+   Verificado en el navegador real, no sólo en el solver: barriendo
+   `animation.currentTime` de la palabra "Diego" cuadro a cuadro con la
+   curva final (y1=1.47), el `translateY` más negativo medido es
+   -2,86px en t≈480ms de 800ms (progreso≈60%, cerca del 61% que predice
+   el solver) — el signo negativo (pasa de largo la posición de reposo
+   Y=0 antes de asentar) es la firma visual del overshoot. -2,86px sobre
+   un recorrido de 40px es 7,15% de pico, prácticamente el 7,06% de
+   `back.out(1.4)` calculado arriba. */
+:root {
+  --ease-back-out-1-4: cubic-bezier(0.34, 1.47, 0.64, 1);
+}
+
+@keyframes hero-name-word-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px) rotateX(-50deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+  }
+}
+
+/* Kill-switch global (arriba de este archivo, `* { animation-duration:
+   0.01ms !important }`) fuerza la DURACIÓN a casi cero pero no toca
+   `animation-delay` — con el delay de 0.06s de Chiquiar sin tocar, ese
+   `<span>` seguiría en `opacity:0` (fill-mode "backwards") durante esos
+   60ms antes de aparecer de golpe: no es exactamente "sin animación,
+   visible de inmediato", que es lo que pide WCAG 2.3.3/el brief. Esta
+   regla apaga la animación entera para las dos palabras (no sólo acorta
+   su duración) y dejar el estado final puesto a mano — ninguna palabra
+   pasa por `opacity:0` en ningún momento, ni siquiera 60ms. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__name-word {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ADR-0011 queda superado (T-L): con una sola tinta por tema, el acento

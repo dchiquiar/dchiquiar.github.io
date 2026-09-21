@@ -33,12 +33,34 @@ const portraitAlt =
   lang === "es"
     ? "Retrato de Diego Chiquiar, con buzo oscuro"
     : "Portrait of Diego Chiquiar, wearing a dark hoodie";
+
+// F-14: entrada palabra por palabra del nombre (CSS puro, ver global.css
+// ".hero__name-word"). Se separa por espacios en vez de hardcodear
+// "Diego"/"Chiquiar": person.name es el mismo string en los dos idiomas
+// (es un nombre propio, no se traduce — confirmado en data/cv.*.yaml), así
+// que esto no duplica contenido entre ES/EN, sólo reparte lo que ya llega
+// de los datos. Cada <span> lleva --word-index para el stagger (0.06s por
+// palabra) vía `calc()` en CSS — no depende de que haya exactamente 2
+// palabras. El espacio entre palabras queda como nodo de texto SUELTO
+// entre los <span>, no dentro de ellos: así el punto de wrap entre
+// palabras es el mismo que con el string plano de antes (ver el porqué en
+// el comentario de `.hero__name-word` en global.css).
+const nameWords = person.name.trim().split(/\s+/);
 ---
 
 <section id="top" class="hero">
   <div class="container hero__layout">
     <div class="hero__content">
-      <h1 class="hero__name">{person.name}</h1>
+      <h1 class="hero__name">
+        {nameWords.map((word, i) => (
+          <>
+            <span class="hero__name-word" style={`--word-index: ${i}`}>
+              {word}
+            </span>
+            {i < nameWords.length - 1 && " "}
+          </>
+        ))}
+      </h1>
       <p class="hero__role">{person.headline}</p>
       {intro && <p class="hero__intro">{intro}</p>}
       <p class="hero__meta">
