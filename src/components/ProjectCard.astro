@@ -4,6 +4,7 @@
 // proyecto los tiene (hoy sólo game-server); si viene vacío no se renderiza
 // nada — ni marco ni hueco (mismo criterio que el resto de la tarjeta).
 import { ui } from "../i18n/ui.js";
+import { splitParagraphs } from "../lib/content.js";
 
 interface ProjectImage {
   src: string;
@@ -36,6 +37,15 @@ const {
 } = Astro.props;
 const t = ui[lang];
 const carouselLabel = `${title} — ${t.projects.screenshotsLabel}`;
+
+// `description` puede traer dos párrafos separados por línea en blanco
+// (game-server, hoy es el único caso). Un solo `<p>` colapsaba el salto:
+// se veía como un único bloque de 600 caracteres. Mismo criterio que
+// AboutSection: primer párrafo con el peso destacado, siguientes en peso
+// normal, pero acá el primero SIEMPRE se destaca (haya uno o más), a
+// diferencia del lead de "Sobre mí" — es el comportamiento actual con un
+// único párrafo y no hay que cambiarlo.
+const descriptionParagraphs = splitParagraphs(description);
 ---
 
 <article class={`project-card project-card--${variant}`}>
@@ -67,7 +77,11 @@ const carouselLabel = `${title} — ${t.projects.screenshotsLabel}`;
   )}
   <div class="project-card__body">
     <h3>{title}</h3>
-    <p class="project-card__description">{description}</p>
+    {descriptionParagraphs.map((paragraph, i) => (
+      <p class={i === 0 ? "project-card__description" : "project-card__description--secondary"}>
+        {paragraph}
+      </p>
+    ))}
     <p class="project-card__problem">
       <span class="project-card__problem-label">{t.projects.problemLabel}</span>
       {problem}

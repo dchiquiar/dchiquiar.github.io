@@ -1,13 +1,14 @@
-# Proyectos con código público a mostrar en el sitio.
+# Proyectos que arma la vitrina del sitio.
 #
-# La selección (F1-C) está cerrada: MCP -> servidor de juego -> este sitio.
-# No agregar un cuarto proyecto ni reordenar sin una decisión nueva del
-# orquestador. `images` sólo existe donde hay capturas/GIF/diagrama
-# aprobados; no inventar rutas de archivos que no existen.
+# La selección y el orden son una decisión deliberada, no un default: no
+# agregar proyectos ni reordenar los que hay sin que sea igual de
+# deliberado. No todos tienen código público — el campo `repoUrl` de cada
+# ficha dice si lo tiene. `images` sólo existe donde hay capturas/GIF/
+# diagrama aprobados; no inventar rutas de archivos que no existen.
 # Validar contra data/schemas/proyectos.schema.json (máximo 4 items).
 
 meta:
-  lastUpdated: "2026-09-19"
+  lastUpdated: "2026-09-20"
 
 projects:
   - id: mcp-sql-server
@@ -69,22 +70,20 @@ projects:
         quién golpeó a quién y qué ve cada jugador.
 
 
-        El repositorio es privado: lo construí trabajando con agentes de
-        IA, así que lo que muestro es el sistema funcionando y las
-        decisiones de diseño que hay detrás — el modelo de autoridad, qué
-        valida el servidor y qué anticipa el cliente, y cómo se define
-        qué ve cada jugador. Eso es lo que puedo discutir en detalle.
+        Lo que se ve acá es el sistema corriendo. Lo que puedo contar
+        en detalle son las decisiones: qué confirma el servidor, qué
+        anticipa el cliente para que el juego se sienta inmediato, y
+        por qué elegí eso y no otra cosa.
       en: >-
         My own .NET server with a Unity client, where the server is the
         single source of truth: it decides who moved, who hit whom, and
         what each player gets to see.
 
 
-        The repository is private. I built this working with AI agents,
-        so what I'm showing is the system running and the design behind
-        it — the authority model, what the server validates and what the
-        client anticipates, and how it's decided what each player sees.
-        That's what I can go into detail on.
+        What you're seeing here is the system running. What I can walk
+        through in detail are the decisions: what the server confirms,
+        what the client predicts so the game feels immediate, and why I
+        picked that over the alternatives.
     images:
       - src: "/projects/urgentum-multiplayer.webp"
         width: 1280
@@ -107,22 +106,17 @@ projects:
     problem:
       es: >-
         En un juego en línea no se le puede creer al cliente: si el
-        jugador dice "estoy acá y te pegué", el servidor tiene que poder
-        verificarlo, o el juego se rompe solo. El servidor valida cada
-        movimiento y cada acción de combate, guarda el estado de los
-        personajes y le manda a cada jugador únicamente lo que está
-        pasando cerca suyo, para no inundar la red con información que
-        nadie va a usar. Es el problema opuesto al de un sistema de
-        gestión: acá todo pasa al mismo tiempo y nada puede esperar.
+        jugador dice «estoy acá y te pegué», el servidor tiene que poder
+        verificarlo. Valida cada movimiento y cada golpe, guarda el
+        estado de los personajes y le manda a cada jugador sólo lo que
+        pasa cerca suyo. Es el problema opuesto al de un sistema de
+        gestión.
       en: >-
-        In an online game you can't take the client's word for anything.
-        If a player says "I'm here and I hit you", the server has to be
-        able to verify it, or the game breaks on its own. The server
-        validates every movement and every combat action, persists
-        character state, and sends each player only what is happening
-        near them, so the network isn't flooded with information nobody
-        will use. It's the opposite of a business system: here
-        everything happens at once and nothing can wait.
+        In an online game you can't take the client's word for anything:
+        if a player says "I'm here and I hit you", the server has to be
+        able to verify it. It validates every move and every hit,
+        persists character state, and sends each player only what is
+        happening near them. It's the opposite of a business system.
     repoUrl: null
     liveUrl: null
     status: in-progress

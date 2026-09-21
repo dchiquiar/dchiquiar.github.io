@@ -4,9 +4,9 @@
 # data/schemas/cv.private.schema.json. See data/schemas/cv.schema.json for
 # the valid shape of this file.
 #
-# Employers: each experience entry only carries employer.sector (industry
-# description, no proper name). The employer's real name lives in the
-# private layer, linked by the experience id. See ADR-0002-identidad-publicada.
+# Employers: each experience entry carries employer.name and employer.sector,
+# both public. The only contact detail kept separate, in a private layer
+# consumed only by PDF generation, is the phone number.
 #
 # Voice: all public content speaks in first person (Diego's own voice). No
 # highlight or bio is written in the third person, as if by someone else
@@ -15,47 +15,39 @@
 
 meta:
   language: en
-  lastUpdated: "2026-09-20"
+  lastUpdated: "2026-09-21"
 
 person:
   name: "Diego Chiquiar"
-  headline: "Software Developer — .NET / C#"
-  location: "Montevideo, Uruguay (UTC-3)"
-  seniority: "Semi Senior (SSR)"
+  headline: "Software Developer"
+  location: "Montevideo, Uruguay"
   # CONTRACT with the code (src/lib/content.js, splitParagraphs): this field
   # can hold several paragraphs, separated by a blank line. The YAML folded
   # block (`>-`) is REQUIRED for that — it's not a formatting preference.
   # If changed to a literal block (`|`), every wrapped line renders as its
   # own paragraph instead of one.
+  #
+  # The original paragraph 1 (support-desk origin story) moved out of here:
+  # it's the hero intro (person.intro, below), not published twice (ADR-0015).
   summary: >-
-    Before I wrote software I spent years on the other side of it: picking up the
-    phone when a system went down and people were standing around, unable to work.
-    That is where the way I build backends comes from. When I design something,
-    the first question is not how it behaves when everything goes right, but what
-    happens when it does not: what gets lost, who finds out, and how it gets fixed
-    without stopping the operation.
+    I'm a .NET/C# developer specialized in integrations, automation, and
+    enterprise systems in production.
 
-    What I am strongest at is .NET backend work over SQL Server, and the problems
-    I keep going back to look alike: getting two systems that were never meant to
-    talk to each other to agree, and then making that run on its own, every day,
-    with nobody watching it. The language matters less to me than the problem,
-    which is usually the same one: a process someone is holding together by hand
-    that should not depend on that person showing up.
+    I combine development experience with several years in support and
+    infrastructure, which shapes how I design software — with an eye on
+    operations, failure modes, and maintainability.
 
-    I am looking to take that into a wider context than the .NET niche. Not to
-    leave it behind, but because the judgment about how to build something travels
-    between stacks far better than the tooling does, and I want to work with
-    people who argue about that. Alongside it I am working my way into the web
-    side and into DevOps, and I am clear about which of those I have run in
-    production and which I have not. I am looking for my next role and available
-    to start immediately, remote or hybrid, working from Montevideo on UTC-3 —
-    which overlaps almost entirely with US business hours.
-
-    Outside working hours I build things with no commercial justification at all,
-    just because a problem stays with me: what you see above came out of that. It
-    is also where I try what I cannot use at work yet, and where I learn fastest.
-    If that sounds like the person you need, my email is right below.
-  availability: "Hybrid or remote in Uruguay; open to remote work abroad"
+    I'm currently expanding my profile toward web development and DevOps.
+  # Short hero intro, next to the portrait (ADR-0015). Short variant chosen
+  # by Diego over intro-hero.md — Option A. Compresses the paragraph 1 that
+  # moved out of person.summary (above): not published twice.
+  intro: >-
+    I mainly develop software in .NET. Before that, I spent years on the
+    other end of the phone when systems went down, so today I design with
+    an eye on what happens when something fails. One of the last systems I
+    built processes about 1,500 operations a day with six banks and has
+    been in production for over a year.
+  availability: "Hybrid or remote in Uruguay"
   email: "diegochiquiar@gmail.com"
   links:
     linkedin: null # Pending confirmation.
@@ -71,58 +63,90 @@ experience:
     startDate: "2024-04"
     endDate: "2026-09"
     current: false
-    summary: "Designed and built the two in-house systems the company operates on."
+    summary: "Designed and built internal systems to automate operational, banking and commercial processes."
     projects:
-      - name: "TAS — Tecnisegur Automatic Accreditation System"
-        description: "The system that automatically settles, with each bank, the cash customers deposit into the smart safes in their stores — the country's largest retail chains. It queries the safes through an external provider's web service, pulls the deposits into our own database and builds each bank's settlement: six banks, four different ways of receiving it, from a file dropped in a shared folder to a web service. Around 1,500 settlements a day with no manual step, in production for over a year. I built it as a desktop application rather than an unattended service for an operational reason: when a settlement fails, an operator has to be able to re-run it by hand, there and then."
+      - name: "TAAS — Automated Settlement System"
+        # Two paragraphs, separated by a blank line — same splitParagraphs
+        # contract as person.summary.
+        description: >-
+          Automates the bank settlements triggered by deposits made into
+          smart safes. It connects with six banks through different
+          channels — from file exchange to web services — and processes
+          around 1,500 operations a day with no manual intervention.
+
+          Includes monitoring and reprocessing tools so operators can
+          manually resolve a settlement whenever an exception comes up.
         technologies:
           - "C#"
+          - ".NET"
           - "ASP.NET Core"
-          - "WPF with MVVM"
+          - "WPF"
+          - "MVVM"
           - "Quartz.NET"
           - "SQL Server"
           - "SQLite"
-          - "Windows Server on Azure"
-      - name: "Cash-tracking mobile app"
-        description: "The Android app crews use to follow every shipment from dispatch to delivery. Scanning a seal at each step changes the shipment's state and records who did it, when and where. It works with no signal — an armoured truck spends much of the day out of coverage, so the app stores everything locally and reconciles against the server once the connection is back. Published on Google Play."
+          - "Azure"
+      - name: "Valuables Tracking App"
+        description: >-
+          Android app used by field crews to log and track each shipment
+          along its route through seal scanning, geolocation and status
+          changes.
+
+          Built to work offline: it stores operations locally during
+          periods without coverage and syncs once connectivity is back.
+          Published and distributed through Google Play.
         technologies:
           - ".NET for Android"
-          - "Migrated from Xamarin.Forms"
+          - "Xamarin.Forms"
           - "SQLite"
+          - "Google ML Kit"
           - "Geolocation"
+          - "Google Play Console"
+      - name: "Subscriptions and Payments System"
+        description: >-
+          Built an internal API that connects the sales system with
+          Mercado Pago to create and manage subscriptions and payments
+          from the quoting platform.
+
+          Handles the full lifecycle of each transaction — approved,
+          rejected, expired or reversed payments, as well as renewals and
+          cancellations — and integrates Twilio to send notifications for
+          those events.
+        technologies:
+          - "C#"
+          - ".NET"
+          - "ASP.NET Core"
+          - "REST API"
+          - "Mercado Pago API"
+          - "SQL Server"
+          - "Twilio"
     highlights:
-      - "Payment integration with MercadoPago — Built the internal API a salesperson calls from the quoting site to create a subscription, and which owns everything that happens afterwards: payments that clear, fail, get reversed or expire, and subscriptions that renew or lapse. (Own REST API on top of MercadoPago's; subscriptions and single-item checkout.)"
-      - "Internal ERP — Maintained the company's management ERP and built new forms for HR, Sales, Billing and Treasury. (WinForms.)"
+      - "Internal ERP — Maintained and built modules for HR, Sales, Billing and Treasury on an existing WinForms application."
     technologies:
       - "C#"
-      - ".NET Core"
-      - "WPF"
-      - "MVVM"
-      - "Quartz.NET"
-      - "SQLite"
-      - "Mutex (single instance)"
+      - ".NET"
+      - "ASP.NET Core"
       - "SQL Server"
-      - "Xamarin.Forms"
+      - "WPF"
       - ".NET for Android"
       - "WinForms"
-      - "REST APIs"
-      - "SOLID"
 
   - id: job-2
     role: "Technical Support Assistant"
     employer:
-      name: "Advansys — Cars Solutions"
-      sector: "Family-run software company for the automotive sector (workshop and parts-inventory management)"
+      name: "Advansys - Cars Solutions"
+      sector: "Software development company for the automotive sector"
     location: "Montevideo, Uruguay"
     startDate: "2017-05"
     endDate: "2023-12"
     current: false
-    summary: null
+    summary: "Started in support and infrastructure, and later also took part in developing and maintaining the company's internal software."
     highlights:
-      - "For one year I built and maintained the company's internal business applications on an enterprise 4GL platform (GeneXus) — my first formal development work."
-      - "Kept the whole IT operation running for nearly seven years: end-user support, networks, infrastructure and uptime of internal systems."
+      - "For about a year, I built and maintained internal management applications with GeneXus."
+      - "Spent almost seven years in user support, networking, infrastructure and keeping internal systems running."
     technologies:
       - "GeneXus"
+      - "Networking & infrastructure"
 
   - id: job-3
     role: "Support Technician"
@@ -135,7 +159,7 @@ experience:
     current: false
     summary: null
     highlights:
-      - "I provided technical support at an operations center."
+      - "I provided technical support to users at an operations center."
     technologies: []
 
 education:
@@ -144,7 +168,7 @@ education:
     institution: "Universidad ORT Uruguay"
     year: "2025"
     status: "completed"
-    detail: "Degree obtained. Completed while working full-time."
+    detail: "Degree earned while working full-time."
   - id: ciberseguridad-ort
     title: "Cybersecurity Certification"
     institution: "Universidad ORT Uruguay"
@@ -152,67 +176,67 @@ education:
     status: "completed"
     detail: "OWASP Top 10, ISO, NIST."
   - id: devops-ort
-    title: "DevOps Training"
+    title: "DevOps Engineer Certification"
     institution: "Universidad ORT Uruguay"
     year: null
     status: "in-progress"
-    detail: "Mondays and Wednesdays, 7:30–10:30 PM."
+    detail: "Training in CI/CD, Git, Linux, Docker, GitHub Actions, and development and deployment automation practices."
 
 skills:
-  intro: "This is ordered by what I can stand behind. The core is .NET over SQL Server: there I can explain why each decision is what it is and defend it for ten minutes. Around it are tools I have used enough to be useful with, and at the end, kept separate on purpose, what I am still learning on my own. I would rather tell you where I stand than have you find it out in the interview."
+  intro: "Stack and tools I work with."
   categories:
     - id: backend
       label: "Backend"
       items:
-        - "C#"
-        - ".NET / .NET Core"
+        - "C# / .NET"
+        - "ASP.NET Core"
         - "REST APIs"
-        - "Consuming third-party web services (SOAP/REST)"
-        - "Quartz.NET"
-        - "SOLID"
+        - "SOAP / REST integrations"
     - id: data
       label: "Data"
       items:
         - "SQL Server"
-        - "T-SQL"
-        - "ADO.NET"
-    - id: clients
-      label: "Desktop & Mobile Clients"
+        - "SQLite"
+    - id: desktop-mobile
+      label: "Desktop & Mobile"
       items:
-        - "WPF + .NET Core (MVVM)"
+        - "WPF"
+        - "MVVM"
+        - "WinForms"
         - ".NET for Android"
         - "Xamarin.Forms"
-        - "WinForms"
-        - "JavaScript"
-        - "Ionic"
+    - id: tools-platforms
+      label: "Tools & Platforms"
+      items:
+        - "Quartz.NET"
+        - "Azure"
+        - "Git"
+        - "Google Play Console"
     - id: ai-assisted
       label: "AI-assisted development"
       items:
-        - "Claude Code"
         - "Designing my own agents and skills"
         - "Spec-driven workflow"
     - id: other
       label: "Other"
       items:
-        - "Java"
         - "GeneXus"
-        - "Google Play Console"
-        - "Cybersecurity (OWASP Top 10, ISO, NIST)"
-        - "Networking & infrastructure basics"
+        - "Cybersecurity"
+        - "Networking & infrastructure"
     - id: learning
-      label: "Currently learning (self-taught)"
+      label: "Currently learning"
       items:
         - "Vue 3"
-        - "React"
-        - "Angular (Udemy)"
+        - "JavaScript"
         - "HTML"
         - "CSS"
         - "Bootstrap"
+        - "DevOps"
 
 languages:
   - name: "Spanish"
     level: "Native"
     note: null
   - name: "English"
-    level: "B2 (First Certificate, Cambridge, ~2011)"
-    note: "Currently preparing C1 (CAE), targeting 2027. Comfortable holding a technical conversation in English."
+    level: "B2 certified — Cambridge FCE"
+    note: "Currently preparing C1 Advanced (CAE) for 2027. Comfortable holding technical conversations in English."

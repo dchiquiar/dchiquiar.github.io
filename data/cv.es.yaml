@@ -1,217 +1,302 @@
 # Fuente de datos del CV — ESPAÑOL (capa pública).
-# Única fuente de verdad para el sitio (/es). El PDF combina este archivo con
-# la capa privada en data/private/ (gitignored, nunca se publica) — ver
-# data/schemas/cv.private.schema.json. Ver data/schemas/cv.schema.json para
-# la forma válida de este archivo.
+# Única fuente de verdad para el sitio (/es).
 #
-# Empleadores: cada experiencia sólo lleva employer.sector (descripción de
-# rubro, sin nombre propio). El nombre real de cada empleador vive en la capa
-# privada, enlazado por el id de la experiencia. Ver ADR-0002-identidad-publicada.
-#
-# Voz: todo el contenido público habla en primera persona (la voz de Diego).
-# Ningún highlight ni bio habla de él en tercera persona, como si lo
-# describiera otro (sí puede describirse un sistema en tercera:
-# "consume", "genera", "permite").
+# Voz: todo el contenido público habla en primera persona.
+# Los proyectos pueden describir el sistema en tercera persona.
 
 meta:
   language: es
-  lastUpdated: "2026-09-20"
+  lastUpdated: "2026-09-21"
 
 person:
   name: "Diego Chiquiar"
-  headline: "Desarrollador de Software — .NET / C#"
-  location: "Montevideo, Uruguay (UTC-3)"
-  seniority: "Semi Senior (SSR)"
-  # CONTRATO con el código (src/lib/content.js, splitParagraphs): este campo
-  # puede tener varios párrafos, separados por una línea en blanco. El
-  # bloque plegado YAML (`>-`) es OBLIGATORIO para eso — no es preferencia
-  # de formato. Si se cambia a bloque literal (`|`), cada línea del wrap se
-  # renderiza como un párrafo suelto en vez de uno solo.
+  headline: "Desarrollador de Software"
+  location: "Montevideo, Uruguay"
+
   summary: >-
-    Antes de escribir software estuve años del otro lado: atendiendo cuando un
-    sistema se caía y había gente parada esperando para poder trabajar. De ahí
-    sale la forma en que escribo backend hoy. Cuando diseño algo, la primera
-    pregunta no es cómo funciona si todo sale bien, sino qué pasa cuando falla:
-    qué se pierde, quién se entera y cómo se arregla sin frenar la operación.
+    Desarrollador .NET/C# especializado en integraciones, automatización y
+    sistemas empresariales en producción.
 
-    Lo que mejor hago es backend en .NET sobre SQL Server, y los problemas que me
-    atraen se parecen bastante entre sí: hacer que dos sistemas que nunca fueron
-    pensados para hablarse terminen de acuerdo, y que eso después corra solo todos
-    los días sin que nadie lo esté mirando. Me importa menos el lenguaje que el
-    problema, que casi siempre es el mismo: un proceso que hoy alguien sostiene a
-    mano y que no debería depender de que esa persona esté.
+    Combino experiencia en desarrollo con varios años en soporte e
+    infraestructura, lo que me permite diseñar software pensando también en
+    operación, fallos y mantenibilidad.
 
-    Ahora quiero llevar eso a un contexto más amplio que el nicho .NET. No para
-    dejarlo atrás, sino porque el criterio con el que se decide cómo construir
-    algo viaja entre stacks mucho mejor que las herramientas, y quiero trabajar en
-    equipos donde eso se discuta. En paralelo estoy entrando al lado web y a
-    DevOps, y tengo claro qué de eso ya usé en producción y qué todavía no. Estoy
-    buscando trabajo y disponible para empezar de inmediato, en híbrido o remoto
-    desde Montevideo, y tomo remoto para el exterior.
+    Actualmente estoy ampliando mi perfil hacia desarrollo web y DevOps.
 
-    Fuera del horario construyo cosas que no tienen ninguna justificación
-    comercial, sólo porque el problema me queda dando vueltas: lo que ves acá
-    arriba salió de ahí. Es también donde pruebo lo que todavía no puedo usar en
-    el trabajo, y donde aprendo más rápido. Si estás buscando a alguien así, mi
-    mail está abajo.
-  availability: "Híbrido o remoto en Uruguay; remoto para el exterior"
+  intro: >-
+    Desarrollo software principalmente en .NET. Antes pasé años atendiendo
+    sistemas cuando fallaban, así que hoy diseño pensando también en qué pasa
+    cuando algo sale mal. Uno de mis últimos sistemas procesa unas 1.500
+    operaciones diarias con seis bancos y lleva más de un año en producción.
+
+  availability: "Híbrido o remoto en Uruguay"
   email: "diegochiquiar@gmail.com"
+
   links:
-    linkedin: null # Pendiente de confirmar.
-    github: null # Pendiente de confirmar.
+    linkedin: null
+    github: null
+
 
 experience:
   - id: job-1
     role: "Desarrollador de Software"
+
     employer:
       name: "Tecnisegur"
       sector: "Empresa de transporte de valores (cash-in-transit)"
+
     location: "Montevideo, Uruguay"
     startDate: "2024-04"
     endDate: "2026-09"
     current: false
-    summary: "Diseñé y construí los dos sistemas propios con los que opera la empresa."
+
+    summary: >-
+      Diseñé y desarrollé sistemas internos para automatizar procesos
+      operativos, bancarios y comerciales.
+
     projects:
-      - name: "TAS — Tecnisegur Automatic Accreditation System"
-        description: "Sistema que acredita automáticamente a los bancos el dinero que los clientes depositan en los buzones inteligentes de sus locales — las principales cadenas de retail del país. Consulta los buzones a través del web service de un proveedor externo, baja los depósitos a la base propia y arma la acreditación de cada banco: seis bancos con cuatro formas distintas de recibirla, desde un archivo dejado en una carpeta compartida hasta un web service. Unas 1.500 acreditaciones por día sin intervención manual, más de un año en producción. Lo construí como aplicación de escritorio y no como servicio desatendido por una razón operativa: si una acreditación falla, un operador tiene que poder rehacerla a mano en el momento."
+      - name: "TAAS — Sistema automático de acreditaciones"
+
+        description: >-
+          Sistema que automatiza las acreditaciones bancarias generadas por
+          depósitos realizados en buzones inteligentes. Se integra con seis
+          bancos mediante distintos mecanismos, desde intercambio de archivos
+          hasta web services, y procesa unas 1.500 operaciones diarias sin
+          intervención manual.
+
+          Incluye herramientas de monitoreo y reprocesamiento para que los
+          operadores puedan resolver manualmente una acreditación cuando ocurre
+          una excepción.
+
         technologies:
           - "C#"
+          - ".NET"
           - "ASP.NET Core"
-          - "WPF con MVVM"
+          - "WPF"
+          - "MVVM"
           - "Quartz.NET"
           - "SQL Server"
           - "SQLite"
-          - "Servidor Windows en Azure"
+          - "Azure"
+
       - name: "App de rastreo de valores"
-        description: "App Android con la que el personal operativo sigue cada remesa desde que sale hasta que llega a destino. Se escanea el precinto en cada paso y eso cambia el estado, dejando registrado quién lo hizo, cuándo y dónde. Funciona sin señal: un camión de caudales pasa buena parte del día sin cobertura, así que la app guarda todo localmente y reconcilia contra el servidor al recuperar conexión. Publicada en Google Play."
+
+        description: >-
+          Aplicación Android utilizada por el personal operativo para registrar
+          y seguir cada remesa durante su recorrido mediante escaneo de
+          precintos, geolocalización y cambios de estado.
+
+          Fue diseñada para funcionar offline: persiste las operaciones
+          localmente durante los períodos sin cobertura y las sincroniza al
+          recuperar conectividad. Publicada y distribuida mediante Google Play.
+
         technologies:
           - ".NET for Android"
-          - "Migrada desde Xamarin.Forms"
+          - "Xamarin.Forms"
           - "SQLite"
+          - "Google ML Kit"
           - "Geolocalización"
+          - "Google Play Console"
+
+      - name: "Sistema de suscripciones y pagos"
+
+        description: >-
+          Desarrollé una API interna que integra el sistema comercial con
+          Mercado Pago para crear y administrar suscripciones y pagos desde la
+          plataforma de cotización.
+
+          El sistema gestiona el ciclo completo de cada operación: pagos
+          aprobados, rechazados, vencidos o revertidos, además de renovaciones
+          y cancelaciones. También integra Twilio para enviar notificaciones
+          asociadas a esos eventos.
+
+        technologies:
+          - "C#"
+          - ".NET"
+          - "ASP.NET Core"
+          - "API REST"
+          - "Mercado Pago API"
+          - "SQL Server"
+          - "Twilio"
+
     highlights:
-      - "Integración de pagos con MercadoPago — Construí la API interna que usa el vendedor para generar una suscripción desde la web de cotización, y que se hace cargo de todo lo que pasa después: pagos que se acreditan, fallan, se revierten o vencen, y suscripciones que renuevan o se dan de baja. (API REST propia sobre la de MercadoPago; suscripciones y checkout de compra directa.)"
-      - "ERP interno — Mantuve el ERP de gestión de la empresa y le desarrollé formularios nuevos para RRHH, Comercial, Facturación y Tesorería. (WinForms.)"
+      - >-
+        ERP interno — Mantuve y desarrollé módulos para RRHH, Comercial,
+        Facturación y Tesorería sobre una aplicación WinForms existente.
+
     technologies:
       - "C#"
-      - ".NET Core"
-      - "WPF"
-      - "MVVM"
-      - "Quartz.NET"
-      - "SQLite"
-      - "Mutex (instancia única)"
+      - ".NET"
+      - "ASP.NET Core"
       - "SQL Server"
-      - "Xamarin.Forms"
+      - "WPF"
       - ".NET for Android"
       - "WinForms"
-      - "APIs REST"
-      - "SOLID"
+
 
   - id: job-2
     role: "Auxiliar de Soporte Técnico"
+
     employer:
       name: "Advansys — Cars Solutions"
-      sector: "Empresa familiar de desarrollo de software para el rubro automotriz (gestión de taller y de stock de repuestos)"
+      sector: "Empresa de desarrollo de software para el rubro automotriz"
+
     location: "Montevideo, Uruguay"
     startDate: "2017-05"
     endDate: "2023-12"
     current: false
-    summary: null
+
+    summary: >-
+      Comencé trabajando en soporte e infraestructura y posteriormente también
+      participé en el desarrollo y mantenimiento del software interno de la
+      empresa.
+
     highlights:
-      - "Durante un año desarrollé y mantuve las aplicaciones internas de gestión de la empresa con GeneXus. Fue mi primer trabajo formal escribiendo software."
-      - "Sostuve toda la operación de IT durante casi siete años: soporte a usuarios, redes, infraestructura y continuidad de los sistemas internos."
+      - >-
+        Durante aproximadamente un año desarrollé y mantuve aplicaciones
+        internas de gestión con GeneXus.
+
+      - >-
+        Trabajé durante casi siete años en soporte a usuarios, redes,
+        infraestructura y continuidad de los sistemas internos.
+
     technologies:
       - "GeneXus"
+      - "Redes e infraestructura"
+
 
   - id: job-3
     role: "Técnico de Soporte"
+
     employer:
       name: "Sabre Holdings"
       sector: "Multinacional de tecnología para la industria de viajes"
+
     location: "Canelones, Uruguay"
     startDate: "2013-01"
     endDate: "2014-01"
     current: false
+
     summary: null
+
     highlights:
-      - "Brindé soporte técnico en un centro de operaciones."
+      - >-
+        Brindé soporte técnico a usuarios dentro de un centro de operaciones.
+
     technologies: []
+
 
 education:
   - id: analista-programador-ort
-    title: "Analista Programador (Desarrollo de Software)"
+    title: "Analista Programador"
     institution: "Universidad ORT Uruguay"
     year: "2025"
     status: "completed"
-    detail: "Título obtenido. Cursado trabajando full-time."
+
+    detail: >-
+      Título en desarrollo de software obtenido mientras trabajaba full-time.
+
+
   - id: ciberseguridad-ort
     title: "Certificación en Ciberseguridad"
     institution: "Universidad ORT Uruguay"
     year: "2025"
     status: "completed"
-    detail: "OWASP Top 10, ISO, NIST."
+
+    detail: "OWASP Top 10, ISO y NIST."
+
+
   - id: devops-ort
-    title: "Formación en DevOps"
+    title: "Certificación DevOps Engineer"
     institution: "Universidad ORT Uruguay"
     year: null
     status: "in-progress"
-    detail: "Cursado lunes y miércoles, 19:30–22:30."
+
+    detail: >-
+      Formación en CI/CD, Git, Linux, Docker, GitHub Actions y prácticas de
+      automatización de procesos de desarrollo y despliegue.
+
 
 skills:
-  intro: "Esto está ordenado por lo que puedo sostener. El núcleo es .NET sobre SQL Server: ahí puedo explicar por qué cada decisión es la que es y discutirla diez minutos. Alrededor hay tecnologías que usé lo suficiente como para ser útil con ellas, y al final, separado a propósito, lo que estoy aprendiendo por mi cuenta. Prefiero decirte dónde estoy parado a que lo descubras en la entrevista."
+  intro: "Stack y herramientas con las que trabajo."
+
   categories:
     - id: backend
       label: "Backend"
+
       items:
-        - "C#"
-        - ".NET / .NET Core"
+        - "C# / .NET"
+        - "ASP.NET Core"
         - "APIs REST"
-        - "Consumo de web services de terceros (SOAP/REST)"
-        - "Quartz.NET"
-        - "SOLID"
+        - "Integraciones SOAP / REST"
+
+
     - id: data
       label: "Datos"
+
       items:
         - "SQL Server"
-        - "T-SQL"
-        - "ADO.NET"
-    - id: clients
-      label: "Clientes de escritorio y móvil"
+        - "SQLite"
+
+
+    - id: desktop-mobile
+      label: "Desktop y mobile"
+
       items:
-        - "WPF + .NET Core (MVVM)"
+        - "WPF"
+        - "MVVM"
+        - "WinForms"
         - ".NET for Android"
         - "Xamarin.Forms"
-        - "WinForms"
-        - "JavaScript"
-        - "Ionic"
+
+
+    - id: tools-platforms
+      label: "Herramientas y plataformas"
+
+      items:
+        - "Quartz.NET"
+        - "Azure"
+        - "Git"
+        - "Google Play Console"
+
+
     - id: ai-assisted
       label: "Desarrollo asistido por IA"
+
       items:
-        - "Claude Code"
-        - "Diseño de agentes y skills propias"
-        - "Trabajo spec-driven"
+        - "Diseño de agentes y skills"
+        - "Desarrollo guiado por especificaciones"
+
+
     - id: other
       label: "Otros"
+
       items:
-        - "Java"
         - "GeneXus"
-        - "Google Play Console"
-        - "Ciberseguridad (OWASP Top 10, ISO, NIST)"
-        - "Redes e infraestructura, nociones"
+        - "Ciberseguridad"
+        - "Redes e infraestructura"
+
+
     - id: learning
-      label: "En formación (autodidacta)"
+      label: "Actualmente aprendiendo"
+
       items:
         - "Vue 3"
-        - "React"
-        - "Angular (Udemy)"
+        - "JavaScript"
         - "HTML"
         - "CSS"
         - "Bootstrap"
+        - "DevOps"
+
 
 languages:
   - name: "Español"
     level: "Nativo"
     note: null
+
   - name: "Inglés"
-    level: "B2 (First Certificate, Cambridge, ~2011)"
-    note: "Preparando C1 (CAE), a rendir en 2027. Nivel suficiente para sostener una charla técnica en inglés."
+    level: "B2 certificado — Cambridge FCE"
+
+    note: >-
+      Preparando C1 Advanced (CAE) para 2027. Capacidad para mantener
+      conversaciones técnicas en inglés.

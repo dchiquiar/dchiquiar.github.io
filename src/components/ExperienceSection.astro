@@ -1,7 +1,7 @@
 ---
 import { ui } from "../i18n/ui.js";
 import SectionHeading from "./SectionHeading.astro";
-import { cleanField, cleanList } from "../lib/content.js";
+import { cleanField, cleanList, splitParagraphs } from "../lib/content.js";
 import { formatDateRange } from "../lib/format.js";
 
 interface Props {
@@ -25,6 +25,10 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
     {experience.map((job) => {
       const employerName = cleanField(job.employer?.name);
       const sector = cleanField(job.employer?.sector);
+      // `job.summary` es una línea corta con comillas dobles en el YAML,
+      // no un bloque plegado (`>-`) como `person.summary`/`project.description`:
+      // por contrato no trae varios párrafos, así que no necesita
+      // `splitParagraphs` (revisado a propósito, no es un olvido).
       const summary = cleanField(job.summary);
       const highlights = cleanList(job.highlights);
       const technologies = job.technologies ?? [];
@@ -57,7 +61,14 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
               {projects.map((project) => (
                 <div class="job__project">
                   <h4 class="job__project-name">{project.name}</h4>
-                  <p class="job__project-description">{project.description}</p>
+                  {/* `description` puede traer varios párrafos separados
+                      por línea en blanco (TAS, hoy el único caso) — mismo
+                      contrato de YAML plegado (`>-`) que person.summary y
+                      la description de ProjectCard. Un solo `<p>` colapsaba
+                      el salto en un bloque único. */}
+                  {splitParagraphs(project.description).map((paragraph) => (
+                    <p class="job__project-description">{paragraph}</p>
+                  ))}
                   {project.technologies.length > 0 && (
                     <ul class="tag-list">
                       {project.technologies.map((tech) => (

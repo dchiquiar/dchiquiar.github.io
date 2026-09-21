@@ -10,24 +10,60 @@ const { lang, person } = Astro.props;
 const t = ui[lang];
 const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
 const availability = cleanField(person.availability);
+// person.seniority pasa a opcional (F-10, decisión de Diego): mismo
+// patrón que availability. Sin esto, con el campo ausente quedaba un
+// <span> vacío y un separador "·" colgando en la línea de datos — el
+// separador lo pone `.hero__meta span:not(:last-child)::after` en CSS,
+// puramente por estructura del DOM, así que con el <span> condicionado
+// (no sólo su contenido) el separador se acomoda solo sin tocar el CSS.
+const seniority = cleanField(person.seniority);
+
+// person.intro (ADR-0015): la carga `backend` en paralelo — hoy el campo
+// no existe en data/cv.*.yaml, así que esto tiene que construir igual con
+// `undefined`. Mismo patrón que availability/summary: sin valor limpio, no
+// se renderiza el párrafo (nada de hueco ni marcador).
+const intro = cleanField(person.intro);
+
+// Alt del retrato: no es contenido del CV (no sale de data/cv.*.yaml, es
+// un hecho fijo de la propia foto), así que se escribe acá directo con
+// el mismo criterio que ya usa HomePage.astro para el meta description —
+// texto corto y bilingüe atado al markup, no a ui.js (que es sólo chrome
+// de interfaz) ni al YAML.
+const portraitAlt =
+  lang === "es"
+    ? "Retrato de Diego Chiquiar, con buzo oscuro"
+    : "Portrait of Diego Chiquiar, wearing a dark hoodie";
 ---
 
 <section id="top" class="hero">
-  <div class="container">
-    <h1 class="hero__name">{person.name}</h1>
-    <p class="hero__role">{person.headline}</p>
-    <p class="hero__meta">
-      <span>{person.location}</span>
-      <span>{person.seniority}</span>
-      {availability && <span>{availability}</span>}
-    </p>
-    <div class="cta-group">
-      <a class="btn btn-primary" href={cvHref} download>
-        {t.hero.downloadCv}
-      </a>
-      <a class="btn btn-secondary" href="#projects">
-        {t.hero.viewProjects}
-      </a>
+  <div class="container hero__layout">
+    <div class="hero__content">
+      <h1 class="hero__name">{person.name}</h1>
+      <p class="hero__role">{person.headline}</p>
+      {intro && <p class="hero__intro">{intro}</p>}
+      <p class="hero__meta">
+        <span>{person.location}</span>
+        {seniority && <span>{seniority}</span>}
+        {availability && <span>{availability}</span>}
+      </p>
+      <div class="cta-group">
+        <a class="btn btn-primary" href={cvHref} download>
+          {t.hero.downloadCv}
+        </a>
+        <a class="btn btn-secondary" href="#projects">
+          {t.hero.viewProjects}
+        </a>
+      </div>
+    </div>
+    <div class="hero__media">
+      <img
+        src="/images/diego-portrait.webp"
+        width="520"
+        height="898"
+        alt={portraitAlt}
+        decoding="async"
+        fetchpriority="high"
+      />
     </div>
   </div>
 </section>

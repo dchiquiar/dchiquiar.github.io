@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://dchiquiar.github.io/schemas/cv.schema.json",
   "title": "CV data",
-  "description": "Estructura de la capa pública del CV de Diego Chiquiar. Un archivo por idioma (cv.en.yaml, cv.es.yaml), misma forma, contenido en su idioma. Fuente única para el sitio; el PDF combina esta capa con la privada en data/private/ (ver data/schemas/cv.private.schema.json, ADR-0002 y ADR-0004).",
+  "description": "Estructura de la capa pública del CV de Diego Chiquiar. Un archivo por idioma (cv.en.yaml, cv.es.yaml), misma forma, contenido en su idioma. Fuente única para el sitio; el PDF combina esta capa con la privada en data/private/ (ver data/schemas/cv.private.schema.json).",
   "type": "object",
   "additionalProperties": false,
   "required": ["meta", "person", "experience", "education", "skills", "languages"],
@@ -26,7 +26,7 @@
     "person": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "headline", "location", "seniority", "email"],
+      "required": ["name", "headline", "location", "email"],
       "properties": {
         "name": { "type": "string" },
         "headline": {
@@ -34,10 +34,17 @@
           "description": "Titular factual (rol + stack), no copy de marketing: la versión final de venta se define en el proceso de contenido, no en este campo."
         },
         "location": { "type": "string" },
-        "seniority": { "type": "string" },
+        "seniority": {
+          "type": ["string", "null"],
+          "description": "Sale del sitio (decisión de Diego, B-19): el campo se mantiene por compatibilidad con la capa privada del PDF, pero ya no es obligatorio ni se declara en la capa pública. null = no publicado."
+        },
         "summary": {
           "type": ["string", "null"],
-          "description": "Bio corta. null si todavía no hay copy aprobada por Diego/talent-seeker."
+          "description": "Bio corta. null si todavía no hay copy aprobada para publicar."
+        },
+        "intro": {
+          "type": ["string", "null"],
+          "description": "Intro breve del hero, en primera persona, junto al retrato (ADR-0015). null si todavía no hay copy aprobada para publicar."
         },
         "availability": {
           "type": ["string", "null"],
@@ -74,7 +81,7 @@
             "properties": {
               "name": {
                 "type": "string",
-                "description": "Nombre real del empleador. Público desde ADR-0009: identifica y es verificable. Convive con sector, no lo reemplaza."
+                "description": "Nombre real del empleador, público: identifica y es verificable. Convive con sector, no lo reemplaza."
               },
               "sector": {
                 "type": ["string", "null"],
@@ -96,7 +103,7 @@
           "summary": { "type": ["string", "null"] },
           "projects": {
             "type": "array",
-            "description": "Proyectos con nombre propio dentro de este empleo (ADR-0010). Opcional: sólo lo lleva el empleo que los tiene. No confundir con data/proyectos.yaml (proyectos personales de la vitrina, otra fuente).",
+            "description": "Proyectos con nombre propio dentro de este empleo. Opcional: sólo lo lleva el empleo que los tiene. No confundir con data/proyectos.yaml (proyectos personales de la vitrina, otra fuente).",
             "items": {
               "type": "object",
               "additionalProperties": false,

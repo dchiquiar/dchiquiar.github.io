@@ -82,11 +82,11 @@ content_regexes=(
 # arriba), separados por coma; "" si ningún archivo necesita excepción para
 # ese patrón. El motivo de cada uno va en el comentario de su línea.
 content_exempt_files=(
-  ".gitignore,.github/workflows/deploy.yml,scripts/check-repo-leak.sh"  # los tres describen la regla de exclusión (qué se excluye y por qué); ninguno cita un archivo concreto de adentro del vault
+  ".gitignore,.github/workflows/deploy.yml,scripts/check-repo-leak.sh,scripts/generate-cv-pdf.mjs"  # los tres primeros describen la regla de exclusión (qué se excluye y por qué), sin citar un archivo concreto de adentro del vault. generate-cv-pdf.mjs sí necesita leer del vault en runtime (ADR: los PDF del CV se generan desde ahí, en local) y escribe la ruta directa a propósito — ver el comentario en ese archivo
   ""                                                                    # ningún archivo público necesita citar una ruta de usuario Windows
   "scripts/check-repo-leak.sh"                                         # el patrón que este chequeo busca queda escrito, literal, en el propio script
   "scripts/check-repo-leak.sh"                                         # ídem: el patrón que busca este chequeo queda escrito en el script
-  "scripts/check-repo-leak.sh"                                         # la etiqueta de este chequeo (el nombre del patrón) queda escrita en el script
+  "scripts/check-repo-leak.sh,scripts/generate-cv-pdf.mjs"             # check-repo-leak.sh: la etiqueta de este chequeo (el nombre del patrón) queda escrita en el propio script. generate-cv-pdf.mjs: nombra el archivo fuente concreto (cv-final-<lang>.md) que lee del vault, mismo motivo que la excepción de arriba
   "scripts/check-repo-leak.sh,src/lib/content.js"                      # check-repo-leak.sh: el patrón que busca queda escrito en el script. content.js: PLACEHOLDER_RE detecta ese marcador en datos sin confirmar, no lo tiene como fuga
 )
 
