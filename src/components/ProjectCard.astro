@@ -1,8 +1,14 @@
 ---
-// Carrusel sin JavaScript (ADR-0008): scroll-snap de CSS, contenedor
-// enfocable con nombre accesible. `images` sólo llega con datos cuando el
-// proyecto los tiene (hoy sólo game-server); si viene vacío no se renderiza
-// nada — ni marco ni hueco (mismo criterio que el resto de la tarjeta).
+// Carrusel de capturas (ADR-0008 sigue vigente como base): scroll-snap de
+// CSS, contenedor enfocable con nombre accesible, funciona sin JS. F-19
+// (ADR-0019 §5) agrega un nivel 2 de navegación ENCIMA de esa base: flechas
+// chicas superpuestas a la imagen y puntos convertidos en botones reales.
+// Nacen `disabled` + `aria-hidden="true"` (invisibles/inertes) y el script
+// inline de ProjectsSection.astro los activa — sin ese script, el
+// carrusel sigue exactamente como antes de F-19 (scroll nativo, puntos
+// decorativos). `images` sólo llega con datos cuando el proyecto los
+// tiene (hoy sólo game-server); si viene vacío no se renderiza nada — ni
+// marco ni hueco (mismo criterio que el resto de la tarjeta).
 import { ui } from "../i18n/ui.js";
 import { splitParagraphs } from "../lib/content.js";
 
@@ -15,7 +21,7 @@ interface ProjectImage {
 
 interface Props {
   lang: "en" | "es";
-  variant?: "featured" | "standard";
+  id: string;
   title: string;
   description: string;
   problem: string;
@@ -26,7 +32,7 @@ interface Props {
 }
 const {
   lang,
-  variant = "standard",
+  id,
   title,
   description,
   problem,
@@ -37,6 +43,11 @@ const {
 } = Astro.props;
 const t = ui[lang];
 const carouselLabel = `${title} — ${t.projects.screenshotsLabel}`;
+const trackId = `carousel-track-${id}`;
+
+function fillTemplate(tpl: string, current: number, total: number) {
+  return tpl.replace("{current}", String(current)).replace("{total}", String(total));
+}
 
 // `description` puede traer dos párrafos separados por línea en blanco
 // (game-server, hoy es el único caso). Un solo `<p>` colapsaba el salto:
@@ -48,30 +59,71 @@ const carouselLabel = `${title} — ${t.projects.screenshotsLabel}`;
 const descriptionParagraphs = splitParagraphs(description);
 ---
 
-<article class={`project-card project-card--${variant}`}>
+<article class="project-card">
   {images.length > 0 && (
-    <div class="carousel" role="region" aria-label={carouselLabel} tabindex="0">
-      <ul class="carousel__track">
-        {images.map((img, i) => (
-          <li class="carousel__item">
-            <img
-              src={img.src}
-              width={img.width}
-              height={img.height}
-              alt={img.alt[lang]}
-              loading={i === 0 ? undefined : "lazy"}
-              decoding={i === 0 ? undefined : "async"}
-              fetchpriority={i === 0 ? "high" : undefined}
-            />
-          </li>
-        ))}
-      </ul>
-      {images.length > 1 && (
-        <div class="carousel__dots" aria-hidden="true">
-          {images.map(() => (
-            <span class="carousel__dot"></span>
+    <div class="carousel-frame">
+      <div
+        class="carousel"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={carouselLabel}
+        tabindex="0"
+        data-carousel
+      >
+        <ul class="carousel__track" id={trackId}>
+          {images.map((img, i) => (
+            <li class="carousel__item" data-carousel-item>
+              <img
+                src={img.src}
+                width={img.width}
+                height={img.height}
+                alt={img.alt[lang]}
+                loading={i === 0 ? undefined : "lazy"}
+                decoding={i === 0 ? undefined : "async"}
+                fetchpriority={i === 0 ? "high" : undefined}
+              />
+            </li>
           ))}
-        </div>
+        </ul>
+      </div>
+      {images.length > 1 && (
+        <>
+          <button
+            type="button"
+            class="carousel__nav carousel__nav--prev"
+            data-carousel-prev
+            aria-label={t.projects.prevScreenshot}
+            aria-controls={trackId}
+            disabled
+            aria-hidden="true"
+          >
+            <span aria-hidden="true">‹</span>
+          </button>
+          <button
+            type="button"
+            class="carousel__nav carousel__nav--next"
+            data-carousel-next
+            aria-label={t.projects.nextScreenshot}
+            aria-controls={trackId}
+            disabled
+            aria-hidden="true"
+          >
+            <span aria-hidden="true">›</span>
+          </button>
+          <div class="carousel__dots">
+            {images.map((img, i) => (
+              <button
+                type="button"
+                class="carousel__dot"
+                data-carousel-dot
+                aria-label={fillTemplate(t.projects.screenshotLabelTemplate, i + 1, images.length)}
+                aria-controls={trackId}
+                disabled
+                aria-hidden="true"
+              ></button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )}

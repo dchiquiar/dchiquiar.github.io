@@ -5,10 +5,14 @@
 // se terminan las cosas, y eso resta más de lo que suma. Cuando el MCP
 // deje de estar "planned" reaparece solo, en su lugar en el YAML.
 //
-// Los proyectos visibles no prueban lo mismo entre sí (uno prueba código
-// auditable, otro prueba escala): el primero se renderiza con
-// variant="featured" para que se perciba esa jerarquía, no una grilla
-// de clones.
+// F-19 (ADR-0019 §4-§5): un proyecto a la vez, como case study, con
+// flechas externas para cambiar de proyecto. Ya no hay variant
+// featured/standard (F-4): esa distinción existía para que una GRILLA con
+// varios proyectos simultáneos no se leyera como clones. Acá nunca hay
+// más de uno visible a la vez — no hay nada que comparar, así que darle
+// menos peso visual al segundo proyecto sólo por su posición en el YAML
+// ya no tiene motivo. Los dos usan el mismo tratamiento (el que antes
+// era "featured").
 import { ui } from "../i18n/ui.js";
 import SectionHeading from "./SectionHeading.astro";
 import ProjectCard from "./ProjectCard.astro";
@@ -24,6 +28,7 @@ const t = ui[lang];
 const cards = loadProjects()
   .filter((p) => p.status !== "planned")
   .map((p) => ({
+    id: p.id,
     title: p.title[lang],
     description: p.description[lang],
     problem: p.problem[lang],
@@ -32,15 +37,233 @@ const cards = loadProjects()
     repoUrl: p.repoUrl ?? null,
     liveUrl: p.liveUrl ?? null,
   }));
+
+const multiple = cards.length > 1;
+
+function fillTemplate(tpl: string, current: number, total: number) {
+  return tpl.replace("{current}", String(current)).replace("{total}", String(total));
+}
 ---
 
 <section id="projects" class="section">
   <div class="container">
     <SectionHeading number={number} title={t.sections.projects} id="projects" />
-    <div class="project-grid">
-      {cards.map((card, index) => (
-        <ProjectCard lang={lang} variant={index === 0 ? "featured" : "standard"} {...card} />
-      ))}
+    <div
+      class="projects-carousel"
+      data-projects-carousel
+      data-counter-template={t.projects.counterTemplate}
+      data-announce-template={t.projects.announceTemplate}
+      {...multiple
+        ? { role: "region", "aria-roledescription": "carousel", "aria-labelledby": "projects-heading" }
+        : {}}
+    >
+      {multiple && (
+        <button
+          type="button"
+          class="projects-carousel__arrow projects-carousel__arrow--prev"
+          data-projects-prev
+          aria-label={t.projects.prevProject}
+          aria-controls="project-track"
+          disabled
+          aria-hidden="true"
+        >
+          <span aria-hidden="true">‹</span>
+        </button>
+      )}
+      <div class="projects-carousel__viewport">
+        {multiple && (
+          <p class="projects-carousel__counter" data-projects-counter hidden></p>
+        )}
+        <div class="project-grid" data-projects-track id="project-track">
+          {cards.map((card, index) => (
+            <div
+              class="project-slide"
+              data-project-slide
+              data-title={card.title}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={fillTemplate(t.projects.slideLabelTemplate, index + 1, cards.length)}
+            >
+              <ProjectCard lang={lang} {...card} />
+            </div>
+          ))}
+        </div>
+      </div>
+      {multiple && (
+        <button
+          type="button"
+          class="projects-carousel__arrow projects-carousel__arrow--next"
+          data-projects-next
+          aria-label={t.projects.nextProject}
+          aria-controls="project-track"
+          disabled
+          aria-hidden="true"
+        >
+          <span aria-hidden="true">›</span>
+        </button>
+      )}
     </div>
+    {multiple && (
+      <p class="visually-hidden" aria-live="polite" data-projects-announcer></p>
+    )}
   </div>
 </section>
+
+<script is:inline>
+  (function () {
+    var reduceMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function fill(tpl, current, total, title) {
+      return tpl
+        .replace("{current}", String(current))
+        .replace("{total}", String(total))
+        .replace("{title}", title || "");
+    }
+
+    // Nivel 1: cambia de proyecto entero (ADR-0019 §5). Sin este script,
+    // las flechas/el contador quedan `disabled` + `aria-hidden` (CSS los
+    // esconde) y los proyectos siguen apilados, cada uno con su propio
+    // carrusel funcionando por scroll — el bloque de abajo es la única
+    // parte de la página que depende de JS para algo más que un detalle
+    // visual.
+    var wrap = document.querySelector("[data-projects-carousel]");
+    var track = document.querySelector("[data-projects-track]");
+    var prevProject = document.querySelector("[data-projects-prev]");
+    var nextProject = document.querySelector("[data-projects-next]");
+    var counter = document.querySelector("[data-projects-counter]");
+    var announcer = document.querySelector("[data-projects-announcer]");
+    var slides = track
+      ? Array.prototype.slice.call(track.querySelectorAll("[data-project-slide]"))
+      : [];
+
+    if (wrap && track && prevProject && nextProject && slides.length > 1) {
+      var active = 0;
+      var counterTpl = wrap.getAttribute("data-counter-template") || "";
+      var announceTpl = wrap.getAttribute("data-announce-template") || "";
+
+      var render = function () {
+        slides.forEach(function (slide, i) {
+          slide.hidden = i !== active;
+        });
+        if (counter) {
+          counter.hidden = false;
+          counter.textContent = fill(counterTpl, active + 1, slides.length);
+        }
+        if (announcer) {
+          announcer.textContent = fill(
+            announceTpl,
+            active + 1,
+            slides.length,
+            slides[active].getAttribute("data-title"),
+          );
+        }
+      };
+
+      // Transición corta (≤250ms totales) sólo de opacidad/traslado sobre
+      // el track entero: se desvanece, se intercambia qué slide queda sin
+      // `hidden` (ahí cambia el alto real de la sección, pero ocurre
+      // mientras el track está en opacity:0), y se desvanece de vuelta ya
+      // con el alto nuevo — nunca hay dos proyectos en flujo a la vez.
+      // `reduceMotion` se resuelve una sola vez arriba: se salta el paso
+      // intermedio entero, no depende de que la transición CSS quede en
+      // 0.01ms por la regla global de `*`.
+      var goTo = function (index) {
+        var next = (index + slides.length) % slides.length;
+        if (next === active) return;
+        if (reduceMotion) {
+          active = next;
+          render();
+          return;
+        }
+        track.setAttribute("data-swapping", "");
+        setTimeout(function () {
+          active = next;
+          render();
+          track.removeAttribute("data-swapping");
+        }, 120);
+      };
+
+      prevProject.addEventListener("click", function () {
+        goTo(active - 1);
+      });
+      nextProject.addEventListener("click", function () {
+        goTo(active + 1);
+      });
+      prevProject.disabled = false;
+      nextProject.disabled = false;
+      prevProject.removeAttribute("aria-hidden");
+      nextProject.removeAttribute("aria-hidden");
+      render();
+    }
+
+    // Nivel 2: cambia sólo la captura dentro del proyecto activo. Sigue
+    // usando el scroll-snap de ADR-0008 como mecanismo real de
+    // desplazamiento (`scrollIntoView`, no una reimplementación propia) —
+    // este bloque sólo agrega flechas/puntos encima.
+    var galleries = Array.prototype.slice.call(document.querySelectorAll("[data-carousel]"));
+    galleries.forEach(function (carousel) {
+      var frame = carousel.parentElement;
+      var items = Array.prototype.slice.call(carousel.querySelectorAll("[data-carousel-item]"));
+      if (items.length < 2 || !frame) return;
+
+      var prevShot = frame.querySelector("[data-carousel-prev]");
+      var nextShot = frame.querySelector("[data-carousel-next]");
+      var dots = Array.prototype.slice.call(frame.querySelectorAll("[data-carousel-dot]"));
+      var behavior = reduceMotion ? "auto" : "smooth";
+      var current = 0;
+
+      var setActiveDot = function (index) {
+        dots.forEach(function (dot, i) {
+          if (i === index) dot.setAttribute("aria-current", "true");
+          else dot.removeAttribute("aria-current");
+        });
+      };
+
+      var goToItem = function (index) {
+        current = (index + items.length) % items.length;
+        items[current].scrollIntoView({ behavior: behavior, block: "nearest", inline: "start" });
+      };
+
+      if (prevShot && nextShot) {
+        prevShot.addEventListener("click", function () {
+          goToItem(current - 1);
+        });
+        nextShot.addEventListener("click", function () {
+          goToItem(current + 1);
+        });
+        prevShot.disabled = false;
+        nextShot.disabled = false;
+        prevShot.removeAttribute("aria-hidden");
+        nextShot.removeAttribute("aria-hidden");
+      }
+
+      dots.forEach(function (dot, i) {
+        dot.addEventListener("click", function () {
+          goToItem(i);
+        });
+        dot.disabled = false;
+        dot.removeAttribute("aria-hidden");
+      });
+
+      if (dots.length && "IntersectionObserver" in window) {
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+                setActiveDot(items.indexOf(entry.target));
+              }
+            });
+          },
+          { root: carousel, threshold: 0.6 },
+        );
+        items.forEach(function (item) {
+          observer.observe(item);
+        });
+      } else if (dots.length) {
+        setActiveDot(0);
+      }
+    });
+  })();
+</script>

@@ -367,10 +367,39 @@ a:not(.btn) {
   top: 1rem;
 }
 
+/* F-19: anuncia cambios de proyecto (aria-live) sin ocupar espacio visual
+   ni aportar ruido a quien no usa lector de pantalla. Técnica estándar de
+   "clip" en vez de `display: none` (que sacaría el nodo del árbol de
+   accesibilidad, inutilizando el aria-live). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .container {
   max-width: var(--container-width);
   margin-inline: auto;
   padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+  /* F-19: a 200% de tamaño de texto, el trazo decorativo de
+     `.section-heading__mark::before` (izq/der en `em`, que crecen con el
+     zoom de texto igual que el resto de la tipografía) podía asomar hasta
+     11px más allá del viewport en títulos largos ("Experiencia", ES,
+     mobile) — `body` ya tiene `overflow-x: hidden` y lo recorta a la
+     vista, pero el layout seguía "creyendo" que esa caja era más ancha
+     (medible con scrollWidth). `overflow-x: clip` acá lo acota al ancho
+     real de ESTE contenedor, sin afectar el resto: no crea scrollport
+     (a diferencia de `hidden`, no interfiere con el `animation-timeline:
+     view()` del propio trazo) y el alto de `.container` sobra de sobra
+     para el trazo (unos 2.5em desde arriba) en las cinco secciones, así
+     que no recorta nada verticalmente pese a que la ausencia de
+     `overflow-y` explícito lo deja en `auto` por regla del spec (visible +
+     no-visible en el otro eje se resuelve a `auto`, no a `visible`). */
+  overflow-x: clip;
 }
 
 /* El nav ya no varía de alto por breakpoint (F-11, reemplaza el esquema de
@@ -1620,25 +1649,139 @@ h3 {
 }
 
 /* ── Projects ────────────────────────────────────────────────────── */
-/* Los proyectos visibles no son equivalentes: cada uno prueba algo
-   distinto, y si las tarjetas se leen como clones el lector promedia y
-   el más débil arrastra a los otros. La grilla no puede leerse como una
-   lista de clones. `--featured` (primer proyecto, el más grande) rompe
-   la simetría con más espacio, tipografía mayor y borde de acento;
-   `--standard` queda más angosto y alineado a la izquierda. */
+/* F-19 (ADR-0019 §4-§5): un proyecto a la vez, como case study, con dos
+   niveles de navegación que nunca se mezclan — distinta ubicación,
+   tamaño y estilo entre uno y otro:
+   - Nivel 1, `.projects-carousel`: cambia de PROYECTO. Flechas grandes
+     (44px) afuera de la tarjeta + contador "1 / 2".
+   - Nivel 2, `.carousel`/`.carousel-frame`: cambia de CAPTURA dentro del
+     proyecto activo. Flechas chicas (28px) superpuestas a la imagen +
+     puntos. Sigue siendo scroll-snap puro (ADR-0008) como mecanismo
+     real; el nivel 2 sólo le agrega controles encima.
+   Ya no hay variant featured/standard (existía desde F-1 para que una
+   GRILLA con varios proyectos simultáneos no se leyera como clones). Acá
+   nunca hay más de un proyecto visible a la vez — no hay nada que
+   comparar — así que los dos usan el mismo tratamiento visual (el que
+   antes era "featured"). */
+
+/* Nivel 1: flechas externas + contador. Nacen `disabled` + `aria-hidden`
+   (CSS las esconde con `[disabled]`) y el script de ProjectsSection.astro
+   las activa — sin JS, `.project-grid` no tiene overrides de este bloque
+   y los proyectos quedan apilados como siempre, cada uno con su propio
+   carrusel funcionando por scroll (mejora progresiva, ADR-0019 §5). */
+.projects-carousel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Mobile: con la tarjeta apilada (imagen arriba, texto abajo) es mucho más
+   alta que ancha — `align-items: center` centraría las flechas contra el
+   alto TOTAL de la tarjeta, quedando huérfanas a mitad de un párrafo en
+   vez de cerca de la imagen. `flex-start` + un corrimiento fijo (altura
+   aproximada del contador) las deja arriba, a la altura de la imagen. */
+@media (max-width: 767px) {
+  .projects-carousel {
+    align-items: flex-start;
+  }
+
+  .projects-carousel__arrow {
+    margin-top: 2.4rem;
+  }
+}
+
+.projects-carousel__viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.projects-carousel__arrow {
+  appearance: none;
+  flex-shrink: 0;
+  /* 44px: destino táctil "default" (accessibility.md), igual que
+     `.theme-toggle` — es el control más importante de la página después
+     de las anclas del nav, se lo trata igual de grande. */
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--color-control-border);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: border-color 150ms ease, color 150ms ease,
+    transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.projects-carousel__arrow[disabled] {
+  display: none;
+}
+
+.projects-carousel__arrow:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.projects-carousel__arrow:active {
+  transform: scale(0.93);
+}
+
+.projects-carousel__counter {
+  margin: 0 0 0.6rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
 
 .project-grid {
   display: grid;
   gap: 1.75rem;
+  /* Transición corta (≤250ms totales, JS orquesta el intercambio de
+     `hidden` mientras esto está en opacity:0) — ver el script inline de
+     ProjectsSection.astro. `prefers-reduced-motion` ya fuerza
+     `transition-duration: 0.01ms` sobre `*` (arriba en este archivo), así
+     que acá no hace falta un carve-out propio. */
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.project-grid[data-swapping] {
+  opacity: 0;
+  transform: translateY(0.4rem);
 }
 
 .project-card {
   background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-accent);
   border-radius: 0.5rem;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* Envoltorio nuevo de F-19: separa "lo que scrollea" (`.carousel`, sigue
+   igual que ADR-0008) de "lo que se ve fijo encima" (flechas chicas,
+   nivel 2). Las flechas van `position: absolute` respecto de ESTE
+   contenedor, no de `.carousel` — si vivieran dentro del propio
+   `.carousel` (el elemento con `overflow-x: auto`), un `position:
+   absolute` ahí adentro seguiría scrolleando con el contenido en vez de
+   quedarse fijo sobre la imagen. El `max-width`/centrado que antes tenía
+   `.carousel` se mueve acá — la fórmula sigue siendo el mismo álgebra de
+   F-6/T-C, sólo cambió la constante que se resta (ver el comentario de
+   `.carousel__dots`, más abajo: los puntos crecieron de 0.4rem a 1.75rem
+   de área táctil real por el hallazgo de Lighthouse de F-19). */
+.carousel-frame {
+  position: relative;
+  max-width: calc((25vh - 2.35rem) * 16 / 9 / 0.9);
+  margin-inline: auto;
 }
 
 /* Carrusel sin JS (ADR-0008): `scroll-snap` + contenedor enfocable.
@@ -1646,33 +1789,30 @@ h3 {
    restante deja ver el borde de la imagen siguiente ("peek"), que es la
    señal de que hay más de una sin necesidad de interactuar ni de JS.
 
-   El `max-width` de abajo es lo que resuelve "la imagen se ve muy
-   grande" — no achica el ítem/slide respecto del carrusel (seguiría
-   siendo 90%), achica el carrusel entero. Es a propósito, no al revés:
-   los puntos activos (más abajo, `animation-timeline: view()`) asumen
-   que UN slide llena casi todo el carrusel a la vez — esa es la premisa
-   con la que "cover" calcula cuándo un slide está a mitad de su
-   recorrido. Si en cambio se achica sólo el `flex-basis` del ítem
-   dejando el carrusel a su ancho completo, entran 2-3 slides a la vez en
-   pantalla y el punto activo deja de moverse con el scroll (verificado
-   con Puppeteer: quedaba fijo en el del medio sin importar la posición
-   real de scroll — es la forma exacta de romperlos que pedía evitar el
-   brief). Con el carrusel entero achicado, la proporción 90%/10% se
-   mantiene igual que siempre y el cálculo de los puntos no cambia.
+   El `max-width` de `.carousel-frame` (arriba) es lo que resuelve "la
+   imagen se ve muy grande" — no achica el ítem/slide respecto del
+   carrusel (seguiría siendo 90%), achica el carrusel entero. Es a
+   propósito, no al revés: los puntos activos (más abajo,
+   `animation-timeline: view()`) asumen que UN slide llena casi todo el
+   carrusel a la vez — esa es la premisa con la que "cover" calcula
+   cuándo un slide está a mitad de su recorrido. Si en cambio se achica
+   sólo el `flex-basis` del ítem dejando el carrusel a su ancho completo,
+   entran 2-3 slides a la vez en pantalla y el punto activo deja de
+   moverse con el scroll (verificado con Puppeteer: quedaba fijo en el
+   del medio sin importar la posición real de scroll — es la forma exacta
+   de romperlos que pedía evitar el brief). Con el carrusel entero
+   achicado, la proporción 90%/10% se mantiene igual que siempre y el
+   cálculo de los puntos no cambia.
 
-   Álgebra: si el ítem (90% del carrusel) tiene que dar, a 16:9, un alto
-   de imagen de `25vh - 1.6rem` (el resto son los puntos, ver el
-   comentario de `.carousel__dots`), el ancho del ITEM es
-   `(25vh - 1.6rem) * 16/9`, y el ancho del CARRUSEL es ese valor
-   dividido por 0.9 (porque el ítem es el 90% del carrusel, no el 100%).
-   Sin `min()`: `max-width` ya no actúa cuando el resultado supera el
-   ancho disponible de la tarjeta (mobile), así que el comportamiento
-   angosto de siempre queda intacto ahí. Centrado con `margin-inline:
-   auto` para que no quede pegado a la izquierda de una tarjeta más
-   ancha. */
+   Álgebra (misma de F-6, sólo cambió de selector y de constante — ver
+   `.carousel__dots` más abajo): si el ítem (90% del carrusel) tiene que
+   dar, a 16:9, un alto de imagen de `25vh - 2.35rem` (el resto son los
+   puntos), el ancho del ITEM es `(25vh - 2.35rem) * 16/9`, y el ancho del
+   CARRUSEL es ese valor dividido por 0.9 (porque el ítem es el 90% del
+   carrusel, no el 100%). Sin `min()`: `max-width` ya no actúa cuando el
+   resultado supera el ancho disponible de la tarjeta (mobile), así que
+   el comportamiento angosto de siempre queda intacto ahí. */
 .carousel {
-  max-width: calc((25vh - 1.6rem) * 16 / 9 / 0.9);
-  margin-inline: auto;
   overflow-x: auto;
   /* F-12: consistencia con `.site-nav__anchors`, el otro scroller
      horizontal del sitio — momentum scroll defensivo en WebKit viejo. */
@@ -1720,18 +1860,105 @@ h3 {
   aspect-ratio: 16 / 9;
 }
 
-/* Alto fijo: 0.6rem + 0.6rem de padding + 0.4rem del punto = 1.6rem —
+/* Nivel 2, flechas chicas (F-19): superpuestas a la imagen, no encima de
+   los puntos — "sobre la imagen" de las dos ubicaciones que permitía el
+   brief, elegida porque no toca el presupuesto de alto de
+   `.carousel-frame` (los puntos, abajo, siguen midiendo exactamente lo
+   mismo que antes de F-19: la fórmula de arriba no cambió). 28px: destino
+   "mínimo" de accessibility.md, no el "default" de 44px — es un control
+   secundario dentro de uno ya chico. `color-mix` con el propio
+   `--color-bg` (The One Ink Rule: ningún color nuevo) para que se lea
+   encima de una foto con cualquier tono. */
+.carousel__nav {
+  appearance: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--color-control-border);
+  background: color-mix(in srgb, var(--color-bg) 78%, transparent);
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: border-color 150ms ease, transform 150ms ease;
+}
+
+.carousel__nav[disabled] {
+  display: none;
+}
+
+.carousel__nav:hover {
+  border-color: var(--color-accent);
+}
+
+.carousel__nav:active {
+  transform: translateY(-50%) scale(0.93);
+}
+
+.carousel__nav--prev {
+  left: 0.5rem;
+}
+
+.carousel__nav--next {
+  right: 0.5rem;
+}
+
+/* Alto fijo: 0.3rem + 0.3rem de padding + 1.75rem del botón = 2.35rem —
    es el término que se resta del presupuesto de `25vh` en el
-   `max-width` de `.carousel`, más arriba, para que el 25% sea del
-   carrusel completo (imagen + esta fila), no sólo de la imagen. */
+   `max-width` de `.carousel-frame`, más arriba, para que el 25% sea del
+   carrusel completo (imagen + esta fila), no sólo de la imagen.
+
+   Primera versión de F-19 probó un botón visualmente chico (0.4rem, el
+   tamaño de siempre) con el área táctil ampliada sólo vía un `::before`
+   invisible (`position: absolute`, sin aportar al layout) — pasaba
+   inspección visual y hasta un cálculo de "distancia al vecino más
+   cercano", pero Lighthouse (audit `target-size`) mide la CAJA propia
+   del elemento, no un pseudo superpuesto: reportó 6,4×6,4px igual, tres
+   fallos de Accessibility. La caja real del `<button>` tiene que medir
+   ≥28px — no hay atajo con un pseudo. */
 .carousel__dots {
   display: flex;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.6rem 0;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0;
 }
 
 .carousel__dot {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.carousel__dot[disabled] {
+  cursor: default;
+}
+
+/* El punto visible sigue midiendo lo de siempre (0.4rem): el botón real
+   (arriba) es el área táctil de 28px, transparente, y este `::after`
+   centrado es el único que se ve — mismo color/estado que antes, la
+   animación de "activo" (más abajo) se mueve acá porque es el elemento
+   que efectivamente pinta el color. */
+.carousel__dot::after {
+  content: "";
   width: 0.4rem;
   height: 0.4rem;
   border-radius: 50%;
@@ -1747,8 +1974,9 @@ h3 {
    porque data/schemas/proyectos.schema.json no permite más imágenes
    por proyecto. Envuelto en @supports: sin soporte (Safari estable a
    esta fecha) la regla entera no aplica y los dots quedan exactamente
-   como estaban — fallback explícito, no bug. Siguen aria-hidden y no
-   clicables. */
+   como estaban — fallback explícito, no bug. Sigue siendo puramente
+   visual: el estado accesible activo (`aria-current`) lo pone el script
+   de F-19 vía IntersectionObserver, no esta animación. */
 @supports (animation-timeline: view()) {
   .carousel__item:nth-child(1) {
     view-timeline-name: --carousel-slide-1;
@@ -1772,23 +2000,23 @@ h3 {
       --carousel-slide-3, --carousel-slide-4;
   }
 
-  .carousel__dot {
+  .carousel__dot::after {
     animation-name: carousel-dot-active;
     animation-duration: 1ms;
     animation-fill-mode: both;
     animation-timing-function: linear;
   }
 
-  .carousel__dot:nth-child(1) {
+  .carousel__dot:nth-child(1)::after {
     animation-timeline: --carousel-slide-1;
   }
-  .carousel__dot:nth-child(2) {
+  .carousel__dot:nth-child(2)::after {
     animation-timeline: --carousel-slide-2;
   }
-  .carousel__dot:nth-child(3) {
+  .carousel__dot:nth-child(3)::after {
     animation-timeline: --carousel-slide-3;
   }
-  .carousel__dot:nth-child(4) {
+  .carousel__dot:nth-child(4)::after {
     animation-timeline: --carousel-slide-4;
   }
 
@@ -1803,12 +2031,20 @@ h3 {
   }
 }
 
+/* Padding/gap/tamaños: heredados de lo que antes era sólo `--featured`
+   (F-19, ver el comentario de "── Projects" más arriba) — con un solo
+   proyecto visible a la vez, los dos usan el tratamiento más grande. */
 .project-card__body {
-  padding: 1.25rem 1.4rem 1.5rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.5rem, 5vw, 2.75rem)
+    clamp(1.75rem, 5vw, 3rem);
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 1rem;
   flex: 1;
+}
+
+.project-card__body h3 {
+  font-size: clamp(1.4rem, 2.6vw, 1.85rem);
 }
 
 /* `description` puede partirse en varios `<p>` (ProjectCard.astro,
@@ -1819,6 +2055,7 @@ h3 {
 .project-card__description--secondary {
   color: var(--color-text);
   margin: 0;
+  font-size: 1.05rem;
   /* Medida de lectura (ADR-0013, precisado): el tope va en el párrafo,
      no en `.project-card__body` — ese contenedor también envuelve el
      título, los tags y los enlaces, así que un `max-width` ahí
@@ -1868,53 +2105,34 @@ h3 {
   margin-bottom: 0.25rem;
 }
 
-.project-card--featured {
-  border-color: var(--color-accent);
-}
-
-.project-card--featured .project-card__body {
-  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.5rem, 5vw, 2.75rem)
-    clamp(1.75rem, 5vw, 3rem);
-  gap: 1rem;
-}
-
-.project-card--featured h3 {
-  font-size: clamp(1.4rem, 2.6vw, 1.85rem);
-}
-
-.project-card--featured .project-card__description,
-.project-card--featured .project-card__description--secondary {
-  font-size: 1.05rem;
-}
-
-.project-card--standard {
-  max-width: 34rem;
-  justify-self: start;
-}
-
-/* Dos columnas en desktop (F-12, corrige P0-2 de analisis-taste.md): con
-   un único proyecto visible, `--featured` apilado (carrusel arriba,
-   texto abajo) dejaba ~45% de la tarjeta vacío a la derecha del texto,
-   topado en la medida de lectura (ADR-0013) dentro de una caja de ancho
-   completo. El carrusel pasa a ser una columna propia en vez de
-   centrarse arriba; el texto sigue respetando `--medida-lectura` (no se
-   estira para "llenar" el resto). Sigue siendo el mismo `scroll-snap`
-   sin JS (ADR-0008): sólo cambia el layout del contenedor, no el
-   carrusel en sí. Sólo `--featured`: `--standard` ya está topado a
-   34rem y no tiene el mismo vacío. */
+/* Dos columnas en desktop (F-12, corrige P0-2 de analisis-taste.md;
+   generalizado en F-19 a todas las tarjetas — antes sólo `--featured`,
+   ver el comentario de "── Projects"): apilado (imagen arriba, texto
+   abajo) deja ~45% de la tarjeta vacío a la derecha del texto, topado en
+   la medida de lectura (ADR-0013) dentro de una caja de ancho completo.
+   La galería pasa a ser una columna propia en vez de centrarse arriba;
+   el texto sigue respetando `--medida-lectura` (no se estira para
+   "llenar" el resto). Sigue siendo el mismo `scroll-snap` sin JS
+   (ADR-0008): sólo cambia el layout del contenedor, no el carrusel en
+   sí. Un proyecto sin imágenes (portfolio-site) no tiene `.carousel-frame`
+   en el DOM (ProjectCard.astro no lo renderiza si `images` viene vacío):
+   con un solo hijo (`.project-card__body`), la fila igual ocupa el
+   ancho completo por `flex: 1 1 auto` — no queda hueco ni hace falta un
+   bloque sustituto, mismo criterio anti-placeholder del resto del
+   sitio. */
 @media (min-width: 768px) {
-  .project-card--featured {
+  .project-card {
     flex-direction: row;
     align-items: center;
   }
 
-  .project-card--featured .carousel {
+  .project-card .carousel-frame {
     flex: 0 0 44%;
     max-width: none;
     margin-inline: 0;
   }
 
-  .project-card--featured .project-card__body {
+  .project-card__body {
     flex: 1 1 auto;
     min-width: 0;
   }

@@ -56,6 +56,22 @@ export const ui = {
       viewCode: "View code",
       viewLive: "Live demo",
       noRepoNote: "Code not public",
+      // F-19 (ADR-0019 §5): navegación de proyectos con JS mínimo. Nivel 1
+      // (cambia de proyecto) y nivel 2 (cambia de captura dentro del
+      // proyecto activo) usan etiquetas distintas a propósito, para que un
+      // lector de pantalla nunca confunda a cuál de los dos afecta un
+      // control. Los "Template" llevan placeholders ({current}/{total}/
+      // {title}) que el script inline de ProjectsSection.astro completa en
+      // tiempo de ejecución — el script en sí no tiene texto propio en
+      // ningún idioma, sólo rellena estas plantillas ya traducidas.
+      prevProject: "Previous project",
+      nextProject: "Next project",
+      counterTemplate: "{current} / {total}",
+      announceTemplate: "Project {current} of {total}: {title}",
+      slideLabelTemplate: "{current} of {total}",
+      prevScreenshot: "Previous screenshot",
+      nextScreenshot: "Next screenshot",
+      screenshotLabelTemplate: "Screenshot {current} of {total}",
     },
     experience: {
       downloadCv: "Download CV (PDF)",
@@ -123,6 +139,14 @@ export const ui = {
       viewCode: "Ver código",
       viewLive: "Demo en vivo",
       noRepoNote: "Código no público",
+      prevProject: "Proyecto anterior",
+      nextProject: "Proyecto siguiente",
+      counterTemplate: "{current} / {total}",
+      announceTemplate: "Proyecto {current} de {total}: {title}",
+      slideLabelTemplate: "{current} de {total}",
+      prevScreenshot: "Captura anterior",
+      nextScreenshot: "Captura siguiente",
+      screenshotLabelTemplate: "Captura {current} de {total}",
     },
     experience: {
       downloadCv: "Descargar CV (PDF)",
