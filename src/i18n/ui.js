@@ -41,6 +41,12 @@ export const ui = {
       // `.hero__meta`; ahora es una frase completa, así que la palabra
       // necesita salir de acá, no quedar hardcodeada en Hero.astro.
       from: "From",
+      // F-20: nombre accesible de la terminal decorativa (data/now.yaml).
+      // El comando en sí ("cat now.txt") es sintaxis de shell, no
+      // necesariamente legible para quien no la reconoce — este rótulo
+      // (chrome de interfaz, no contenido del CV) va en aria-label del
+      // contenedor, nunca visible.
+      currentlyLearningLabel: "Currently learning",
     },
     sections: {
       projects: "Projects",
@@ -124,6 +130,7 @@ export const ui = {
       downloadCv: "Descargar CV (PDF)",
       viewProjects: "Ver proyectos",
       from: "Desde",
+      currentlyLearningLabel: "Actualmente estudiando",
     },
     sections: {
       projects: "Proyectos",

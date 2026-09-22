@@ -9,7 +9,7 @@
 // queda disponible en data/cv.*.yaml para cuando se decida usarlo, pero
 // este componente no lo lee. Sin edad en ningún punto del hero (ADR-0019).
 import { ui } from "../i18n/ui.js";
-import { cleanField, splitParagraphs } from "../lib/content.js";
+import { cleanField, splitParagraphs, loadNow } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
@@ -34,6 +34,14 @@ const github = person.links?.github ?? null;
 // description, ver content.js) — un solo <p> los uniría en un bloque
 // corrido. splitParagraphs ya resuelve esto en el resto del sitio.
 const introParagraphs = splitParagraphs(cleanField(person.intro) ?? "");
+
+// F-20: terminal decorativa "$ cat now.txt" — un solo archivo
+// (data/now.yaml) para los dos idiomas, ya en inglés en el propio dato
+// (se presenta como código, no como copy traducible, decisión de Diego).
+// Sin cleanField/cleanList: now.schema.json ya exige command/items no
+// vacíos y validate-data.mjs corre el mismo filtro anti-placeholder sobre
+// este archivo que sobre cv.*.yaml (ver scripts/validate-data.mjs).
+const now = loadNow();
 
 // Alt del retrato: no es contenido del CV (no sale de data/cv.*.yaml, es
 // un hecho fijo de la propia foto), así que se escribe acá directo con
@@ -117,21 +125,67 @@ const nameWordsData = person.name
           ))}
         </div>
       )}
-      {featuredFact && <p class="hero__fact">{featuredFact}</p>}
-      {availability && <p class="hero__availability">{availability}</p>}
-      {(linkedin || github) && (
-        <p class="hero__links">
-          {linkedin && <a href={linkedin}>LinkedIn</a>}
-          {github && <a href={github}>GitHub</a>}
+      {/* F-20 (A-4 P1-2): el dato destacado, la disponibilidad y los links
+         eran tres filas propias con tres tratamientos de peso distintos
+         (fact con filete de acento + itálica llevaba MÁS peso que
+         availability, aunque PRODUCT.md exige que availability se vea y
+         fact es opcional). Ahora comparten `.hero__support`, al costado
+         del CTA, con un único tratamiento (mismo tamaño, misma tinta
+         suave, sin filete): ninguno de los dos pesa más que el otro. En
+         mobile, `.hero__fact`/`.hero__links` se siguen ocultando (ADR-0019
+         §2, mismo selector de clase que ya usaba F-18) — sólo
+         `.hero__availability` es obligatorio ahí. */}
+      <div class="hero__action">
+        <div class="cta-group">
+          <a class="btn btn-primary" href={cvHref} download>
+            {t.hero.downloadCv}
+          </a>
+          <a class="btn btn-secondary" href="#projects">
+            {t.hero.viewProjects}
+          </a>
+        </div>
+        {(featuredFact || availability || linkedin || github) && (
+          <div class="hero__support">
+            {featuredFact && <p class="hero__fact">{featuredFact}</p>}
+            {availability && <p class="hero__availability">{availability}</p>}
+            {(linkedin || github) && (
+              <p class="hero__links">
+                {linkedin && <a href={linkedin}>LinkedIn</a>}
+                {github && <a href={github}>GitHub</a>}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+      {/* F-20: terminal "$ cat now.txt", después del grupo de CTAs a
+         propósito — nunca antes (A-4: en mobile el CTA ya cierra a
+         794,8px de 812px, sin presupuesto para meter esto arriba sin
+         romper PRODUCT.md Principio 1). Texto real, sin partir en letras
+         (a diferencia de .hero__name-letters): un lector de pantalla lee
+         cada línea entera y de corrido, la animación de `clip-path` no
+         saca nada del árbol de accesibilidad. `$`/`→` son sintaxis
+         decorativa (aria-hidden) para no anunciarse como "dólar"/"flecha"
+         cuatro veces; el rótulo real de la región es
+         t.hero.currentlyLearningLabel. */}
+      <div class="hero__terminal" role="group" aria-label={t.hero.currentlyLearningLabel}>
+        <p class="hero__terminal-line hero__terminal-prompt">
+          <span class="hero__terminal-sigil" aria-hidden="true">$</span>
+          <span class="hero__terminal-typed">{now.command}</span>
         </p>
-      )}
-      <div class="cta-group">
-        <a class="btn btn-primary" href={cvHref} download>
-          {t.hero.downloadCv}
-        </a>
-        <a class="btn btn-secondary" href="#projects">
-          {t.hero.viewProjects}
-        </a>
+        <ul class="hero__terminal-list">
+          {now.items.map((item, i) => (
+            <li class="hero__terminal-item" style={`--line-index: ${i}`}>
+              <span class="hero__terminal-arrow" aria-hidden="true">→</span>
+              <span class="hero__terminal-item-text">
+                {item.label} <span class="hero__terminal-status">— {item.status}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p class="hero__terminal-line hero__terminal-prompt hero__terminal-final">
+          <span class="hero__terminal-sigil" aria-hidden="true">$</span>
+          <span class="hero__terminal-cursor" aria-hidden="true"></span>
+        </p>
       </div>
     </div>
     <div class="hero__media">

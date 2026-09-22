@@ -60,7 +60,11 @@ const learningBlock =
       <StackOrbit />
     </div>
 
-    {intro && <p class="stack__lead">{intro}</p>}
+    {/* F-20 (A-4 P2-2): se deja de renderizar skills.intro — la oración
+       entre la órbita y las tarjetas no agregaba información que el
+       título de sección y la propia órbita no dijeran ya, sólo ocupaba
+       una línea. El campo (y el prop `intro`) se mantienen intactos: es
+       contenido de Diego en el YAML, esto sólo deja de mostrarlo. */}
 
     <div class="stack-grid">
       {displayCategories.map((cat, i) => (

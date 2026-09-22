@@ -564,13 +564,32 @@ section[id] {
 
   /* NO sticky: se va con el scroll (F-11). Scroll horizontal si las
      anclas no entran, sin scrollbar nativa visible (mismo criterio que
-     `.carousel` — el peek de la última ancla ya avisa que hay más). */
+     `.carousel` — el peek de la última ancla ya avisa que hay más).
+
+     `mask-image` (F-20/A-4 P2-3): sin esto, "Contacto"/"Contact" quedaba
+     cortado en seco justo en el borde del viewport cuando hay más anclas
+     de las que entran — un corte duro, no un aviso de que hay más
+     (apple-design §12, "scroll edge effects, not hard dividers"; el
+     sitio ya usa `mask-image` en otro lado con la misma técnica,
+     `.section-heading__mark::before`). SÓLO el borde derecho, nunca el
+     izquierdo: el primer ítem tiene que seguir pegado al gutter tal cual
+     está hoy quieto en reposo (scrollLeft=0), y agregar un fade a la
+     izquierda ahí sería puro ruido. 16px de fade, no más: `.site-nav__
+     links` ya reserva `padding-inline-end: clamp(1.25rem, 4vw, 2.5rem)`
+     (mínimo real 20px, a partir de 320px de ancho) DESPUÉS del último
+     link — con el fade más angosto que ese padding, al llegar al final
+     del scroll el degradé cae siempre sobre el hueco vacío, nunca sobre
+     el texto de "Contacto"/"Contact". Sin JS: el padding existente ya
+     resuelve el caso que el informe marcaba como el que necesitaría
+     JS. */
   .site-nav__anchors {
     max-width: var(--container-width);
     margin-inline: auto;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
+    mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
   }
 
   .site-nav__anchors::-webkit-scrollbar {
@@ -1119,10 +1138,17 @@ html[data-theme="dark"] .hero__media img {
    métricas de fuente en CSS, no hay forma exacta de leerlo — calibrado a
    ojo contra capturas reales, ver reporte F-16). Sin sombra, sin
    `pointer-events` (puramente decorativo). */
+/* `left: calc(100% + 0.08em)`, no `left: 100%` (F-20/A-4 P1-1): pegado
+   contra el borde de la letra, el cursor en su ESTADO FINAL (el que más
+   tiempo se ve: queda fijo ahí tras el corte a los 5s de
+   `hero-cursor-hold-then-blink`, no sólo durante el tipeo) se fundía
+   visualmente con la última letra de "Chiquiar" — a 3x se leía como una
+   letra partida, no como un cursor. Un margen chico lo separa sin tocar
+   ninguna animación ni temporización (F-16b sigue intacto). */
 .hero__name-letter::after {
   content: "";
   position: absolute;
-  left: 100%;
+  left: calc(100% + 0.08em);
   bottom: 0;
   width: 0.06em;
   height: 0.72em;
@@ -1345,40 +1371,56 @@ html[data-theme="dark"] .hero__media img {
   margin: 0;
 }
 
-/* F-18: dato destacado del hero (person.featuredFact) — una cifra o logro
-   verificable, en itálica (DESIGN.md: mono es sólo para datos sueltos,
-   ésta es una oración completa, así que no le corresponde la mono) y sin
-   tarjeta (ni fondo ni sombra: "The Paper-Doesn't-Float Rule"). El filete
-   vertical en tinta de énfasis reusa el mismo lenguaje que ya usa
-   `.education-list li` para marcar un bloque destacado sin envolverlo en
-   una caja. */
-.hero__fact {
-  font-style: italic;
-  color: var(--color-text);
-  border-left: 2px solid var(--color-accent);
-  padding-left: 0.85rem;
-  margin: 0 0 1.25rem;
-  max-width: var(--medida-lectura);
+/* F-20 (A-4 P1-2): agrupa el CTA primario y el bloque de apoyo (dato
+   destacado + disponibilidad + links) en una sola fila en vez de cuatro
+   bloques de ancho completo apilados — recupera el alto que antes se iba
+   en el margen propio de cada uno (medido en el informe: 100-140px en
+   escritorio). `flex-wrap: wrap`: en desktop, cuando el contenedor tiene
+   lugar, van lado a lado ("acción primaria + línea de apoyo chica"); si
+   no entran (viewports intermedios o 200% de zoom), el soporte baja a su
+   propia línea sin desbordar. */
+.hero__action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.75rem;
+  margin: 0 0 1.5rem;
 }
 
+.hero__support {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* F-20 (A-4 P1-2): antes `.hero__fact` (itálica + filete de acento, a
+   contraste pleno) pesaba MÁS que `.hero__availability` (texto mudo, sin
+   marcador) — invertido respecto de lo que exige PRODUCT.md (ver
+   disponibilidad, no necesariamente el dato opcional). Mismo tamaño,
+   misma tinta suave, sin filete para los dos: ninguno "gana" al otro.
+   `.hero__fact` conserva sólo la itálica como diferencia tipográfica, ya
+   no de peso. */
+.hero__fact,
 .hero__availability {
+  margin: 0;
+  font-size: 0.95rem;
   color: var(--color-text-muted);
-  font-size: 1rem;
-  margin: 0 0 1.25rem;
+}
+
+.hero__fact {
+  font-style: italic;
 }
 
 /* F-18: LinkedIn/GitHub como links de texto en el hero (ADR-0019 §2), no
    `.btn` — serían un tercer y cuarto botón compitiendo con "Descargar CV"
-   (DESIGN.md: un botón primario por bloque). `min-height` 28px, mismo
-   criterio que `.site-footer a`/`.about__cv-link`: no son texto corrido
-   dentro de una oración (serían link inline exento de destino táctil),
-   son un renglón de acciones propio. */
+   (DESIGN.md: un botón primario por bloque). F-20: ya no es su propia
+   fila de ancho completo — se mudó a `.hero__support`, junto al CTA. */
 .hero__links {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.25rem;
-  margin: 0 0 1.5rem;
-  font-size: 0.95rem;
+  gap: 1rem;
+  margin: 0;
+  font-size: 0.92rem;
 }
 
 .hero__links a {
@@ -1499,8 +1541,189 @@ html[data-theme="dark"] .hero__media img {
     gap: 0.5rem;
   }
 
-  .hero__availability {
+  /* F-20: reemplaza el viejo `.hero__availability { margin-bottom: 0.9rem }`
+     — ahora availability vive dentro de `.hero__action`/`.hero__support`
+     (ver esas reglas, más arriba), así que el recorte de ritmo se aplica
+     al contenedor entero, no al párrafo suelto. */
+  .hero__action {
     margin-bottom: 0.9rem;
+  }
+}
+
+/* ── Hero terminal ("$ cat now.txt", F-20/A-4) ──────────────────────
+   Terminal decorativa que muestra qué está estudiando Diego ahora mismo
+   (data/now.yaml, B-23) — no es evidencia de trabajo (eso lo cubren
+   Proyectos/Experiencia), es un guiño chico y real. Reusa el lenguaje
+   visual de `.stack-card` (papel entintado, filete de 1px, esquina de
+   8px, mismo padding) en vez de inventar un componente nuevo: "The
+   Paper-Doesn't-Float Rule" sigue valiendo, cero sombra. Mono para todo
+   el bloque porque es, literalmente, un dato ("The Mono-Means-Data
+   Rule") — la fuente ya está alojada y ya se usa en el resto del sitio,
+   0 KB nuevos. Ancho acotado a la medida de lectura (no al ancho
+   completo de `.hero__content`), igual que cualquier otro bloque de
+   texto del sitio (ADR-0013). */
+.hero__terminal {
+  max-width: var(--medida-lectura);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1.25rem 1.4rem 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-text);
+  /* Cadena de tiempo del reveal (ver `.hero__terminal-typed`/`-item`/
+     `-cursor` más abajo): arranca a los 2,2s de la carga, DESPUÉS de que
+     el nombre termine de caer letra por letra (~1,84s, F-16) y su propio
+     cursor se asiente — secuencial, nunca simultáneo con esa animación.
+     Un solo punto de ajuste si el ritmo del nombre cambiara a futuro. */
+  --terminal-start: 2.2s;
+}
+
+.hero__terminal-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  margin: 0;
+}
+
+.hero__terminal-prompt {
+  margin-bottom: 0.6em;
+}
+
+.hero__terminal-final {
+  margin-top: 0.6em;
+  margin-bottom: 0;
+}
+
+/* Puramente sintaxis, nunca contenido — el `aria-hidden` que lo saca del
+   árbol de accesibilidad vive en el markup (Hero.astro), no acá. */
+.hero__terminal-sigil {
+  flex: none;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+/* `inline-block`, no el `inline` por defecto: `clip-path` con
+   porcentajes necesita una caja con ancho propio para que
+   `inset(0 100% 0 0)` signifique algo (mismo motivo que
+   `.hero__name-letter` más arriba necesita `inline-block` para que el
+   `transform` aplique). `min-width: 0` dentro del flex de
+   `.hero__terminal-line`: sin esto, un `now.command` largo empujaría el
+   ancho del flex item más allá del disponible en vez de habilitar el
+   wrap. */
+.hero__terminal-typed {
+  display: inline-block;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.hero__terminal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Sangría colgante (brief: "si una línea no entra, que envuelva con
+   sangría colgante, no que desborde"): la flecha es un flex item aparte
+   de ancho fijo (`flex: none`); si `.hero__terminal-item-text` envuelve
+   a una segunda línea, esa línea arranca alineada bajo el TEXTO, no bajo
+   la flecha — efecto de sangría colgante sin `text-indent` a mano. */
+.hero__terminal-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  margin: 0 0 0.35em;
+}
+
+.hero__terminal-arrow {
+  flex: none;
+  color: var(--color-accent);
+}
+
+.hero__terminal-item-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hero__terminal-status {
+  color: var(--color-text-muted);
+}
+
+/* Cursor de bloque final: reusa LITERALMENTE `hero-cursor-hold-then-blink`
+   (definido más arriba para el cursor del nombre) en vez de un keyframe
+   propio — mismo patrón de motion, ya calibrado y ya verificado (F-16b).
+   A diferencia del nombre (cuyo reloj es "5s desde la carga de la
+   página", data-driven por el largo del nombre), acá el reloj es "5s
+   desde que el cursor aparece" (pedido explícito del brief): duración
+   fija de 5s, con el delay puesto en el instante en que termina de
+   revelarse el último ítem. `opacity: 0` de base, sin `backwards` en la
+   animación: mientras no llega el delay, el cursor no existe
+   visualmente — mismo criterio que `.hero__name-letter::after`. */
+.hero__terminal-cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  background: var(--color-accent);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  opacity: 0;
+  animation: hero-cursor-hold-then-blink 5s linear forwards;
+  animation-delay: calc(var(--terminal-start) + 1.3s);
+}
+
+/* `clip-path: inset(0 100% 0 0)` → `inset(0 0 0 0)`, SIN `steps()`: A-4
+   proponía `steps(N)` (N = caracteres) para el efecto de tipeo, pero esta
+   misma hoja de estilos tiene un bug real y verificado con
+   `steps(1, jump-end)` en reproducción real (F-16b — el navegador puede
+   "congelar" la animación un pelo antes del 100% exacto por redondeo de
+   punto flotante, y con `forwards` eso deja el contenido pegado en el
+   paso anterior PARA SIEMPRE). El riesgo no es exclusivo de `steps(1)`:
+   es cualquier animación con `forwards` que dependa de cruzar
+   EXACTAMENTE un valor de progreso. La interpolación continua (lineal,
+   sin pasos) no tiene ese borde que cruzar — se ve un barrido en vez de
+   un tipeo letra por letra, pero a esta velocidad (≤0,4s) la diferencia
+   es casi imperceptible, y a cambio el estado final SIEMPRE llega a
+   `inset(0 0 0 0)` exacto. Verificado con `document.getAnimations()` en
+   tiempo real (no `currentTime` scrubbeado), ver reporte F-20. */
+@keyframes hero-terminal-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.hero__terminal-typed {
+  animation: hero-terminal-reveal 0.4s linear both;
+  animation-delay: var(--terminal-start);
+}
+
+/* Escalonado con `--line-index` (Hero.astro lo pone por `<li>`, mismo
+   patrón que `--letter-step` en el nombre): 0,5s después de que arranca
+   la terminal (deja terminar la línea de comando primero) y 0,18s entre
+   ítem e ítem. Con 4 ítems, el último termina de revelarse a 1,22s desde
+   `--terminal-start` — dentro del presupuesto de ≤1,5s pedido, con
+   margen real. */
+.hero__terminal-item {
+  animation: hero-terminal-reveal 0.22s linear both;
+  animation-delay: calc(var(--terminal-start) + 0.5s + (var(--line-index, 0) * 0.18s));
+}
+
+/* Mismo criterio que el nombre (más arriba), pero NO el mismo tratamiento
+   (pedido explícito del brief): acá el cursor final queda VISIBLE y
+   quieto, no oculto — "todo visible de inmediato, cursor sin parpadeo". */
+@media (prefers-reduced-motion: reduce) {
+  .hero__terminal-typed,
+  .hero__terminal-item {
+    animation: none;
+    clip-path: none;
+  }
+
+  .hero__terminal-cursor {
+    animation: none;
+    opacity: 1;
   }
 }
 
@@ -2339,11 +2562,9 @@ h3 {
   margin: 0 0 clamp(2rem, 5vw, 3rem);
 }
 
-.stack__lead {
-  color: var(--color-text-muted);
-  max-width: 28rem;
-  margin: 0 0 1.5rem;
-}
+/* `.stack__lead` (skills.intro) se dejó de renderizar en F-20 (A-4 P2-2):
+   ver el comentario en SkillsSection.astro. Regla retirada por quedar
+   sin uso — el campo del YAML sigue intacto, esto es sólo CSS muerto. */
 
 /* ── Órbita de tecnologías (F-13, ADR-0018) ─────────────────────────
    Decorativa, aria-hidden, CSS puro. Un centro ("STACK") y 4 anillos
@@ -2578,11 +2799,20 @@ h3 {
    punteado (en --color-control-border, no el --color-border decorativo,
    para sostener ≥3:1 incluso sobre el fondo plano de la página). El
    rótulo queda a contraste pleno a propósito — es justo lo que tiene que
-   leerse ("En formación (autodidacta)"), no lo que hay que esconder. */
+   leerse ("En formación (autodidacta)"), no lo que hay que esconder.
+
+   `grid-column: 1 / -1` (F-20/A-4 P2-1): con `.stack-grid` en
+   `auto-fit`/2 columnas (5 tarjetas = 2+2+1), la quinta quedaba sola en
+   su fila con una celda vacía al lado — hueco real, no un efecto de
+   grilla intencional. Ocupar el ancho completo refuerza, no rompe, el
+   tratamiento visual ya distinto de esta tarjeta (filete punteado). Sin
+   media query: con 1 sola columna (mobile) `1 / -1` no hace nada
+   distinto de `1 / 2`, así que la regla es segura en todo el rango. */
 .stack-card--learning {
   background: transparent;
   border-style: dashed;
   border-color: var(--color-control-border);
+  grid-column: 1 / -1;
 }
 
 .stack-card--learning .stack-card__title {

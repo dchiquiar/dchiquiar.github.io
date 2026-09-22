@@ -22,6 +22,15 @@ export function loadProjects() {
   return parsed?.projects ?? [];
 }
 
+// F-20: fuente de la terminal decorativa del hero (`$ cat now.txt`).
+// data/now.yaml es independiente de idioma (se presenta como código, no
+// como copy) — un solo archivo para /es y /, sin parámetro lang, a
+// diferencia de loadCv().
+export function loadNow() {
+  const file = path.join(dataDir, "now.yaml");
+  return load(fs.readFileSync(file, "utf-8"));
+}
+
 // Algunos campos de data/cv.*.yaml todavía llevan una nota "TODO:" o
 // "<<PREGUNTA" incrustada en el propio string (no sólo `null`), porque son
 // pendientes de confirmación de Diego que se dejaron documentados ahí mismo.
