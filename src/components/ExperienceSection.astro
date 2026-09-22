@@ -6,17 +6,17 @@ import { formatDateRange } from "../lib/format.js";
 
 interface Props {
   lang: "en" | "es";
+  number: string;
   experience: Array<Record<string, any>>;
-  education: Array<Record<string, any>>;
 }
-const { lang, experience, education } = Astro.props;
+const { lang, number, experience } = Astro.props;
 const t = ui[lang];
 const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
 ---
 
 <section id="experience" class="section">
   <div class="container">
-    <SectionHeading number="02" title={t.sections.experience} id="experience" />
+    <SectionHeading number={number} title={t.sections.experience} id="experience" />
 
     <p>
       <a class="btn btn-primary" href={cvHref} download>{t.experience.downloadCv}</a>
@@ -107,25 +107,5 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
         </div>
       );
     })}
-
-    {education.length > 0 && (
-      <>
-        <h3>{t.experience.education}</h3>
-        <ul class="education-list">
-          {education.map((ed) => (
-            <li>
-              <strong>{ed.title}</strong> — {ed.institution}
-              {ed.year ? `, ${ed.year}` : ""}
-              <div class="status">
-                {ed.status === "completed"
-                  ? t.experience.statusCompleted
-                  : t.experience.statusInProgress}
-                {ed.detail ? ` · ${ed.detail}` : ""}
-              </div>
-            </li>
-          ))}
-        </ul>
-      </>
-    )}
   </div>
 </section>

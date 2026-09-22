@@ -15,9 +15,15 @@ export const ui = {
       toggleLabel: "Dark theme",
     },
     nav: {
+      // Claves alineadas a los ids semánticos de meta.sectionOrder (F-18):
+      // "skills" reemplaza a la vieja "stack" (la sección sigue
+      // mostrándose como "Stack" en pantalla, sólo cambió el nombre de la
+      // clave para que coincida con el id del YAML/DOM). "education" es
+      // nueva: Formación pasa a ser una sección propia.
       projects: "Projects",
       experience: "Experience",
-      stack: "Stack",
+      skills: "Stack",
+      education: "Education",
       about: "About",
       contact: "Contact",
       // Nombra el <nav> de anclas de sección (F-11) — reemplaza el
@@ -30,11 +36,17 @@ export const ui = {
     hero: {
       downloadCv: "Download CV (PDF)",
       viewProjects: "View projects",
+      // F-18 (ADR-0019 §2): precede a person.location en el hero
+      // ("From Montevideo, Uruguay"). Antes era sólo un dato suelto en
+      // `.hero__meta`; ahora es una frase completa, así que la palabra
+      // necesita salir de acá, no quedar hardcodeada en Hero.astro.
+      from: "From",
     },
     sections: {
       projects: "Projects",
       experience: "Experience",
-      stack: "Stack",
+      skills: "Stack",
+      education: "Education",
       about: "About",
       contact: "Contact",
     },
@@ -47,7 +59,9 @@ export const ui = {
     },
     experience: {
       downloadCv: "Download CV (PDF)",
-      education: "Education",
+      // "education" (el h3 dentro de esta sección) se fue con F-18: Formación
+      // es sección propia ahora, título en sections.education. statusCompleted/
+      // statusInProgress se quedan: los sigue usando EducationSection.astro.
       statusCompleted: "Completed",
       statusInProgress: "In progress",
       roleStackLabel: "Stack for this role",
@@ -84,7 +98,8 @@ export const ui = {
     nav: {
       projects: "Proyectos",
       experience: "Experiencia",
-      stack: "Stack",
+      skills: "Stack",
+      education: "Formación",
       about: "Sobre mí",
       contact: "Contacto",
       sectionsLabel: "Navegación de secciones",
@@ -92,11 +107,13 @@ export const ui = {
     hero: {
       downloadCv: "Descargar CV (PDF)",
       viewProjects: "Ver proyectos",
+      from: "Desde",
     },
     sections: {
       projects: "Proyectos",
       experience: "Experiencia",
-      stack: "Stack",
+      skills: "Stack",
+      education: "Formación",
       about: "Sobre mí",
       contact: "Contacto",
     },
@@ -109,7 +126,6 @@ export const ui = {
     },
     experience: {
       downloadCv: "Descargar CV (PDF)",
-      education: "Formación",
       statusCompleted: "Completado",
       statusInProgress: "En curso",
       roleStackLabel: "Stack del puesto",

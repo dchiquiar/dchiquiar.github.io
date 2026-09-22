@@ -187,11 +187,52 @@ function validateDataFile(
   if (checkPlaceholders) {
     checkNoFalsePlaceholders(dataFile, doc);
   }
+
+  return doc;
 }
 
-for (const { data: dataFile, schema: schemaFile } of FILES) {
-  validateDataFile(dataFile, schemaFile, { checkBannedPhrases: true, checkPlaceholders: true });
+// meta.sectionOrder define el orden de las secciones de la home y lo
+// declara cada idioma por separado (mismo campo, en cv.en.yaml y
+// cv.es.yaml). Si los dos lo traen, tienen que coincidir — si no, un
+// idioma renderiza las secciones en un orden distinto al otro sin que
+// nadie lo haya decidido así. Mientras se está migrando (uno de los dos
+// archivos todavía no lo tiene), es sólo un warning: no bloquea la
+// validación.
+function checkSectionOrderConsistency(esDoc, enDoc) {
+  const esOrder = esDoc?.meta?.sectionOrder;
+  const enOrder = enDoc?.meta?.sectionOrder;
+
+  if (esOrder && enOrder) {
+    const same =
+      esOrder.length === enOrder.length && esOrder.every((id, i) => id === enOrder[i]);
+    if (!same) {
+      fail(
+        `meta.sectionOrder no coincide entre cv.es.yaml (${JSON.stringify(esOrder)}) y ` +
+          `cv.en.yaml (${JSON.stringify(enOrder)}): tienen que declarar el mismo orden.`
+      );
+    }
+  } else if (esOrder && !enOrder) {
+    console.warn(
+      "AVISO: cv.es.yaml define meta.sectionOrder pero cv.en.yaml todavía no — " +
+        "falta sincronizar el inglés."
+    );
+  } else if (enOrder && !esOrder) {
+    console.warn(
+      "AVISO: cv.en.yaml define meta.sectionOrder pero cv.es.yaml todavía no — " +
+        "falta sincronizar el español."
+    );
+  }
 }
+
+const parsedDocs = {};
+for (const { data: dataFile, schema: schemaFile } of FILES) {
+  parsedDocs[dataFile] = validateDataFile(dataFile, schemaFile, {
+    checkBannedPhrases: true,
+    checkPlaceholders: true,
+  });
+}
+
+checkSectionOrderConsistency(parsedDocs["cv.es.yaml"], parsedDocs["cv.en.yaml"]);
 
 for (const { data: dataFile, schema: schemaFile, optional } of PRIVATE_FILES) {
   validateDataFile(dataFile, schemaFile, { optional });

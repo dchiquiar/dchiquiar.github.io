@@ -1,14 +1,26 @@
 ---
 // Único componente de página: src/pages/index.astro y src/pages/es/index.astro
 // sólo le pasan `lang`. Cero markup duplicado entre idiomas.
+//
+// F-18 (ADR-0019 §1): el orden de las secciones sale de
+// `cv.meta.sectionOrder` (cv.es.yaml ya lo trae; cv.en.yaml todavía no —
+// ver DEFAULT_SECTION_ORDER más abajo, que coincide con el orden que ES
+// declara hoy). Una sección cuyo contenido no existe (about sin summary,
+// education sin items) no entra al orden final: ni se renderiza ni
+// aparece en el nav. "about" NO está en el fallback por defecto — el
+// orden nuevo del ADR (Hero → Stack → Proyectos → Experiencia →
+// Formación → Contacto) no tiene "Sobre mí"; sólo reaparecería si un
+// idioma la declara explícitamente en su propio sectionOrder Y tiene
+// summary confirmado.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "./Hero.astro";
 import ProjectsSection from "./ProjectsSection.astro";
 import ExperienceSection from "./ExperienceSection.astro";
+import EducationSection from "./EducationSection.astro";
 import SkillsSection from "./SkillsSection.astro";
 import AboutSection from "./AboutSection.astro";
 import ContactSection from "./ContactSection.astro";
-import { loadCv, cleanField } from "../lib/content.js";
+import { loadCv, loadProjects, cleanField } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
@@ -17,12 +29,54 @@ const { lang } = Astro.props;
 const cv = loadCv(lang);
 const { person } = cv;
 
-// person.summary puede no estar confirmado todavía (queda null o con nota
-// TODO en el YAML): si no hay valor limpio, la sección "Sobre mí" no
-// existe — nada de encabezado ni entrada de nav para una sección vacía.
+// person.summary puede no estar confirmado todavía (queda null, ausente,
+// o con nota TODO en el YAML): si no hay valor limpio, la sección
+// "Sobre mí" no existe — nada de encabezado ni entrada de nav para una
+// sección vacía. cv.es.yaml ya no trae person.summary en absoluto
+// (ADR-0019: la sección sale del orden nuevo), así que esto también
+// cubre ese caso sin cambios.
 const summary = cleanField(person.summary);
-const contactNumber = summary ? "05" : "04";
 const stackIntro = cleanField(cv.skills?.intro ?? null);
+const experienceItems = cv.experience ?? [];
+const educationItems = cv.education ?? [];
+const visibleProjectsCount = loadProjects().filter((p) => p.status !== "planned").length;
+
+const DEFAULT_SECTION_ORDER = ["intro", "skills", "projects", "experience", "education", "contact"];
+const rawOrder = cv.meta?.sectionOrder ?? DEFAULT_SECTION_ORDER;
+
+// Presencia de contenido por id semántico — el único filtro que decide si
+// una sección entra al orden final (y por lo tanto al nav). "intro" y
+// "contact" siempre tienen algo (person.name/headline y person.email son
+// campos requeridos por el schema); "skills" también, en la práctica (las
+// categorías del CV nunca están vacías) pero igual queda atado a datos
+// reales por si algún día lo estuvieran.
+const sectionHasContent = {
+  intro: true,
+  skills: (cv.skills?.categories?.length ?? 0) > 0 || Boolean(cv.skills?.learning),
+  projects: visibleProjectsCount > 0,
+  experience: experienceItems.length > 0,
+  education: educationItems.length > 0,
+  about: Boolean(summary),
+  contact: true,
+};
+
+const orderedSections = rawOrder.filter((id) => sectionHasContent[id] === true);
+
+// Numeración de SectionHeading (01, 02…): por posición real dentro del
+// orden ya filtrado, no hardcodeada por componente. "intro" (el hero) no
+// numera — no lleva SectionHeading, es el h1 de la página.
+const sectionNumbers = {};
+let numberCounter = 0;
+for (const id of orderedSections) {
+  if (id === "intro") continue;
+  numberCounter += 1;
+  sectionNumbers[id] = String(numberCounter).padStart(2, "0");
+}
+
+// Ids para el nav (SiteNav.astro): el mismo orden ya filtrado, sin "intro"
+// (el hero no lleva ancla propia en esa fila, igual que antes "top"
+// tampoco aparecía).
+const navSections = orderedSections.filter((id) => id !== "intro");
 
 const title = `${person.name} — ${person.headline}`;
 const description =
@@ -53,13 +107,40 @@ const jsonLd = {
 };
 ---
 
-<BaseLayout lang={lang} title={title} description={description} jsonLd={jsonLd} showAbout={Boolean(summary)}>
+<BaseLayout lang={lang} title={title} description={description} jsonLd={jsonLd} sections={navSections}>
   <main id="main">
-    <Hero lang={lang} person={person} />
-    <ProjectsSection lang={lang} />
-    <ExperienceSection lang={lang} experience={cv.experience} education={cv.education} />
-    <SkillsSection lang={lang} categories={cv.skills.categories} languages={cv.languages} intro={stackIntro} />
-    {summary && <AboutSection lang={lang} number="04" summary={summary} person={person} />}
-    <ContactSection lang={lang} number={contactNumber} person={person} />
+    {orderedSections.map((id) => {
+      switch (id) {
+        case "intro":
+          return <Hero lang={lang} person={person} />;
+        case "skills":
+          return (
+            <SkillsSection
+              lang={lang}
+              number={sectionNumbers.skills}
+              categories={cv.skills.categories ?? []}
+              languages={cv.languages ?? []}
+              intro={stackIntro}
+              learning={cv.skills?.learning ?? null}
+            />
+          );
+        case "projects":
+          return <ProjectsSection lang={lang} number={sectionNumbers.projects} />;
+        case "experience":
+          return (
+            <ExperienceSection lang={lang} number={sectionNumbers.experience} experience={experienceItems} />
+          );
+        case "education":
+          return (
+            <EducationSection lang={lang} number={sectionNumbers.education} education={educationItems} />
+          );
+        case "about":
+          return <AboutSection lang={lang} number={sectionNumbers.about} summary={summary} person={person} />;
+        case "contact":
+          return <ContactSection lang={lang} number={sectionNumbers.contact} person={person} />;
+        default:
+          return null;
+      }
+    })}
   </main>
 </BaseLayout>

@@ -3,9 +3,15 @@ import { ui } from "../i18n/ui.js";
 
 interface Props {
   lang: "en" | "es";
-  showAbout?: boolean;
+  // F-18 (ADR-0019 §1): ids semánticos de las secciones con contenido, en
+  // el orden real en que HomePage.astro las va a renderizar (ya sin
+  // "intro": el hero no lleva ancla propia en esta fila, igual que antes
+  // "top" tampoco aparecía en el nav). HomePage ya filtró las que no
+  // tienen contenido (about sin summary, education sin items) — este
+  // componente no vuelve a decidir eso, sólo dibuja lo que le llega.
+  sections: string[];
 }
-const { lang, showAbout = false } = Astro.props;
+const { lang, sections } = Astro.props;
 const t = ui[lang];
 const homeHref = lang === "es" ? "/es/" : "/";
 const isEn = lang === "en";
@@ -58,11 +64,9 @@ const isEn = lang === "en";
   </div>
   <nav class="site-nav__anchors" aria-label={t.nav.sectionsLabel}>
     <ul class="site-nav__links">
-      <li><a href="#projects">{t.nav.projects}</a></li>
-      <li><a href="#experience">{t.nav.experience}</a></li>
-      <li><a href="#stack">{t.nav.stack}</a></li>
-      {showAbout && <li><a href="#about">{t.nav.about}</a></li>}
-      <li><a href="#contact">{t.nav.contact}</a></li>
+      {sections.map((id) => (
+        <li><a href={`#${id}`}>{t.nav[id]}</a></li>
+      ))}
     </ul>
   </nav>
 </header>

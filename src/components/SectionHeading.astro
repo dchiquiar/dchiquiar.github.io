@@ -8,6 +8,8 @@ const { number, title, id } = Astro.props;
 ---
 
 <h2 class="section-heading" id={`${id}-heading`}>
-  <span class="num" aria-hidden="true">{number}</span>
-  {title}
+  <span class="section-heading__mark">
+    <span class="num" aria-hidden="true">{number}</span>
+    {title}
+  </span>
 </h2>

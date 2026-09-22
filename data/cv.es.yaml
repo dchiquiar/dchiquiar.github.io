@@ -1,35 +1,52 @@
-# Fuente de datos del CV — ESPAÑOL (capa pública).
-# Única fuente de verdad para el sitio (/es).
+# Fuente de datos del perfil profesional — ESPAÑOL.
+# Única fuente de verdad para el contenido público del sitio (/es).
 #
-# Voz: todo el contenido público habla en primera persona.
-# Los proyectos pueden describir el sistema en tercera persona.
+# Voz:
+# - El contenido personal y profesional habla en primera persona.
+# - Los proyectos pueden describir el sistema en tercera persona.
+#
+# Objetivo:
+# Presentar primero a la persona, luego demostrar capacidad técnica
+# mediante proyectos y experiencia real en producción.
 
 meta:
   language: es
   lastUpdated: "2026-09-21"
 
+  sectionOrder:
+    - intro
+    - skills
+    - projects
+    - experience
+    - education
+    - contact
+
 person:
   name: "Diego Chiquiar"
-  headline: "Desarrollador de Software"
+
+  headline: "Desarrollador de Software & DevOps"
+
+  tagline: >-
+    Integraciones, automatización y software pensado para funcionar
+    en producción.
+
   location: "Montevideo, Uruguay"
 
-  summary: >-
-    Desarrollador .NET/C# especializado en integraciones, automatización y
-    sistemas empresariales en producción.
-
-    Combino experiencia en desarrollo con varios años en soporte e
-    infraestructura, lo que me permite diseñar software pensando también en
-    operación, fallos y mantenibilidad.
-
-    Actualmente estoy ampliando mi perfil hacia desarrollo web y DevOps.
+  greeting: "Hola, soy Diego."
 
   intro: >-
-    Desarrollo software principalmente en .NET. Antes pasé años atendiendo
-    sistemas cuando fallaban, así que hoy diseño pensando también en qué pasa
-    cuando algo sale mal. Uno de mis últimos sistemas procesa unas 1.500
-    operaciones diarias con seis bancos y lleva más de un año en producción.
+    Desarrollo software principalmente en .NET/C#, con foco en integraciones,
+    automatización y sistemas empresariales.
 
-  availability: "Híbrido o remoto en Uruguay"
+    Mi experiencia previa en soporte e infraestructura hace que diseñe pensando
+    también en operación, fallos y mantenibilidad.
+
+  featuredFact: >-
+    Uno de los sistemas que desarrollé procesa unas 1.500 operaciones diarias,
+    se integra con seis bancos y lleva más de un año funcionando en producción.
+
+  availability: "Disponible para nuevas oportunidades."
+
   email: "diegochiquiar@gmail.com"
 
   links:
@@ -39,34 +56,39 @@ person:
 
 experience:
   - id: job-1
+
     role: "Desarrollador de Software"
 
     employer:
       name: "Tecnisegur"
-      sector: "Empresa de transporte de valores (cash-in-transit)"
+      sector: "Transporte de valores y servicios de seguridad"
 
     location: "Montevideo, Uruguay"
+
     startDate: "2024-04"
     endDate: "2026-09"
     current: false
 
     summary: >-
-      Diseñé y desarrollé sistemas internos para automatizar procesos
-      operativos, bancarios y comerciales.
+      Diseñé y desarrollé aplicaciones .NET para automatizar procesos
+      bancarios, operativos y comerciales, incluyendo integraciones con seis
+      bancos y sistemas que procesan aproximadamente 1.500 operaciones diarias
+      en producción.
 
     projects:
       - name: "TAAS — Sistema automático de acreditaciones"
 
         description: >-
-          Sistema que automatiza las acreditaciones bancarias generadas por
-          depósitos realizados en buzones inteligentes. Se integra con seis
-          bancos mediante distintos mecanismos, desde intercambio de archivos
-          hasta web services, y procesa unas 1.500 operaciones diarias sin
-          intervención manual.
+          Desarrollé un sistema que automatiza las acreditaciones bancarias
+          generadas por depósitos realizados en buzones inteligentes.
 
-          Incluye herramientas de monitoreo y reprocesamiento para que los
-          operadores puedan resolver manualmente una acreditación cuando ocurre
-          una excepción.
+          Se integra con seis bancos mediante distintos mecanismos, desde
+          intercambio de archivos hasta servicios web, y procesa unas
+          1.500 operaciones diarias sin intervención manual.
+
+          También incluye herramientas de monitoreo y reprocesamiento para que
+          los operadores puedan resolver excepciones sin alterar el flujo
+          normal del sistema.
 
         technologies:
           - "C#"
@@ -79,16 +101,19 @@ experience:
           - "SQLite"
           - "Azure"
 
-      - name: "App de rastreo de valores"
+
+      - name: "Aplicación de rastreo de valores"
 
         description: >-
-          Aplicación Android utilizada por el personal operativo para registrar
-          y seguir cada remesa durante su recorrido mediante escaneo de
-          precintos, geolocalización y cambios de estado.
+          Desarrollé una aplicación Android para el seguimiento operativo de
+          remesas mediante escaneo de precintos, geolocalización y cambios de
+          estado.
 
-          Fue diseñada para funcionar offline: persiste las operaciones
-          localmente durante los períodos sin cobertura y las sincroniza al
-          recuperar conectividad. Publicada y distribuida mediante Google Play.
+          Fue diseñada con funcionamiento offline: persiste las operaciones
+          localmente durante períodos sin cobertura y las sincroniza cuando
+          recupera conectividad.
+
+          La aplicación fue publicada y distribuida mediante Google Play.
 
         technologies:
           - ".NET for Android"
@@ -98,17 +123,17 @@ experience:
           - "Geolocalización"
           - "Google Play Console"
 
+
       - name: "Sistema de suscripciones y pagos"
 
         description: >-
-          Desarrollé una API interna que integra el sistema comercial con
-          Mercado Pago para crear y administrar suscripciones y pagos desde la
-          plataforma de cotización.
+          Desarrollé una API interna que integra la plataforma comercial con
+          Mercado Pago para administrar pagos y suscripciones.
 
-          El sistema gestiona el ciclo completo de cada operación: pagos
-          aprobados, rechazados, vencidos o revertidos, además de renovaciones
-          y cancelaciones. También integra Twilio para enviar notificaciones
-          asociadas a esos eventos.
+          El sistema gestiona el ciclo de vida de cada operación, incluyendo
+          aprobaciones, rechazos, vencimientos, reversiones, renovaciones y
+          cancelaciones, e integra Twilio para enviar las notificaciones
+          asociadas.
 
         technologies:
           - "C#"
@@ -121,8 +146,8 @@ experience:
 
     highlights:
       - >-
-        ERP interno — Mantuve y desarrollé módulos para RRHH, Comercial,
-        Facturación y Tesorería sobre una aplicación WinForms existente.
+        Mantuve y desarrollé módulos de RRHH, Comercial, Facturación y
+        Tesorería sobre el ERP interno existente en WinForms.
 
     technologies:
       - "C#"
@@ -130,35 +155,33 @@ experience:
       - "ASP.NET Core"
       - "SQL Server"
       - "WPF"
+      - "MVVM"
       - ".NET for Android"
       - "WinForms"
 
 
   - id: job-2
+
     role: "Auxiliar de Soporte Técnico"
 
     employer:
       name: "Advansys — Cars Solutions"
-      sector: "Empresa de desarrollo de software para el rubro automotriz"
+      sector: "Software para el sector automotriz"
 
     location: "Montevideo, Uruguay"
+
     startDate: "2017-05"
     endDate: "2023-12"
     current: false
 
     summary: >-
-      Comencé trabajando en soporte e infraestructura y posteriormente también
-      participé en el desarrollo y mantenimiento del software interno de la
-      empresa.
+      Trabajé durante más de 6 años en soporte, redes, infraestructura y
+      continuidad de los sistemas internos.
 
-    highlights:
-      - >-
-        Durante aproximadamente un año desarrollé y mantuve aplicaciones
-        internas de gestión con GeneXus.
+      Durante la etapa final del período también desarrollé y mantuve
+      aplicaciones internas de gestión con GeneXus.
 
-      - >-
-        Trabajé durante casi siete años en soporte a usuarios, redes,
-        infraestructura y continuidad de los sistemas internos.
+    highlights: []
 
     technologies:
       - "GeneXus"
@@ -166,59 +189,30 @@ experience:
 
 
   - id: job-3
+
     role: "Técnico de Soporte"
 
     employer:
       name: "Sabre Holdings"
-      sector: "Multinacional de tecnología para la industria de viajes"
+      sector: "Tecnología para la industria de viajes"
 
     location: "Canelones, Uruguay"
+
     startDate: "2013-01"
     endDate: "2014-01"
     current: false
 
-    summary: null
+    summary: >-
+      Brindé soporte técnico a usuarios dentro de un centro de operaciones.
 
-    highlights:
-      - >-
-        Brindé soporte técnico a usuarios dentro de un centro de operaciones.
+    highlights: []
 
     technologies: []
 
 
-education:
-  - id: analista-programador-ort
-    title: "Analista Programador"
-    institution: "Universidad ORT Uruguay"
-    year: "2025"
-    status: "completed"
-
-    detail: >-
-      Título en desarrollo de software obtenido mientras trabajaba full-time.
-
-
-  - id: ciberseguridad-ort
-    title: "Certificación en Ciberseguridad"
-    institution: "Universidad ORT Uruguay"
-    year: "2025"
-    status: "completed"
-
-    detail: "OWASP Top 10, ISO y NIST."
-
-
-  - id: devops-ort
-    title: "Certificación DevOps Engineer"
-    institution: "Universidad ORT Uruguay"
-    year: null
-    status: "in-progress"
-
-    detail: >-
-      Formación en CI/CD, Git, Linux, Docker, GitHub Actions y prácticas de
-      automatización de procesos de desarrollo y despliegue.
-
-
 skills:
-  intro: "Stack y herramientas con las que trabajo."
+  intro: >-
+    Tecnologías y herramientas con las que trabajo habitualmente.
 
   categories:
     - id: backend
@@ -228,7 +222,7 @@ skills:
         - "C# / .NET"
         - "ASP.NET Core"
         - "APIs REST"
-        - "Integraciones SOAP / REST"
+        - "Integraciones REST / SOAP"
 
 
     - id: data
@@ -243,8 +237,7 @@ skills:
       label: "Desktop y mobile"
 
       items:
-        - "WPF"
-        - "MVVM"
+        - "WPF / MVVM"
         - "WinForms"
         - ".NET for Android"
         - "Xamarin.Forms"
@@ -254,39 +247,60 @@ skills:
       label: "Herramientas y plataformas"
 
       items:
-        - "Quartz.NET"
-        - "Azure"
         - "Git"
+        - "Azure"
+        - "Quartz.NET"
         - "Google Play Console"
 
 
-    - id: ai-assisted
-      label: "Desarrollo asistido por IA"
+  learning:
+    label: "Actualmente"
 
-      items:
-        - "Diseño de agentes y skills"
-        - "Desarrollo guiado por especificaciones"
+    description: >-
+      Estoy profundizando en DevOps y desarrollo web moderno con Vue 3.
 
-
-    - id: other
-      label: "Otros"
-
-      items:
-        - "GeneXus"
-        - "Ciberseguridad"
-        - "Redes e infraestructura"
+    items:
+      - "DevOps"
+      - "Vue 3"
+      - "JavaScript"
 
 
-    - id: learning
-      label: "Actualmente aprendiendo"
+education:
+  - id: analista-programador-ort
 
-      items:
-        - "Vue 3"
-        - "JavaScript"
-        - "HTML"
-        - "CSS"
-        - "Bootstrap"
-        - "DevOps"
+    title: "Analista Programador"
+    institution: "Universidad ORT Uruguay"
+
+    year: "2025"
+    status: "completed"
+
+    detail: null
+
+
+  - id: ciberseguridad-ort
+
+    title: "Certificación en Ciberseguridad"
+    institution: "Universidad ORT Uruguay"
+
+    year: "2025"
+    status: "completed"
+
+    detail: >-
+      Formación en seguridad de aplicaciones, OWASP Top 10 y marcos de
+      referencia como ISO y NIST.
+
+
+  - id: devops-ort
+
+    title: "Certificación DevOps Engineer"
+    institution: "Universidad ORT Uruguay"
+
+    year: null
+    status: "in-progress"
+
+    detail: >-
+      Formación en CI/CD, Git, Linux, Docker, GitHub Actions y automatización
+      de procesos de desarrollo y despliegue.
 
 
 languages:
@@ -298,5 +312,21 @@ languages:
     level: "B2 certificado — Cambridge FCE"
 
     note: >-
-      Preparando C1 Advanced (CAE) para 2027. Capacidad para mantener
-      conversaciones técnicas en inglés.
+      Actualmente preparando Cambridge C1 Advanced (CAE).
+
+
+contact:
+  title: "¿Hablamos?"
+
+  description: >-
+    Estoy abierto a nuevas oportunidades de desarrollo de software,
+    especialmente en entornos .NET y equipos donde pueda seguir creciendo
+    técnicamente.
+
+  email: "diegochiquiar@gmail.com"
+
+  availability: "Disponible para nuevas oportunidades."
+
+  links:
+    linkedin: "https://www.linkedin.com/in/diego-chiquiar/"
+    github: "https://github.com/dchiquiar"

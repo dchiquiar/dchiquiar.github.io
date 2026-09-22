@@ -1,81 +1,108 @@
 # CV data source — ENGLISH (public layer).
-# Single source of truth for the site (/). The PDF combines this file with
-# the private layer in data/private/ (gitignored, never published) — see
-# data/schemas/cv.private.schema.json. See data/schemas/cv.schema.json for
-# the valid shape of this file.
+# Single source of truth for the site (/). See data/cv.es.yaml for the
+# Spanish source (/es): same shape, same meta.sectionOrder, sentence-for-
+# sentence equivalent content — not a literal translation.
 #
-# Employers: each experience entry carries employer.name and employer.sector,
-# both public. The only contact detail kept separate, in a private layer
-# consumed only by PDF generation, is the phone number.
+# Voice:
+# - Personal and professional content speaks in the first person.
+# - Projects may describe the system in the third person.
 #
-# Voice: all public content speaks in first person (Diego's own voice). No
-# highlight or bio is written in the third person, as if by someone else
-# (a system can still be described in third person: "consumes",
-# "generates", "lets").
+# Goal:
+# Introduce the person first, then demonstrate technical capability
+# through projects and real production experience.
+#
+# CONTRACT with the code (src/lib/content.js, splitParagraphs): any folded
+# block (`>-`) that holds more than one paragraph (person.intro, project
+# descriptions, experience summaries) splits on the blank line between
+# paragraphs. If changed to a literal block (`|`), every wrapped line would
+# render as its own paragraph instead of one.
+#
+# Employers: each experience entry carries employer.name and
+# employer.sector, both public. The only contact detail kept separate, in
+# a private layer consumed only by PDF generation, is the phone number
+# (data/private/, gitignored — see data/schemas/cv.private.schema.json).
 
 meta:
   language: en
   lastUpdated: "2026-09-21"
 
+  sectionOrder:
+    - intro
+    - skills
+    - projects
+    - experience
+    - education
+    - contact
+
 person:
   name: "Diego Chiquiar"
-  headline: "Software Developer"
+
+  headline: "Software & DevOps Developer"
+
+  tagline: >-
+    Integrations, automation, and software built to run in production.
+
   location: "Montevideo, Uruguay"
-  # CONTRACT with the code (src/lib/content.js, splitParagraphs): this field
-  # can hold several paragraphs, separated by a blank line. The YAML folded
-  # block (`>-`) is REQUIRED for that — it's not a formatting preference.
-  # If changed to a literal block (`|`), every wrapped line renders as its
-  # own paragraph instead of one.
-  #
-  # The original paragraph 1 (support-desk origin story) moved out of here:
-  # it's the hero intro (person.intro, below), not published twice (ADR-0015).
-  summary: >-
-    I'm a .NET/C# developer specialized in integrations, automation, and
-    enterprise systems in production.
 
-    I combine development experience with several years in support and
-    infrastructure, which shapes how I design software — with an eye on
-    operations, failure modes, and maintainability.
+  greeting: "Hi, I'm Diego."
 
-    I'm currently expanding my profile toward web development and DevOps.
-  # Short hero intro, next to the portrait (ADR-0015). Short variant chosen
-  # by Diego over intro-hero.md — Option A. Compresses the paragraph 1 that
-  # moved out of person.summary (above): not published twice.
   intro: >-
-    I mainly develop software in .NET. Before that, I spent years on the
-    other end of the phone when systems went down, so today I design with
-    an eye on what happens when something fails. One of the last systems I
-    built processes about 1,500 operations a day with six banks and has
-    been in production for over a year.
-  availability: "Hybrid or remote in Uruguay"
+    I develop software mainly in .NET/C#, with a focus on integrations,
+    automation, and enterprise systems.
+
+    My background in support and infrastructure shapes how I design
+    software, with an eye on operations, failure modes, and maintainability.
+
+  featuredFact: >-
+    One of the systems I built processes around 1,500 operations a day,
+    integrates with six banks, and has been running in production for
+    over a year.
+
+  availability: "Open to new opportunities."
+
   email: "diegochiquiar@gmail.com"
+
   links:
     linkedin: "https://www.linkedin.com/in/diego-chiquiar/"
     github: "https://github.com/dchiquiar"
 
+
 experience:
   - id: job-1
+
     role: "Software Developer"
+
     employer:
       name: "Tecnisegur"
-      sector: "Cash-in-transit / valuables transport company"
+      sector: "Cash-in-transit and security services"
+
     location: "Montevideo, Uruguay"
+
     startDate: "2024-04"
     endDate: "2026-09"
     current: false
-    summary: "Designed and built internal systems to automate operational, banking and commercial processes."
-    projects:
-      - name: "TAAS — Automated Settlement System"
-        # Two paragraphs, separated by a blank line — same splitParagraphs
-        # contract as person.summary.
-        description: >-
-          Automates the bank settlements triggered by deposits made into
-          smart safes. It connects with six banks through different
-          channels — from file exchange to web services — and processes
-          around 1,500 operations a day with no manual intervention.
 
-          Includes monitoring and reprocessing tools so operators can
-          manually resolve a settlement whenever an exception comes up.
+    summary: >-
+      I designed and built .NET applications to automate banking,
+      operational, and commercial processes, including integrations with
+      six banks and systems that process around 1,500 operations a day
+      in production.
+
+    projects:
+      - name: "TAAS — Tecnisegur Automatic Accreditation System"
+
+        description: >-
+          I built a system that automates the bank settlements generated
+          by deposits made into smart safes.
+
+          It integrates with six banks through different mechanisms, from
+          file exchange to web services, and processes around 1,500
+          operations a day with no manual intervention.
+
+          It also includes monitoring and reprocessing tools so operators
+          can resolve exceptions without disrupting the system's normal
+          flow.
+
         technologies:
           - "C#"
           - ".NET"
@@ -86,15 +113,21 @@ experience:
           - "SQL Server"
           - "SQLite"
           - "Azure"
+
+
       - name: "Valuables Tracking App"
+
         description: >-
-          Android app used by field crews to log and track each shipment
-          along its route through seal scanning, geolocation and status
+          I built an Android app for the operational tracking of
+          shipments through seal scanning, geolocation, and status
           changes.
 
-          Built to work offline: it stores operations locally during
-          periods without coverage and syncs once connectivity is back.
-          Published and distributed through Google Play.
+          It was designed to work offline: it stores operations locally
+          during periods without coverage and syncs them once
+          connectivity is restored.
+
+          The app was published and distributed through Google Play.
+
         technologies:
           - ".NET for Android"
           - "Xamarin.Forms"
@@ -102,16 +135,19 @@ experience:
           - "Google ML Kit"
           - "Geolocation"
           - "Google Play Console"
-      - name: "Subscriptions and Payments System"
-        description: >-
-          Built an internal API that connects the sales system with
-          Mercado Pago to create and manage subscriptions and payments
-          from the quoting platform.
 
-          Handles the full lifecycle of each transaction — approved,
-          rejected, expired or reversed payments, as well as renewals and
-          cancellations — and integrates Twilio to send notifications for
-          those events.
+
+      - name: "Subscriptions and Payments System"
+
+        description: >-
+          I built an internal API that integrates the commercial platform
+          with Mercado Pago to manage payments and subscriptions.
+
+          The system handles the full lifecycle of each transaction,
+          including approvals, rejections, expirations, reversals,
+          renewals, and cancellations, and integrates Twilio to send the
+          associated notifications.
+
         technologies:
           - "C#"
           - ".NET"
@@ -120,123 +156,190 @@ experience:
           - "Mercado Pago API"
           - "SQL Server"
           - "Twilio"
+
     highlights:
-      - "Internal ERP — Maintained and built modules for HR, Sales, Billing and Treasury on an existing WinForms application."
+      - >-
+        I maintained and built modules for HR, Sales, Billing, and
+        Treasury on the existing internal ERP built in WinForms.
+
     technologies:
       - "C#"
       - ".NET"
       - "ASP.NET Core"
       - "SQL Server"
       - "WPF"
+      - "MVVM"
       - ".NET for Android"
       - "WinForms"
 
+
   - id: job-2
+
     role: "Technical Support Assistant"
+
     employer:
-      name: "Advansys - Cars Solutions"
-      sector: "Software development company for the automotive sector"
+      name: "Advansys — Cars Solutions"
+      sector: "Software for the automotive industry"
+
     location: "Montevideo, Uruguay"
+
     startDate: "2017-05"
     endDate: "2023-12"
     current: false
-    summary: "Started in support and infrastructure, and later also took part in developing and maintaining the company's internal software."
-    highlights:
-      - "For about a year, I built and maintained internal management applications with GeneXus."
-      - "Spent almost seven years in user support, networking, infrastructure and keeping internal systems running."
+
+    summary: >-
+      I spent over six years in support, networking, infrastructure, and
+      keeping internal systems running.
+
+      During the final stretch of that period, I also developed and
+      maintained internal management applications with GeneXus.
+
+    highlights: []
+
     technologies:
       - "GeneXus"
-      - "Networking & infrastructure"
+      - "Networking and infrastructure"
+
 
   - id: job-3
+
     role: "Support Technician"
+
     employer:
       name: "Sabre Holdings"
-      sector: "Multinational travel-technology company"
+      sector: "Travel industry technology"
+
     location: "Canelones, Uruguay"
+
     startDate: "2013-01"
     endDate: "2014-01"
     current: false
-    summary: null
-    highlights:
-      - "I provided technical support to users at an operations center."
+
+    summary: >-
+      I provided technical support to users within an operations center.
+
+    highlights: []
+
     technologies: []
 
-education:
-  - id: analista-programador-ort
-    title: "Software Development Analyst"
-    institution: "Universidad ORT Uruguay"
-    year: "2025"
-    status: "completed"
-    detail: "Degree earned while working full-time."
-  - id: ciberseguridad-ort
-    title: "Cybersecurity Certification"
-    institution: "Universidad ORT Uruguay"
-    year: "2025"
-    status: "completed"
-    detail: "OWASP Top 10, ISO, NIST."
-  - id: devops-ort
-    title: "DevOps Engineer Certification"
-    institution: "Universidad ORT Uruguay"
-    year: null
-    status: "in-progress"
-    detail: "Training in CI/CD, Git, Linux, Docker, GitHub Actions, and development and deployment automation practices."
 
 skills:
-  intro: "Stack and tools I work with."
+  intro: >-
+    Technologies and tools I work with regularly.
+
   categories:
     - id: backend
       label: "Backend"
+
       items:
         - "C# / .NET"
         - "ASP.NET Core"
         - "REST APIs"
-        - "SOAP / REST integrations"
+        - "REST / SOAP integrations"
+
+
     - id: data
       label: "Data"
+
       items:
         - "SQL Server"
         - "SQLite"
+
+
     - id: desktop-mobile
-      label: "Desktop & Mobile"
+      label: "Desktop and mobile"
+
       items:
-        - "WPF"
-        - "MVVM"
+        - "WPF / MVVM"
         - "WinForms"
         - ".NET for Android"
         - "Xamarin.Forms"
+
+
     - id: tools-platforms
-      label: "Tools & Platforms"
+      label: "Tools and platforms"
+
       items:
-        - "Quartz.NET"
-        - "Azure"
         - "Git"
+        - "Azure"
+        - "Quartz.NET"
         - "Google Play Console"
-    - id: ai-assisted
-      label: "AI-assisted development"
-      items:
-        - "Designing my own agents and skills"
-        - "Spec-driven workflow"
-    - id: other
-      label: "Other"
-      items:
-        - "GeneXus"
-        - "Cybersecurity"
-        - "Networking & infrastructure"
-    - id: learning
-      label: "Currently learning"
-      items:
-        - "Vue 3"
-        - "JavaScript"
-        - "HTML"
-        - "CSS"
-        - "Bootstrap"
-        - "DevOps"
+
+
+  learning:
+    label: "Currently"
+
+    description: >-
+      I'm currently deepening my skills in DevOps and modern web
+      development with Vue 3.
+
+    items:
+      - "DevOps"
+      - "Vue 3"
+      - "JavaScript"
+
+
+education:
+  - id: analista-programador-ort
+
+    title: "Software Development Analyst"
+    institution: "Universidad ORT Uruguay"
+
+    year: "2025"
+    status: "completed"
+
+    detail: null
+
+
+  - id: ciberseguridad-ort
+
+    title: "Cybersecurity Certification"
+    institution: "Universidad ORT Uruguay"
+
+    year: "2025"
+    status: "completed"
+
+    detail: >-
+      Training in application security, OWASP Top 10, and reference
+      frameworks such as ISO and NIST.
+
+
+  - id: devops-ort
+
+    title: "DevOps Engineer Certification"
+    institution: "Universidad ORT Uruguay"
+
+    year: null
+    status: "in-progress"
+
+    detail: >-
+      Training in CI/CD, Git, Linux, Docker, GitHub Actions, and
+      automation of development and deployment processes.
+
 
 languages:
   - name: "Spanish"
     level: "Native"
     note: null
+
   - name: "English"
     level: "B2 certified — Cambridge FCE"
-    note: "Currently preparing C1 Advanced (CAE) for 2027. Comfortable holding technical conversations in English."
+
+    note: >-
+      Currently preparing for Cambridge C1 Advanced (CAE).
+
+
+contact:
+  title: "Let's talk"
+
+  description: >-
+    I'm open to new software development opportunities, especially in
+    .NET environments and teams where I can keep growing technically.
+
+  email: "diegochiquiar@gmail.com"
+
+  availability: "Open to new opportunities."
+
+  links:
+    linkedin: "https://www.linkedin.com/in/diego-chiquiar/"
+    github: "https://github.com/dchiquiar"

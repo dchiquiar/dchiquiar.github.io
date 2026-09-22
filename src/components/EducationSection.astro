@@ -1,0 +1,38 @@
+---
+// F-18 (ADR-0019 §1): Formación pasa a ser sección propia — antes vivía
+// como un <h3> dentro de ExperienceSection.astro. Mismo markup de lista
+// (`.education-list`) y las mismas etiquetas de estado, sólo con su
+// propio SectionHeading numerado. HomePage.astro sólo instancia este
+// componente cuando `education` no está vacío (mismo criterio que ya
+// usaba AboutSection con person.summary) — no hay versión vacía.
+import { ui } from "../i18n/ui.js";
+import SectionHeading from "./SectionHeading.astro";
+
+interface Props {
+  lang: "en" | "es";
+  number: string;
+  education: Array<Record<string, any>>;
+}
+const { lang, number, education } = Astro.props;
+const t = ui[lang];
+---
+
+<section id="education" class="section">
+  <div class="container">
+    <SectionHeading number={number} title={t.sections.education} id="education" />
+    <ul class="education-list">
+      {education.map((ed) => (
+        <li>
+          <strong>{ed.title}</strong> — {ed.institution}
+          {ed.year ? `, ${ed.year}` : ""}
+          <div class="status">
+            {ed.status === "completed"
+              ? t.experience.statusCompleted
+              : t.experience.statusInProgress}
+            {ed.detail ? ` · ${ed.detail}` : ""}
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

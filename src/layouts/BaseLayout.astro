@@ -11,10 +11,12 @@ interface Props {
   title: string;
   description: string;
   jsonLd: Record<string, unknown>;
-  showAbout?: boolean;
+  // F-18: ids semánticos de las secciones con contenido, en el orden real
+  // de renderizado (ver SiteNav.astro) — reemplaza al viejo `showAbout`.
+  sections: string[];
 }
 
-const { lang, title, description, jsonLd, showAbout = false } = Astro.props;
+const { lang, title, description, jsonLd, sections } = Astro.props;
 const t = ui[lang];
 
 const path = lang === "es" ? "/es/" : "/";
@@ -150,7 +152,7 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
   </head>
   <body>
     <a class="skip-link" href="#main">{t.skipToContent}</a>
-    <SiteNav lang={lang} showAbout={showAbout} />
+    <SiteNav lang={lang} sections={sections} />
     <slot />
     <SiteFooter lang={lang} />
   </body>

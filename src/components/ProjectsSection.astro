@@ -16,8 +16,9 @@ import { loadProjects } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
+  number: string;
 }
-const { lang } = Astro.props;
+const { lang, number } = Astro.props;
 const t = ui[lang];
 
 const cards = loadProjects()
@@ -35,7 +36,7 @@ const cards = loadProjects()
 
 <section id="projects" class="section">
   <div class="container">
-    <SectionHeading number="01" title={t.sections.projects} id="projects" />
+    <SectionHeading number={number} title={t.sections.projects} id="projects" />
     <div class="project-grid">
       {cards.map((card, index) => (
         <ProjectCard lang={lang} variant={index === 0 ? "featured" : "standard"} {...card} />

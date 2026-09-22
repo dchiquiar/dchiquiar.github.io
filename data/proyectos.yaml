@@ -8,82 +8,66 @@
 # Validar contra data/schemas/proyectos.schema.json (máximo 4 items).
 
 meta:
-  lastUpdated: "2026-09-20"
+  lastUpdated: "2026-09-21"
 
 projects:
   - id: mcp-sql-server
+
     title:
-      es: >-
-        Un servidor MCP que deja a un asistente de IA leer una base SQL
-        Server — y nada más
-      en: >-
-        An MCP server that lets an AI read your SQL Server — and nothing
-        else
+      es: "MCP de solo lectura para SQL Server"
+      en: "Read-only MCP server for SQL Server"
+
     description:
       es: >-
-        Le da a un asistente de IA acceso de sólo lectura a una base SQL
-        Server: puede consultarla y recorrer su estructura, y no puede
-        modificar nada.
+        Servidor MCP en .NET que permite a un asistente de IA consultar
+        datos y explorar el esquema de SQL Server manteniendo acceso
+        estrictamente de solo lectura.
       en: >-
-        Gives an AI assistant read-only access to a SQL Server database:
-        it can query the data and walk the schema, and it cannot change
-        anything.
+        A .NET MCP server that allows an AI assistant to query data and
+        explore a SQL Server schema while maintaining strictly read-only
+        access.
+
     problem:
       es: >-
-        Lo difícil no es ejecutar la consulta: es garantizar que no haga
-        daño cuando el que la escribe es un modelo que puede equivocarse.
-        Puse cinco controles en capas —un usuario de base con permisos de
-        sólo lectura, validación de la sentencia antes de ejecutarla,
-        tiempo máximo de ejecución, límite de filas devueltas y registro
-        de todo lo que se consultó— partiendo de que cualquiera de ellos
-        puede fallar y de que ninguno confía en el anterior. Es el mismo
-        criterio con el que trabajé en producción: diseñar para el
-        momento en que algo sale mal, no para el caso feliz.
+        El desafío no es ejecutar SQL, sino controlar qué puede hacer un
+        modelo cuando genera una consulta incorrecta o insegura. El diseño
+        combina permisos de solo lectura a nivel de base de datos, validación
+        previa, timeouts, límites de filas y auditoría de consultas como capas
+        independientes de protección.
       en: >-
-        Running the query is the easy part. The hard part is making sure
-        it can't do damage when the thing writing it is a model that can
-        be wrong. There are five layered controls — a database user with
-        read-only permissions, statement validation before execution, an
-        execution timeout, a row-count cap, and a log of every query that
-        ran — built on the assumption that any one of them can fail and
-        that none of them trusts the one before it. It's the same
-        principle I worked with in production: design for the moment
-        something goes wrong, not for the happy path.
+        The challenge is not executing SQL, but controlling what a model can
+        do when it generates an incorrect or unsafe query. The design combines
+        database-level read-only permissions, statement validation, execution
+        timeouts, row limits, and query auditing as independent layers of
+        protection.
+
     repoUrl: null
     liveUrl: null
     status: planned
+
     technologies:
       - C#
       - .NET
       - SQL Server
       - MCP (Model Context Protocol)
-      - Defensa en capas
+
 
   - id: game-server
+
     title:
-      es: Servidor de juego multijugador en .NET
-      en: Multiplayer game server in .NET
+      es: "Servidor multijugador autoritativo en .NET"
+      en: "Authoritative multiplayer server in .NET"
+
     description:
       es: >-
-        Un servidor propio en .NET con cliente en Unity, donde el
-        servidor es la única fuente de verdad: decide quién se movió,
-        quién golpeó a quién y qué ve cada jugador.
-
-
-        Lo que se ve acá es el sistema corriendo. Lo que puedo contar
-        en detalle son las decisiones: qué confirma el servidor, qué
-        anticipa el cliente para que el juego se sienta inmediato, y
-        por qué elegí eso y no otra cosa.
+        Backend multijugador autoritativo en .NET con cliente Unity. El
+        servidor mantiene el estado del mundo y valida en tiempo real
+        movimientos, combate y acciones de los jugadores.
       en: >-
-        My own .NET server with a Unity client, where the server is the
-        single source of truth: it decides who moved, who hit whom, and
-        what each player gets to see.
+        An authoritative multiplayer server built in .NET with a Unity client.
+        The server owns the game state and validates player movement, combat,
+        and actions in real time.
 
-
-        What you're seeing here is the system running. What I can walk
-        through in detail are the decisions: what the server confirms,
-        what the client predicts so the game feels immediate, and why I
-        picked that over the alternatives.
     images:
       - src: "/projects/urgentum-multiplayer.webp"
         width: 1280
@@ -91,39 +75,80 @@ projects:
         alt:
           es: "Tres jugadores con nombres distintos conversando por chat en la entrada del pueblo"
           en: "Three named players talking over chat at the town gate"
+
       - src: "/projects/urgentum-systems.webp"
         width: 1280
         height: 720
         alt:
           es: "Las ventanas de estadísticas, equipo e inventario del personaje abiertas a la vez"
           en: "The character's stats, equipment and inventory windows open at once"
+
       - src: "/projects/urgentum-hero.webp"
         width: 1280
         height: 720
         alt:
           es: "El personaje en el pueblo, con las barras de vida, maná y energía y la barra de acciones"
           en: "The player character in town, with health, mana and stamina bars and the action bar"
+
     problem:
       es: >-
-        En un juego en línea no se le puede creer al cliente: si el
-        jugador dice «estoy acá y te pegué», el servidor tiene que poder
-        verificarlo. Valida cada movimiento y cada golpe, guarda el
-        estado de los personajes y le manda a cada jugador sólo lo que
-        pasa cerca suyo. Es el problema opuesto al de un sistema de
-        gestión.
+        En un juego online, el cliente no puede ser la fuente de verdad.
+        El servidor valida movimientos y ataques, persiste el estado de los
+        personajes y envía a cada jugador únicamente la información relevante
+        de su entorno.
       en: >-
-        In an online game you can't take the client's word for anything:
-        if a player says "I'm here and I hit you", the server has to be
-        able to verify it. It validates every move and every hit,
-        persists character state, and sends each player only what is
-        happening near them. It's the opposite of a business system.
+        In an online game, the client cannot be the source of truth.
+        The server validates movement and combat, persists character state,
+        and sends each player only the information relevant to their
+        surroundings.
+
     repoUrl: null
     liveUrl: null
     status: in-progress
+
     technologies:
       - C#
       - .NET
       - Unity
-      - Tiempo real
       - TCP
       - SQL Server
+
+  - id: portfolio-site
+
+    title:
+      es: "Este sitio: portfolio y CV en Astro"
+      en: "This site: portfolio and CV in Astro"
+
+    description:
+      es: >-
+        Portfolio y CV bilingüe construido con Astro y publicado como HTML
+        estático en GitHub Pages. El contenido vive en YAML y el código es
+        público: se puede leer exactamente cómo está hecho.
+      en: >-
+        A bilingual portfolio and CV built with Astro and shipped as static
+        HTML on GitHub Pages. The content lives in YAML and the code is
+        public — you can read exactly how it's built.
+
+    problem:
+      es: >-
+        El contenido existe en dos idiomas y tiene que seguir diciendo lo
+        mismo en los dos. Cada dato vive una sola vez, en YAML, y se valida
+        contra un JSON Schema en cada cambio subido: si no valida, el
+        pipeline de CI corta el despliegue antes de publicar.
+      en: >-
+        The content exists in two languages and has to keep saying the same
+        thing in both. Each field lives once, in YAML, checked against a JSON
+        Schema on every push: if it fails, CI blocks the deploy before
+        anything ships.
+
+    repoUrl: "https://github.com/dchiquiar/dchiquiar.github.io"
+    liveUrl: "https://dchiquiar.github.io"
+    status: done
+
+    technologies:
+      - Astro
+      - YAML
+      - JSON Schema
+      - GitHub Actions
+      - GitHub Pages
+      - CSS

@@ -1,38 +1,70 @@
 ---
+// F-18 (ADR-0019 §3): la órbita abre la sección, centrada y más grande —
+// ya no comparte fila con el título (ver StackOrbit.astro/global.css para
+// el tamaño). Debajo, la intro corta y las tarjetas de categorías, sin
+// cambios de contenido.
 import { ui } from "../i18n/ui.js";
 import SectionHeading from "./SectionHeading.astro";
 import StackOrbit from "./StackOrbit.astro";
-import { cleanList } from "../lib/content.js";
+import { cleanField, cleanList } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
+  number: string;
   categories: Array<{ id: string; label: string; items: string[] }>;
   languages: Array<{ name: string; level: string; note: string | null }>;
   intro?: string | null;
+  // Forma vigente de "En formación" (skills.learning, objeto). Opcional:
+  // cv.en.yaml todavía no lo trae (sólo cv.es.yaml, F-18) — sin este prop,
+  // se recurre a la categoría legacy con id "learning" (ver más abajo).
+  learning?: { label: string; description?: string | null; items: string[] } | null;
 }
-const { lang, categories, languages, intro = null } = Astro.props;
+const { lang, number, categories, languages, intro = null, learning = null } = Astro.props;
 const t = ui[lang];
 
 // Filtra items marcados como TODO/pendiente de confirmación y descarta
 // categorías que queden vacías (no se muestra una categoría sin contenido).
-const cleanCategories = categories
+const cleanedCategories = categories
   .map((cat) => ({ ...cat, items: cleanList(cat.items) }))
   .filter((cat) => cat.items.length > 0);
+
+// "En formación" (F-18): la forma vigente es `skills.learning`, un objeto
+// aparte de `categories` (cv.es.yaml). Mientras cv.en.yaml no se
+// sincronice, sigue trayendo la forma vieja: una categoría más dentro de
+// `categories` con id "learning" (ver data/schemas/cv.schema.json). Nunca
+// se usan las dos a la vez para el mismo idioma, pero el código igual
+// separa la categoría legacy del resto de la grilla por si acaso, para no
+// duplicar la tarjeta.
+const legacyLearningCategory = cleanedCategories.find((cat) => cat.id === "learning") ?? null;
+const displayCategories = cleanedCategories.filter((cat) => cat.id !== "learning");
+
+const learningSource = learning
+  ? {
+      label: cleanField(learning.label),
+      description: cleanField(learning.description ?? null),
+      items: cleanList(learning.items),
+    }
+  : legacyLearningCategory
+    ? { label: legacyLearningCategory.label, description: null, items: legacyLearningCategory.items }
+    : null;
+
+const learningBlock =
+  learningSource && learningSource.label && learningSource.items.length > 0 ? learningSource : null;
 ---
 
-<section id="stack" class="section">
+<section id="skills" class="section">
   <div class="container">
-    <div class="stack__intro">
-      <div class="stack__intro-text">
-        <SectionHeading number="03" title={t.sections.stack} id="stack" />
-        {intro && <p class="stack__lead">{intro}</p>}
-      </div>
+    <SectionHeading number={number} title={t.sections.skills} id="skills" />
+
+    <div class="stack__orbit-wrap">
       <StackOrbit />
     </div>
 
+    {intro && <p class="stack__lead">{intro}</p>}
+
     <div class="stack-grid">
-      {cleanCategories.map((cat, i) => (
-        <div class={`stack-card${cat.id === "learning" ? " stack-card--learning" : ""}`}>
+      {displayCategories.map((cat, i) => (
+        <div class="stack-card">
           <div class="stack-card__header">
             <h3 class="stack-card__title">{cat.label}</h3>
             <span class="stack-card__num" aria-hidden="true">
@@ -46,6 +78,22 @@ const cleanCategories = categories
           </ul>
         </div>
       ))}
+      {learningBlock && (
+        <div class="stack-card stack-card--learning">
+          <div class="stack-card__header">
+            <h3 class="stack-card__title">{learningBlock.label}</h3>
+            <span class="stack-card__num" aria-hidden="true">
+              {String(displayCategories.length + 1).padStart(2, "0")}
+            </span>
+          </div>
+          {learningBlock.description && <p class="stack-card__desc">{learningBlock.description}</p>}
+          <ul class="tag-list">
+            {learningBlock.items.map((item) => (
+              <li class="tag">{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
 
     {languages.length > 0 && (

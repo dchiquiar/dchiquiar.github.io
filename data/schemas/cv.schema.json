@@ -20,6 +20,15 @@
           "type": "string",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
           "description": "Fecha ISO (AAAA-MM-DD) de la última revisión de datos."
+        },
+        "sectionOrder": {
+          "type": "array",
+          "description": "Orden de renderizado de las secciones de la home, de arriba hacia abajo. Opcional: mientras no está presente, el orden lo fija el código. ES y EN deben declarar la misma lista (mismos ids, mismo orden); si sólo uno de los dos idiomas la trae, es una inconsistencia transitoria a resolver, no un error de esquema.",
+          "items": {
+            "type": "string",
+            "enum": ["intro", "projects", "experience", "skills", "education", "about", "contact"]
+          },
+          "uniqueItems": true
         }
       }
     },
@@ -34,6 +43,18 @@
           "description": "Titular factual (rol + stack), no copy de marketing: la versión final de venta se define en el proceso de contenido, no en este campo."
         },
         "location": { "type": "string" },
+        "greeting": {
+          "type": ["string", "null"],
+          "description": "Saludo corto del hero, delante del nombre (p. ej. 'Hola, soy Diego.'). null si todavía no hay copy aprobada."
+        },
+        "tagline": {
+          "type": ["string", "null"],
+          "description": "Línea corta bajo el headline, complementaria (no repite el headline ni el intro). null si todavía no hay copy aprobada."
+        },
+        "featuredFact": {
+          "type": ["string", "null"],
+          "description": "Un dato concreto destacado del hero (una cifra o logro verificable). null si todavía no hay copy aprobada."
+        },
         "seniority": {
           "type": ["string", "null"],
           "description": "Sale del sitio (decisión de Diego, B-19): el campo se mantiene por compatibilidad con la capa privada del PDF, pero ya no es obligatorio ni se declara en la capa pública. null = no publicado."
@@ -159,6 +180,7 @@
         },
         "categories": {
           "type": "array",
+          "description": "Categorías de skills confirmadas. Una categoría con id 'learning' aquí (forma antigua, en uso en cv.en.yaml hasta que se sincronice) representa lo mismo que el objeto skills.learning de abajo (forma vigente): no deberían usarse ambas a la vez para el mismo idioma.",
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -170,6 +192,23 @@
                 "type": "array",
                 "items": { "type": "string" }
               }
+            }
+          }
+        },
+        "learning": {
+          "type": "object",
+          "description": "Forma vigente de 'en formación', separada de categories (reemplaza a la categoría con id 'learning'). Opcional.",
+          "additionalProperties": false,
+          "required": ["label", "items"],
+          "properties": {
+            "label": { "type": "string" },
+            "description": {
+              "type": ["string", "null"],
+              "description": "Párrafo corto opcional. null si todavía no hay copy aprobada."
+            },
+            "items": {
+              "type": "array",
+              "items": { "type": "string" }
             }
           }
         }
@@ -185,6 +224,34 @@
           "name": { "type": "string" },
           "level": { "type": "string" },
           "note": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "contact": {
+      "type": "object",
+      "description": "Copy propia de la sección de contacto (título, descripción, y los mismos datos de contacto que person, repetidos aquí para no acoplar esa sección a person). Opcional.",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "description": {
+          "type": ["string", "null"],
+          "description": "Párrafo corto de la sección. null si todavía no hay copy aprobada."
+        },
+        "email": {
+          "type": "string",
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+        },
+        "availability": {
+          "type": ["string", "null"],
+          "description": "Modalidad aceptada, igual criterio que person.availability. null = pendiente de confirmar con Diego."
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "linkedin": { "type": ["string", "null"] },
+            "github": { "type": ["string", "null"] }
+          }
         }
       }
     }

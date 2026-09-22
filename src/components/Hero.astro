@@ -1,6 +1,15 @@
 ---
+// F-18 (ADR-0019 §2): hero humano. Orden conceptual: foto · saludo ·
+// nombre · rol · "desde {ubicación}" · intro en primera persona (hasta 2
+// párrafos) · dato destacado / disponibilidad / links (los tres opcionales,
+// se omiten sin dejar hueco si no hay valor confirmado) · CTAs.
+//
+// person.tagline (nuevo en el YAML) NO se renderiza acá a propósito
+// (decisión de Diego en el brief de F-18, "evitar sobrecarga"): el campo
+// queda disponible en data/cv.*.yaml para cuando se decida usarlo, pero
+// este componente no lo lee. Sin edad en ningún punto del hero (ADR-0019).
 import { ui } from "../i18n/ui.js";
-import { cleanField } from "../lib/content.js";
+import { cleanField, splitParagraphs } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
@@ -9,20 +18,22 @@ interface Props {
 const { lang, person } = Astro.props;
 const t = ui[lang];
 const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
-const availability = cleanField(person.availability);
-// person.seniority pasa a opcional (F-10, decisión de Diego): mismo
-// patrón que availability. Sin esto, con el campo ausente quedaba un
-// <span> vacío y un separador "·" colgando en la línea de datos — el
-// separador lo pone `.hero__meta span:not(:last-child)::after` en CSS,
-// puramente por estructura del DOM, así que con el <span> condicionado
-// (no sólo su contenido) el separador se acomoda solo sin tocar el CSS.
-const seniority = cleanField(person.seniority);
 
-// person.intro (ADR-0015): la carga `backend` en paralelo — hoy el campo
-// no existe en data/cv.*.yaml, así que esto tiene que construir igual con
-// `undefined`. Mismo patrón que availability/summary: sin valor limpio, no
-// se renderiza el párrafo (nada de hueco ni marcador).
-const intro = cleanField(person.intro);
+// Todos opcionales (cv.en.yaml todavía no trae greeting/featuredFact — F-18
+// enmienda cv.es.yaml primero): sin valor confirmado, cada uno se omite sin
+// dejar hueco ni marcador, mismo criterio que ya usaba availability/intro
+// antes de esta tarea.
+const greeting = cleanField(person.greeting);
+const availability = cleanField(person.availability);
+const featuredFact = cleanField(person.featuredFact);
+const linkedin = person.links?.linkedin ?? null;
+const github = person.links?.github ?? null;
+
+// person.intro (ADR-0015) puede traer hasta 2 párrafos separados por línea
+// en blanco (mismo contrato YAML plegado que person.summary/project.
+// description, ver content.js) — un solo <p> los uniría en un bloque
+// corrido. splitParagraphs ya resuelve esto en el resto del sitio.
+const introParagraphs = splitParagraphs(cleanField(person.intro) ?? "");
 
 // Alt del retrato: no es contenido del CV (no sale de data/cv.*.yaml, es
 // un hecho fijo de la propia foto), así que se escribe acá directo con
@@ -68,9 +79,10 @@ const nameWordsData = person.name
   });
 ---
 
-<section id="top" class="hero">
+<section id="intro" class="hero">
   <div class="container hero__layout">
     <div class="hero__content">
+      {greeting && <p class="hero__greeting">{greeting}</p>}
       {/* Nombre accesible fijado por `aria-label` en el propio h1: con el
          nombre partido en <span> por letra, algunos lectores de pantalla
          (ej. VoiceOver) deletrean en vez de leer la palabra completa. El
@@ -95,12 +107,24 @@ const nameWordsData = person.name
         </span>
       </h1>
       <p class="hero__role">{person.headline}</p>
-      {intro && <p class="hero__intro">{intro}</p>}
-      <p class="hero__meta">
-        <span>{person.location}</span>
-        {seniority && <span>{seniority}</span>}
-        {availability && <span>{availability}</span>}
+      <p class="hero__location">
+        {t.hero.from} {person.location}
       </p>
+      {introParagraphs.length > 0 && (
+        <div class="hero__intro">
+          {introParagraphs.map((paragraph) => (
+            <p>{paragraph}</p>
+          ))}
+        </div>
+      )}
+      {featuredFact && <p class="hero__fact">{featuredFact}</p>}
+      {availability && <p class="hero__availability">{availability}</p>}
+      {(linkedin || github) && (
+        <p class="hero__links">
+          {linkedin && <a href={linkedin}>LinkedIn</a>}
+          {github && <a href={github}>GitHub</a>}
+        </p>
+      )}
       <div class="cta-group">
         <a class="btn btn-primary" href={cvHref} download>
           {t.hero.downloadCv}

@@ -768,9 +768,14 @@ html[data-theme="light"] .theme-toggle .icon-moon {
    misma especificidad (una sola clase), el orden de aparición en la hoja
    decide, y una regla de esta media query escrita ANTES de la base
    pierde contra ella aunque la condición de la media query se cumpla. */
+/* F-18: recorte adicional del piso (antes 1.25rem/4vh) — el hero humano
+   suma renglones (saludo, "desde ubicación") que F-11 no tenía cuando
+   calibró este valor; sin bajarlo un poco más el CTA quedaba a 814,9px,
+   2,9px fuera del límite de 812 (medido con Puppeteer real antes de este
+   cambio). Sigue siendo sólo el padding, nunca font-size. */
 @media (max-width: 767px) {
   .hero {
-    padding-block: clamp(1.25rem, 4vh, 2.5rem) clamp(1.5rem, 5vh, 3rem);
+    padding-block: clamp(0.85rem, 3vh, 1.75rem) clamp(1.5rem, 5vh, 3rem);
   }
 }
 
@@ -1049,13 +1054,36 @@ html[data-theme="dark"] .hero__media img {
    pero sólo una está visible a la vez — la de la última letra que
    "aterrizó". Esto funciona porque todas las letras comparten la misma
    `animation-duration` (0.8s) y el mismo stagger (0.08s de `--letter-
-   step`): el momento en que cada letra TERMINA de caer
-   (`--letter-step × 0.08s + 0.8s`) mantiene el mismo espaciado de 0,08s
-   que sus inicios, así que las ventanas en que cada cursor está visible
-   encajan una detrás de la otra sin superponerse ni dejar huecos — no
-   hace falta JS para calcular el avance.
+   step`): el desfasaje entre el ARRANQUE de una letra y el de la
+   siguiente es el mismo 0,08s que el desfasaje entre CUALQUIER otro
+   punto de sus curvas (arrancan y "se ven" con el mismo delta), así que
+   las ventanas en que cada cursor está visible encajan una detrás de la
+   otra sin superponerse ni dejar huecos — no hace falta JS para calcular
+   el avance.
 
-   Tamaño: `1cap` (alto real de una mayúscula de la fuente activa, CSS
+   `--cursor-rise-offset: 0.061s` (F-16b, corrige F-16): el cursor de la
+   letra i NO se activa cuando la letra TERMINA de caer
+   (`--letter-step×0.08s + 0.8s`, el error original) sino cuando la letra
+   EMPIEZA A VERSE. "Verse" no es lo mismo que "arranca su delay": la
+   opacidad sube con la misma curva `back.out(1.4)` que la caída, así que
+   tarda un rato en notarse — medido en el navegador real (bisección
+   sobre `animation.currentTime`, letra "D", delay=0): la opacidad cruza
+   0,3 a los 60,912ms de que arranca su animación, no a los 0ms. 0,061s
+   redondeado. Con este offset, el cursor de la letra i queda visible
+   durante `[step_i×0.08s + 0.061s, step_{i+1}×0.08s + 0.061s)` — el
+   MISMO reloj que hoy usa la caída de las letras, sólo que alineado al
+   instante en que cada una se vuelve perceptible en vez de al instante
+   en que termina de asentarse (ese desfasaje de ~0,74s es justo lo que
+   reportó Diego: "primero aparecen todas las letras y después arranca el
+   cursor"). Verificado con `requestAnimationFrame` en tiempo real
+   (cruce de opacity≥0.3 de la letra vs. cruce de opacity≥0.5 del cursor,
+   letra por letra): diferencia ≤1 cuadro en los 4 combos medidos — ver
+   reporte F-16b. */
+:root {
+  --cursor-rise-offset: 0.061s;
+}
+
+/* Tamaño: `1cap` (alto real de una mayúscula de la fuente activa, CSS
    Values 4 — Chrome/Firefox/Safari recientes) con fallback en `em` para
    navegadores sin soporte. `bottom: 0` lo asienta contra el borde
    inferior de la propia letra (aproximación al baseline: sin una API de
@@ -1116,7 +1144,7 @@ html[data-theme="dark"] .hero__media img {
    un borde único que cruzar, sólo una rampa. */
 .hero__name-letter:not(:last-child)::after {
   animation: hero-cursor-pass 0.08s linear forwards;
-  animation-delay: calc(var(--letter-step, 0) * 0.08s + 0.8s);
+  animation-delay: calc(var(--letter-step, 0) * 0.08s + var(--cursor-rise-offset));
 }
 
 /* Última letra de una palabra que NO es la última del nombre: el cursor
@@ -1128,7 +1156,7 @@ html[data-theme="dark"] .hero__media img {
    `steps()`). */
 .hero__name-word:not(:last-child) .hero__name-letter:last-child::after {
   animation: hero-cursor-pass 0.16s linear forwards;
-  animation-delay: calc(var(--letter-step, 0) * 0.08s + 0.8s);
+  animation-delay: calc(var(--letter-step, 0) * 0.08s + var(--cursor-rise-offset));
 }
 
 @keyframes hero-cursor-pass {
@@ -1154,25 +1182,29 @@ html[data-theme="dark"] .hero__media img {
    (opacity:1) en las dos puntas, ya era robusto de por sí: cualquier
    error de punto flotante ahí cae dentro de una meseta, no un borde.
 
-   `animation-delay` es el momento en que ESTA letra aterriza (igual
-   fórmula que arriba). `animation-duration` es `calc(5s - delay)`: el
-   tiempo que queda hasta el corte de 5s ABSOLUTOS desde el load, no desde
-   que aterriza la letra — por eso depende del delay, no es un valor
-   fijo. Con esto, el corte a los 5s es EXACTO y generado desde el dato
-   (`--letter-step`) sin importar cuántas letras tenga el nombre: si
-   mañana el nombre fuera más largo, la ÚLTIMA letra aterriza más tarde y
-   la ventana de parpadeo se acorta sola, pero siempre termina a los 5s en
-   punto. Lo único que NO es data-driven es el ritmo del parpadeo en sí
-   (los porcentajes del `@keyframes`, más abajo): están calibrados a ojo
-   para los ~3,16s que le tocan hoy a "Diego Chiquiar" (14 pasos, última
-   letra aterriza a 1,84s → quedan 3,16s de los 5s). Si el nombre cambiara
-   mucho de largo, el parpadeo se vería más rápido o más lento, pero el
-   corte a los 5s exactos (lo que pide WCAG) no se rompe nunca porque no
-   depende de esos porcentajes. */
+   `animation-delay` es el momento en que ESTA letra empieza a VERSE
+   (F-16b: `--letter-step×0.08s + --cursor-rise-offset`, misma fórmula
+   que arriba — antes de F-16b usaba `+0.8s`, el momento en que la letra
+   TERMINABA de caer, que es el bug que reportó Diego). `animation-
+   duration` es `calc(5s - delay)`: el tiempo que queda hasta el corte de
+   5s ABSOLUTOS desde el load, no desde que la letra se ve — por eso
+   depende del delay, no es un valor fijo. Con esto, el corte a los 5s es
+   EXACTO y generado desde el dato (`--letter-step`) sin importar cuántas
+   letras tenga el nombre: si mañana el nombre fuera más largo, la ÚLTIMA
+   letra se ve más tarde y la ventana de parpadeo se acorta sola, pero
+   siempre termina a los 5s en punto. Lo único que NO es data-driven es
+   el ritmo del parpadeo en sí (los porcentajes del `@keyframes`, más
+   abajo): siguen calibrados para una duración de unos ~3,2s (con
+   `--cursor-rise-offset` la última letra de "Diego Chiquiar" se ve a
+   ~1,1s → quedan ~3,9s de los 5s; el ritmo del parpadeo se ve apenas más
+   lento que antes de F-16b, cosmético, no afecta el corte a los 5s). Si
+   el nombre cambiara mucho de largo, el parpadeo se vería más rápido o
+   más lento, pero el corte a los 5s exactos (lo que pide WCAG) no se
+   rompe nunca porque no depende de esos porcentajes. */
 .hero__name-word:last-child .hero__name-letter:last-child::after {
-  animation: hero-cursor-hold-then-blink calc(5s - (var(--letter-step, 0) * 0.08s + 0.8s)) linear
-    forwards;
-  animation-delay: calc(var(--letter-step, 0) * 0.08s + 0.8s);
+  animation: hero-cursor-hold-then-blink
+    calc(5s - (var(--letter-step, 0) * 0.08s + var(--cursor-rise-offset))) linear forwards;
+  animation-delay: calc(var(--letter-step, 0) * 0.08s + var(--cursor-rise-offset));
 }
 
 @keyframes hero-cursor-hold-then-blink {
@@ -1244,28 +1276,86 @@ html[data-theme="dark"] .hero__media img {
   margin: 0 0 1rem;
 }
 
-/* Sólo se renderiza con person.intro confirmado (Hero.astro): sin este
-   párrafo en el DOM la regla no deja hueco. Medida de lectura en el
-   párrafo, no en `.hero__content` (ADR-0013 precisado): ese contenedor
-   también lleva el h1, la línea de metadatos y los CTAs, no sólo texto
-   corrido. */
+/* F-18 (ADR-0019 §2): saludo corto delante del nombre ("Hola, soy
+   Diego."). Opcional — sin `person.greeting` confirmado, Hero.astro no
+   renderiza el párrafo y esta regla no deja hueco. */
+.hero__greeting {
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+}
+
+/* F-18: "desde {ubicación}" como frase propia, ya no un dato suelto
+   dentro de `.hero__meta` junto a seniority/availability (esos dos
+   campos ya no comparten línea con la ubicación — ver `.hero__availability`
+   más abajo). */
+.hero__location {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+
+/* F-18: puede traer hasta 2 párrafos (person.intro, splitParagraphs en
+   Hero.astro) — antes era un único <p>, ahora el contenedor agrupa varios
+   con el mismo espaciado que un bloque de lectura corto. Sólo se
+   renderiza con person.intro confirmado: sin este bloque en el DOM la
+   regla no deja hueco. Medida de lectura en el contenedor, no en
+   `.hero__content` (ADR-0013 precisado): ese contenedor también lleva el
+   h1, la línea de rol/ubicación y los CTAs, no sólo texto corrido. */
 .hero__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   color: var(--color-text);
   font-size: 1.1rem;
   max-width: var(--medida-lectura);
   margin: 0 0 1.5rem;
 }
 
-.hero__meta {
-  color: var(--color-text-muted);
-  font-size: 1rem;
-  margin: 0 0 2rem;
+.hero__intro p {
+  margin: 0;
 }
 
-.hero__meta span:not(:last-child)::after {
-  content: "·";
-  margin-inline: 0.6em;
-  color: var(--color-border);
+/* F-18: dato destacado del hero (person.featuredFact) — una cifra o logro
+   verificable, en itálica (DESIGN.md: mono es sólo para datos sueltos,
+   ésta es una oración completa, así que no le corresponde la mono) y sin
+   tarjeta (ni fondo ni sombra: "The Paper-Doesn't-Float Rule"). El filete
+   vertical en tinta de énfasis reusa el mismo lenguaje que ya usa
+   `.education-list li` para marcar un bloque destacado sin envolverlo en
+   una caja. */
+.hero__fact {
+  font-style: italic;
+  color: var(--color-text);
+  border-left: 2px solid var(--color-accent);
+  padding-left: 0.85rem;
+  margin: 0 0 1.25rem;
+  max-width: var(--medida-lectura);
+}
+
+.hero__availability {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  margin: 0 0 1.25rem;
+}
+
+/* F-18: LinkedIn/GitHub como links de texto en el hero (ADR-0019 §2), no
+   `.btn` — serían un tercer y cuarto botón compitiendo con "Descargar CV"
+   (DESIGN.md: un botón primario por bloque). `min-height` 28px, mismo
+   criterio que `.site-footer a`/`.about__cv-link`: no son texto corrido
+   dentro de una oración (serían link inline exento de destino táctil),
+   son un renglón de acciones propio. */
+.hero__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+}
+
+.hero__links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
 }
 
 .cta-group {
@@ -1337,25 +1427,51 @@ html[data-theme="dark"] .hero__media img {
    su piso de 120px, sin bajar de ahí). Medido con Puppeteer real: botón
    en 796,2px, idéntico en EN y ES, con margen bajo el límite de 812. El
    hero de escritorio no se toca (fuera de este breakpoint). */
+/* F-18: el hero humano suma renglones (saludo, "desde ubicación", dato
+   destacado, links) que F-11 no tenía cuando midió el presupuesto de
+   812px. Requisito duro sin cambios (ADR-0019 §2 + PRODUCT.md principio
+   1): nombre + rol + ubicación + CTA primario, siempre dentro del primer
+   pantallazo. `.hero__fact` y `.hero__links` son justo los dos elementos
+   que ADR-0019 marca como "si entran sin cargar" (opcionales) — se
+   ocultan en mobile para proteger ese requisito; en desktop, donde el
+   alto no es la restricción, se muestran siempre que haya dato. El
+   saludo, la intro y la disponibilidad SÍ se muestran en mobile (no están
+   en la lista de opcionales del ADR), con el mismo recorte de ritmo
+   vertical que ya usaba F-11. Medido con Puppeteer real, ver reporte
+   F-18 para el "y" final del CTA. */
 @media (max-width: 767px) {
+  .hero__fact,
+  .hero__links {
+    display: none;
+  }
+
   .hero__layout {
     gap: clamp(0.75rem, 3vw, 3.5rem);
   }
 
+  .hero__greeting {
+    margin-bottom: 0.3rem;
+  }
+
   .hero__name {
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.3rem;
   }
 
   .hero__role {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .hero__location {
+    margin-bottom: 0.6rem;
   }
 
   .hero__intro {
-    margin-bottom: 1rem;
+    margin-bottom: 0.7rem;
+    gap: 0.5rem;
   }
 
-  .hero__meta {
-    margin-bottom: 1.25rem;
+  .hero__availability {
+    margin-bottom: 0.9rem;
   }
 }
 
@@ -1383,6 +1499,119 @@ html[data-theme="dark"] .hero__media img {
   font-family: var(--font-mono);
   font-size: 0.9em;
   font-weight: 700;
+}
+
+/* Trazo de marcador detrás del título de sección. Decorativo: un
+   `::before` cuyo BORDE es una elipse chata; una máscara
+   `conic-gradient` deja ver sólo el arco superior, que cruza la mitad
+   baja del texto como una pasada de resaltador. Un solo lugar para los
+   cinco títulos, en los dos idiomas.
+
+   Envoltorio: el `h2` es flex a lo ancho del contenedor, así que el
+   trazo no puede medirse contra él. `.section-heading__mark` ajusta al
+   ancho real de "número + título" y replica el flex del `h2` (`gap:
+   inherit`, misma alineación por baseline), de modo que la caja del
+   `h2` no cambia. `isolation: isolate` + `z-index: -1` deja el trazo
+   detrás del texto pero delante del fondo de la sección.
+
+   Color (The One Ink Rule): la tinta del propio tema, translúcida sobre
+   el papel — no un matiz nuevo. El número y el título comparten el
+   mismo `--color-accent` (regla `h1, h2, h3`), así que el peor caso es
+   uno solo: ese color sobre el trazo pleno (fondo compuesto con la
+   opacidad de abajo). Verificado componiendo en sRGB: claro 18 % →
+   5,00:1; oscuro 22 % → ~6,5:1. Ambos por encima del 4,5:1 mínimo.
+   Subirlo en claro por encima de ~20 % baja el número de 4,5.
+
+   Caja contenida: `left`/`right` en em chicos y sin `translate`, para
+   que el pseudo no asome fuera del contenedor ni genere scroll
+   horizontal en mobile o con el texto al 200 %. */
+@property --heading-stroke-progress {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 15%;
+}
+
+.section-heading__mark {
+  --heading-stroke-ink: 22%;
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: baseline;
+  gap: inherit;
+}
+
+html[data-theme="light"] .section-heading__mark {
+  --heading-stroke-ink: 18%;
+}
+
+.section-heading__mark::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -0.5em;
+  right: -0.5em;
+  top: 0.5em;
+  height: 2em;
+  border: 0.5em solid
+    color-mix(in srgb, var(--color-accent) var(--heading-stroke-ink), transparent);
+  border-radius: 50%;
+  rotate: -1.5deg;
+  /* Dos capas de máscara, intersectadas:
+     1. La cónica, centrada muy por debajo de la caja (12em): vista
+        desde tan lejos, el arco superior subtiende pocos grados y el
+        barrido avanza casi lineal de izquierda a derecha. 15 % de 360°
+        = 54°, de -27° a +27°: alcanza para el título más ancho; en los
+        más cortos el trazo simplemente termina antes.
+     2. Un corte horizontal fijo a 0,62em del borde superior: descarta
+        los extremos del arco donde la elipse se curva hacia abajo, y
+        deja las puntas afinadas, como la entrada y salida de un
+        marcador. */
+  mask-image: conic-gradient(
+      from -27deg at 50% 12em,
+      #000 var(--heading-stroke-progress),
+      #0000 0
+    ),
+    linear-gradient(#000 0.62em, #0000 0.62em);
+  mask-composite: intersect;
+  pointer-events: none;
+}
+
+/* Revelado atado al scroll, sin JS: el trazo se dibuja mientras el
+   título sube desde el borde inferior de la ventana hasta el 20 % de su
+   recorrido, y queda completo arriba de eso. Sólo `from`: el `to` es el
+   valor de reposo (15 %), así que sin soporte de scroll-driven
+   animations o con movimiento reducido el trazo se ve completo, nunca
+   vacío. El kill-switch global de `prefers-reduced-motion` no aplica
+   acá: con `reduce` esta animación directamente no existe. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section-heading__mark {
+      view-timeline-name: --section-heading-mark;
+    }
+
+    .section-heading__mark::before {
+      animation-name: heading-stroke-draw;
+      animation-duration: 1ms;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --section-heading-mark;
+      animation-range: entry 0% cover 20%;
+    }
+  }
+}
+
+@keyframes heading-stroke-draw {
+  from {
+    --heading-stroke-progress: 0%;
+  }
+}
+
+/* "Aumentar contraste" y colores forzados: sin trazo. En forced-colors
+   el borde se pintaría con un color de sistema opaco detrás del texto. */
+@media (prefers-contrast: more), (forced-colors: active) {
+  .section-heading__mark::before {
+    display: none;
+  }
 }
 
 h3 {
@@ -1880,30 +2109,16 @@ h3 {
    ritmo de tag en todas — las cuatro razones por las que la referencia
    de Diego se ve ordenada y la grilla vieja no. */
 
-/* F-13 (ADR-0018): `.stack__intro` pasa a envolver dos bloques — el texto
-   (título + lead, que entre ellos conservan el mismo flex baseline de
-   antes) y la órbita decorativa. En mobile, `flex-wrap` hace que la
-   órbita cae a su propia fila, encima de `.stack-grid`, sin breakpoint
-   dedicado; en desktop ancho queda al lado del texto. */
-.stack__intro {
+/* F-18 (ADR-0019 §3): la órbita ya no comparte fila con el título (F-13
+   la ponía al lado de `.stack__intro-text`) — abre la sección sola,
+   centrada, antes de la intro y las tarjetas. `justify-content: center`
+   alcanza porque `.stack-orbit` ya resuelve su propio ancho por
+   `flex-basis` (ver comentario ahí abajo); este wrapper sólo la centra y
+   le da aire debajo antes del párrafo de intro. */
+.stack__orbit-wrap {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem 2rem;
-}
-
-.stack__intro-text {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem 2rem;
-  flex: 1 1 18rem;
-}
-
-.stack__intro .section-heading {
-  margin-bottom: 0.5rem;
+  justify-content: center;
+  margin: 0 0 clamp(2rem, 5vw, 3rem);
 }
 
 .stack__lead {
@@ -1932,17 +2147,30 @@ h3 {
    Tokens en rem, sin `vw` ni mezcla de ejes en un mismo valor (ver nota
    de F-12 sobre `clamp()` con ejes mixtos): el tamaño cambia sólo en el
    único breakpoint explícito del sitio (768px), redefiniendo las custom
-   properties, nunca con `clamp()`. El centro (3rem / 48px) se mantiene
-   igual en los dos tamaños porque el texto "STACK" no puede bajar de
-   13px (piso tipográfico de DESIGN.md) y 48px es el mínimo que lo aloja
-   con margen — lo que se achica en mobile son los anillos y los ítems.
+   properties, nunca con `clamp()`.
 
    Monocroma: ítems y anillos en `--color-border` / `--color-control-
    border`, ícono y centro en `--color-accent` / `--color-accent-
    contrast` (mismo par que usan los botones sólidos, ya verificado
    ≥6.59:1 en claro y ≥9.5:1 en oscuro). Sin sombras, sin gradientes, sin
    color de marca — enmienda de ADR-0018 a "Don't" de DESIGN.md, sólo
-   para esta pieza. */
+   para esta pieza.
+
+   F-18 (ADR-0019 §3, "la órbita protagonista"): +40% en desktop (escala
+   uniforme ×1.4 de los 8 tokens — mismo factor en todos preserva las
+   proporciones ya verificadas en F-13b: la cuerda entre dos ítems de un
+   mismo anillo a 120° sigue siendo ~1.73×radio en los cuatro anillos,
+   muy por encima de "tamaño del ítem + 8px", así que escalar todo junto
+   no puede romper ese margen). El centro deja de mantenerse fijo en las
+   dos resoluciones (antes 3rem en ambas a propósito, ver historial): con
+   la órbita mucho más grande, dejarlo en 3rem se leía chico en
+   proporción al resto — ahora escala también, con su propio factor por
+   breakpoint, y "STACK" se queda igual de legible (mismo font-size,
+   0.8125rem, por encima del piso de 13px) porque el círculo que lo aloja
+   sólo crece. En mobile el crecimiento es más moderado (~+27% en
+   `--orbit-stage`, no +40%): el espacio es más escaso ahí, y "más grande
+   pero clara" (pedido del brief) no exige igualar la proporción de
+   desktop. */
 /* El achicamiento vive en el flex item (`flex-basis` + `flex-shrink`),
    no en un `width: min(Xrem, 100%)` dentro de `.orbit-stage`: ese `100%`
    necesita un contenedor con ancho propio, y `.stack-orbit` sin `width`
@@ -1958,14 +2186,14 @@ h3 {
   max-width: 100%;
   aspect-ratio: 1 / 1;
   margin: 0 auto;
-  --orbit-stage: 15rem;
-  --orbit-center: 3rem;
-  --orbit-r1: 3rem;
-  --orbit-r2: 4.2rem;
-  --orbit-r3: 5.4rem;
-  --orbit-r4: 6.6rem;
-  --orbit-item: 1.75rem;
-  --orbit-icon: 1rem;
+  --orbit-stage: 21rem;
+  --orbit-center: 4.2rem;
+  --orbit-r1: 4.2rem;
+  --orbit-r2: 5.88rem;
+  --orbit-r3: 7.56rem;
+  --orbit-r4: 9.24rem;
+  --orbit-item: 2.45rem;
+  --orbit-icon: 1.4rem;
 }
 
 .orbit-stage {
@@ -2080,13 +2308,14 @@ h3 {
 
 @media (max-width: 767px) {
   .stack-orbit {
-    --orbit-stage: 11rem;
-    --orbit-r1: 2.4rem;
-    --orbit-r2: 3.1rem;
-    --orbit-r3: 3.8rem;
-    --orbit-r4: 4.5rem;
-    --orbit-item: 1.4rem;
-    --orbit-icon: 0.875rem;
+    --orbit-stage: 14rem;
+    --orbit-center: 3.75rem;
+    --orbit-r1: 3.1rem;
+    --orbit-r2: 4rem;
+    --orbit-r3: 4.9rem;
+    --orbit-r4: 5.8rem;
+    --orbit-item: 1.8rem;
+    --orbit-icon: 1.1rem;
   }
 }
 
@@ -2140,6 +2369,16 @@ h3 {
 
 .stack-card--learning .stack-card__title {
   color: var(--color-text);
+}
+
+/* F-18: párrafo corto opcional de skills.learning.description (sólo la
+   forma vigente lo trae; la categoría legacy con id "learning" no tiene
+   equivalente, ver SkillsSection.astro). Mismo rol tipográfico que
+   `.languages-list .note` — texto secundario, no una etiqueta ni un dato. */
+.stack-card__desc {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .stack__languages {
