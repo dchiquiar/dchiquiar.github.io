@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dchiquiar.github.io/schemas/now.schema.json",
+  "title": "Now terminal data",
+  "description": "Contenido de la terminal decorativa del hero ($ cat now.txt). Un solo archivo, independiente del idioma: se muestra igual en /es y en / porque se presenta como código, no como copy traducible.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["command", "items"],
+  "properties": {
+    "command": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Comando que se muestra antes del prompt, sin el '$' (ej. 'cat now.txt')."
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "status"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

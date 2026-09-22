@@ -1,0 +1,25 @@
+# Data source for the "now" terminal shown in the hero (`$ cat now.txt`).
+# Language-independent: rendered as-is in both /es and / (it's presented as
+# code, not copy, so it stays in English in both versions of the site).
+# Single source for both locales — do not duplicate into cv.es.yaml or
+# cv.en.yaml.
+#
+# Every item here must be backed by something already stated in
+# data/cv.*.yaml (education, languages, or skills.learning) — this file
+# does not introduce new claims, it only reformats existing ones for the
+# terminal.
+
+command: "cat now.txt"
+
+items:
+  - label: "DevOps (ORT)"
+    status: "in progress"
+
+  - label: "English C1 Advanced"
+    status: "preparing for the exam"
+
+  - label: "C# / .NET"
+    status: "deepening"
+
+  - label: "Vue 3 + JavaScript"
+    status: "learning"
