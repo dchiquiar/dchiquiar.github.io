@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dchiquiar.github.io/sitemap.xml
+Sitemap: https://diegochiquiar.dev/sitemap.xml

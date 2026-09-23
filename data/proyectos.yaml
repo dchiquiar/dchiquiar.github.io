@@ -142,7 +142,7 @@ projects:
         anything ships.
 
     repoUrl: "https://github.com/dchiquiar/dchiquiar.github.io"
-    liveUrl: "https://dchiquiar.github.io"
+    liveUrl: "https://diegochiquiar.dev"
     status: done
 
     technologies:

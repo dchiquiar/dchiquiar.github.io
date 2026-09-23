@@ -1,6 +1,27 @@
 #!/usr/bin/env node
-// Genera public/cv-es.pdf y public/cv-en.pdf a partir de las dos versiones
-// finales y aprobadas del CV (texto ya escrito, este script sólo maqueta).
+// DESACTIVADO desde el 2026-09-23. NO usar sin reactivarlo a propósito.
+//
+// Hasta esa fecha, este script generaba public/cv-es.pdf y public/cv-en.pdf
+// a partir de las dos versiones finales y aprobadas del CV en markdown del
+// vault (ver el resto de este archivo, que queda intacto abajo). Diego dejó
+// de mantener el CV en markdown: ahora lo edita en Word y exporta el PDF él
+// mismo. Los PDF que hoy sirve el sitio (`public/cv-es.pdf`,
+// `public/cv-en.pdf`) son copias tal cual de
+// `vault/06-contenido/word/CV-DiegoChiquiar-Español-2026.pdf` y
+// `vault/06-contenido/word/CV-DiegoChiquiar-English-2026.pdf`, y los
+// mantiene Diego a mano desde ahí.
+//
+// Este script queda en el repo por si algún día se decide volver a generar
+// el PDF desde el vault (o, a futuro, desde `data/`), pero correrlo hoy
+// pisaría el PDF que Diego mantiene a mano por uno desactualizado y sin su
+// maquetado real. Por eso `main()` aborta de entrada — ver el bloque
+// "DESACTIVADO" al principio de `main()`, más abajo — antes de escribir
+// nada en `public/`. Para reactivarlo hay que borrar ese bloque a propósito
+// y confirmar que la fuente en vault/06-contenido/ (los .md, no los .docx)
+// sigue siendo la versión vigente del CV.
+//
+// Todo lo que sigue después de `main()` es el flujo viejo, sin tocar, tal
+// como corría cuando SÍ estaba en uso:
 //
 // CORRE SÓLO EN LOCAL, NUNCA EN CI (ver la decisión "los PDF del CV se
 // generan desde el vault, en local, y sin teléfono" en el historial de
@@ -26,7 +47,7 @@
 // Si ninguna resuelve un ejecutable, el script termina con un mensaje
 // explicando qué falta, sin generar nada.
 //
-// Uso:
+// Uso (con el bloque "DESACTIVADO" quitado):
 //   node scripts/generate-cv-pdf.mjs          # genera los dos idiomas
 //   node scripts/generate-cv-pdf.mjs es       # sólo cv-es.pdf
 //   node scripts/generate-cv-pdf.mjs en       # sólo cv-en.pdf
@@ -671,6 +692,28 @@ async function renderPdf(html, outPath, executablePath) {
 // ── Main ──────────────────────────────────────────────────────────────────
 
 async function main() {
+  // ── DESACTIVADO (2026-09-23) ─────────────────────────────────────────────
+  // Ver el comentario de cabecera de este archivo. Los PDF de public/ los
+  // mantiene Diego a mano desde vault/06-contenido/word/ desde esta fecha;
+  // este script ya no es la fuente y no debe volver a escribir en public/
+  // sin que alguien reactive esto a propósito.
+  console.error(
+    "Este script está desactivado desde el 2026-09-23.\n\n" +
+      "Los PDF de public/cv-es.pdf y public/cv-en.pdf los mantiene Diego a\n" +
+      "mano (los exporta desde Word) y los copia tal cual desde\n" +
+      "vault/06-contenido/word/CV-DiegoChiquiar-Español-2026.pdf y\n" +
+      "vault/06-contenido/word/CV-DiegoChiquiar-English-2026.pdf.\n\n" +
+      "Correr este script pisaría esos archivos por una versión generada\n" +
+      "desde el markdown viejo del vault, desactualizada. Si de verdad se\n" +
+      "quiere volver a generar el PDF desde el vault, borrá este bloque a\n" +
+      "propósito (ver el comentario de cabecera del archivo) y confirmá que\n" +
+      "vault/06-contenido/cv-final-es.md y cv-final-en.md siguen siendo la\n" +
+      "versión vigente del CV."
+  );
+  process.exitCode = 1;
+  return;
+
+  // eslint-disable-next-line no-unreachable
   const requested = process.argv.slice(2).filter((a) => a === "es" || a === "en");
   const langs = requested.length ? requested : ["es", "en"];
 

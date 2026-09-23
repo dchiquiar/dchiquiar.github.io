@@ -68,6 +68,68 @@
   src: url("/fonts/ibm-plex-mono-700.woff2") format("woff2");
 }
 
+/* Tercera familia (ADR-0023): Playwrite IS, manuscrita variable (eje wght
+   100..400) de Google Fonts, alojada acá igual que las otras dos — el sitio
+   sigue sin hacer ningún pedido a un tercero. Se pidió el CSS2 de la API
+   con un User-Agent de escritorio moderno (soporta woff2) para obtener la
+   URL de fonts.gstatic.com, se descargó ese archivo y se recortó con
+   pyftsubset al mismo rango latino que el resto (Basic Latin + Latin-1
+   Supplement + en/em dash), preservando las features de layout (`--layout-features='*'`)
+   porque es una cursiva con trazos que se enlazan entre letras — sin eso el
+   subset puede perder los glifos de sustitución que arman la conexión.
+   29,5 KB → 19,7 KB tras el recorte, un solo peso (400, el techo real de la
+   familia: no existe negrita, ver más abajo).
+
+   Sólo se usa el peso 400: es el ÚNICO que se pide, no una instancia
+   estática recortada de una variable — no hace falta cargar el eje
+   completo para usar un solo punto fijo de él. `font-weight: 800` en
+   `.section-heading` (la regla base, sin tocar) hace match automático a
+   este 400 por el mismo mecanismo de siempre (el navegador usa el peso más
+   cercano disponible en la familia) — igual que el 800→700 de las otras
+   dos, sólo que acá el techo real es más bajo.
+
+   `font-display: optional`, NO `block` (a diferencia de las otras dos —
+   medido, no copiado por costumbre). Verificado con el audit
+   `network-requests` de Lighthouse: un `@font-face` sin uso visible
+   todavía en el primer layout igual dispara su descarga a prioridad
+   `VeryHigh` en cuanto el navegador hace el primer layout y encuentra
+   texto que la usa ("02 — Proyectos" existe en el DOM desde el primer
+   render, aunque esté fuera de la pantalla — el navegador no sabe
+   todavía qué es "visible" en esa pasada), la misma prioridad que las
+   fuentes SÍ precargadas — es decir, esta familia compite de verdad por
+   ancho de banda temprano con Source Serif 4/IBM Plex Mono en una
+   conexión lenta, aunque nunca se pinte antes del scroll.
+
+   Aclaración importante (para no repetir la confusión): Lighthouse mobile
+   mide hoy un CLS de 0,068 en este sitio con `font-display: block` en
+   esta fuente — pero **ese CLS ya existe en el HEAD del repo sin ningún
+   cambio de F-23**, reproducido explícitamente construyendo el sitio con
+   `git show HEAD:...` antes de tocar nada (ver el reporte de F-23): es
+   un problema preexistente de `.hero__intro`/Source Serif 4, no algo que
+   esta fuente causa. Lo que SÍ es cierto y motiva igual el cambio a
+   `optional`: por la prioridad `VeryHigh` de arriba, dejarla en `block`
+   suma un riesgo real (no sólo teórico) de agravar ESE problema
+   preexistente al competir por el mismo ancho de banda — y es además la
+   elección semánticamente correcta para una fuente puramente decorativa
+   (los 5 títulos, no el cuerpo del sitio): con `optional` el navegador
+   bloquea como mucho ~100ms, y si no llegó a tiempo usa el respaldo
+   (`cursive` genérico) para TODA esa visita, sin swap posterior — cero
+   riesgo de reflow propio, a cambio de que en una red lenta el título
+   quede en la fuente de respaldo esa vez (aceptable para un detalle
+   editorial, no lo sería para texto de lectura). Sin preload (mismo
+   motivo de siempre: no está por encima del pliegue) y sin fallback de
+   métricas ajustadas — con `optional` ninguna de las dos cosas puede
+   causar CLS propio, así que la entrada original de ADR-0023 sobre "si
+   no hay fallback, verificar el CLS" queda resuelta por el propio
+   `font-display`, no por una cara Fallback calculada. */
+@font-face {
+  font-family: "Playwrite IS";
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src: url("/fonts/playwrite-is-400.woff2") format("woff2");
+}
+
 /* Métricas calculadas con fontTools comparando cada estilo de Source
    Serif 4 contra el estilo correspondiente de Georgia (el respaldo serif
    real más cercano disponible en Chrome/Windows) con el método estándar
@@ -253,6 +315,12 @@ html[data-theme="light"] {
     "Times New Roman", serif;
   --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace,
     "Cascadia Code", "Consolas", monospace;
+  /* ADR-0023: sólo para el texto de los 5 títulos de sección
+     (`.section-heading__text`) — en ningún otro lugar. Sin cara de
+     respaldo con métricas ajustadas (ver el comentario del `@font-face`,
+     arriba): el respaldo genérico `cursive` alcanza porque `font-display:
+     block` ya evita que se llegue a pintar con él en la práctica. */
+  --font-script: "Playwrite IS", cursive;
 
   --container-width: 72rem;
 
@@ -903,6 +971,7 @@ html[data-theme="light"] .theme-toggle .icon-moon {
    mismo método que encontró el bug (root font-size x2, scrollWidth vs
    clientWidth): sin overflow horizontal en los 4 combos. */
 .hero__media {
+  position: relative;
   flex: 0 0 clamp(120px, 20vw, 288px);
 }
 
@@ -962,6 +1031,89 @@ html[data-theme="light"] .theme-toggle .icon-moon {
 
 html[data-theme="dark"] .hero__media img {
   filter: brightness(0.75) saturate(0.9);
+}
+
+/* Borde que se dibuja en hover (pedido de Diego): mismo patrón que
+   `.section-heading__mark::before` (arriba en el archivo) — un
+   `@property` de porcentaje transiciona en hover y una máscara
+   `conic-gradient` revela el borde de forma progresiva, como una
+   manecilla de reloj recorriendo el marco. NO `border-image` (la
+   referencia de Diego lo usaba): `border-image` ignora `border-radius`,
+   y esta foto tiene `border-radius: 1rem` + `corner-shape: squircle` —
+   con `border-image` el borde saldría rectangular sobre una foto de
+   esquinas redondeadas.
+
+   `::after`, no `::before`: un `::before` pinta ANTES que el `<img>` en
+   el orden de stacking (es como si fuera el primer hijo), así que el
+   `<img>` lo taparía por completo. `::after` pinta después de todos los
+   hijos reales, encima de la foto.
+
+   En reposo el borde es prácticamente inexistente (`--hero-media-
+   border-progress` arranca en 0 %, la máscara no revela nada). Grosor
+   discreto (2px, no un marco) — la foto ya tiene `--shadow-portrait` y
+   nunca tuvo una línea de borde (F-9: "el papel no flota"); esto es un
+   detalle de interacción, no una vuelta a esa línea. Color: `--color-
+   accent`, el mismo que ya usa el borde de `.project-card`/`.hobby-card`
+   — ningún color nuevo.
+
+   `@media (hover: hover)`: sin esto, un tap en táctil dejaría el
+   `:hover` pegado (o el borde a medio camino, según el navegador) sin
+   forma de "soltarlo" — en táctil no existe hover real y el efecto no
+   debe dispararse con el tap.
+
+   `prefers-reduced-motion: reduce` SÍ necesita una regla propia acá
+   (a diferencia de lo que asumí al principio): la regla global de más
+   arriba (`* { transition-duration: 0.01ms !important }`) usa el
+   selector universal `*`, que **no** alcanza a los pseudo-elementos
+   (`::before`/`::after`) — sólo a elementos reales del árbol. Verificado
+   con Puppeteer: sin la regla de abajo, `getComputedStyle(el,
+   "::after").transitionDuration` seguía en `0.5s` con
+   `prefers-reduced-motion: reduce` emulado, y el borde tardaba los
+   500ms igual. `.carousel__nav`/`.hobbies-carousel__arrow` no tienen
+   este problema porque sus transiciones están en el ELEMENTO real (el
+   propio `<button>`), no en un pseudo — ahí sí les alcanza el `*`. Con
+   `transition: none` acá, el cambio de `--hero-media-border-progress`
+   es instantáneo: el borde aparece completo de golpe en hover en vez de
+   dibujado — decisión explícita, sigue siendo una señal útil de "esto
+   es interactivo", no queda oculto para siempre. */
+@property --hero-media-border-progress {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+.hero__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 1rem;
+  border: 2px solid var(--color-accent);
+  mask-image: conic-gradient(
+    from -90deg,
+    #000 var(--hero-media-border-progress),
+    #0000 0
+  );
+  transition: --hero-media-border-progress 500ms ease;
+}
+
+@supports (corner-shape: squircle) {
+  .hero__media::after {
+    corner-shape: squircle;
+  }
+}
+
+@media (hover: hover) {
+  .hero__media:hover::after {
+    --hero-media-border-progress: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__media::after {
+    transition: none;
+  }
 }
 
 /* F-16: entrada letra por letra desde arriba, con cursor de máquina de
@@ -1820,7 +1972,8 @@ html[data-theme="dark"] .hero__media img {
 
 /* ADR-0011 queda superado (T-L): el número de sección vuelve a llevar
    el acento. Sigue en mono para distinguirse tipográficamente del
-   título, que va en serif. */
+   título — ahora una manuscrita (ver `.section-heading__text` abajo),
+   antes serif; la distinción mono/no-mono es la misma de siempre. */
 .section-heading .num {
   color: var(--color-accent);
   font-family: var(--font-mono);
@@ -1828,11 +1981,59 @@ html[data-theme="dark"] .hero__media img {
   font-weight: 700;
 }
 
+/* ADR-0023: Playwrite IS sólo en el TEXTO del título — el número (arriba)
+   se queda en `--font-mono`, así que la familia no puede ir en el `h2`
+   entero (heredaría al número también). `.section-heading__text` es el
+   `<span>` que envuelve sólo el texto (SectionHeading.astro).
+
+   Peso: Playwrite IS no tiene negrita (eje `wght` 100..400, esta familia
+   sólo trajo el estático 400, el techo real) — bajarlo de 800 (heredado
+   de `.section-heading`) a 400 es consecuencia directa de la fuente, no
+   una elección estética aparte (ver ADR-0023).
+
+   Tamaño: a igual `font-size` que el título serif que reemplaza, una
+   manuscrita de trazo fino se lee más chica/liviana (menos tinta por
+   letra que un serif en negrita) — 1.2em compensa esa pérdida de
+   presencia visual. Verificado comparando capturas reales del título
+   antes/después (Puppeteer), no a ojo en el valor solo.
+
+   `line-height` propio (no el 1.55 heredado de `html`): la familia tiene
+   ascendentes/descendentes de lazo mucho más altos que un serif (fracción
+   de em bastante mayor a la de Source Serif 4, medido con fontTools sobre
+   el archivo real) — con el `line-height` heredado, los lazos altos de
+   letras como "P"/"y" quedaban muy cerca del borde de la caja de línea en
+   algunos títulos; 1.35 da aire sin cambiar el `gap: inherit` del layout
+   por baseline de `.section-heading__mark`. */
+.section-heading__text {
+  font-family: var(--font-script);
+  font-weight: 400;
+  font-size: 1.2em;
+  line-height: 1.35;
+}
+
 /* Trazo de marcador detrás del título de sección. Decorativo: un
    `::before` cuyo BORDE es una elipse chata; una máscara
-   `conic-gradient` deja ver sólo el arco superior, que cruza la mitad
-   baja del texto como una pasada de resaltador. Un solo lugar para los
-   cinco títulos, en los dos idiomas.
+   `conic-gradient` deja ver sólo el arco superior. Un solo lugar para
+   los cinco títulos, en los dos idiomas.
+
+   Ajuste de F-23 (pedido de Diego, look más cercano a su referencia): el
+   mecanismo NO cambió (sigue siendo el mismo `::before` con borde +
+   `border-radius: 50%` + máscara cónica animada por `@property`, la
+   misma técnica de la referencia) — lo que cambió son los NÚMEROS, para
+   que el trazo se lea más envolvente y circular alrededor del texto, con
+   aire, en vez de una pasada de resaltador casi recta por debajo. Antes:
+   centro de la cónica a 12em (muy lejos → el arco revelado subtendía
+   pocos grados, casi una línea recta) y un corte vertical a 0,62em
+   (revelaba sólo una tira finísima arriba del todo). Ahora: centro a 6em
+   (más cerca → el mismo barrido angular cubre MÁS curvatura real del
+   borde) + un corte vertical más alto (1,3em, revela más de esa curva,
+   así los extremos bajan y envuelven un poco los costados del texto, no
+   sólo lo cruzan por arriba). Verificado con capturas reales de
+   Puppeteer en los 5 títulos, en los dos idiomas — no a ojo en el CSS
+   solo (ver el reporte de F-23): con el centro más cerca, el mismo % de
+   barrido angular cubre MENOS ancho físico que antes, así que
+   `--heading-stroke-progress` (abajo) también subió, para seguir
+   alcanzando el título más ancho ("Acerca de mí"/"About me").
 
    Envoltorio: el `h2` es flex a lo ancho del contenedor, así que el
    trazo no puede medirse contra él. `.section-heading__mark` ajusta al
@@ -1845,17 +2046,22 @@ html[data-theme="dark"] .hero__media img {
    el papel — no un matiz nuevo. El número y el título comparten el
    mismo `--color-accent` (regla `h1, h2, h3`), así que el peor caso es
    uno solo: ese color sobre el trazo pleno (fondo compuesto con la
-   opacidad de abajo). Verificado componiendo en sRGB: claro 18 % →
-   5,00:1; oscuro 22 % → ~6,5:1. Ambos por encima del 4,5:1 mínimo.
-   Subirlo en claro por encima de ~20 % baja el número de 4,5.
+   opacidad de abajo). La opacidad (`--heading-stroke-ink`) NO cambió en
+   F-23 — el contraste compuesto es el mismo con cualquier geometría,
+   porque cualquier píxel visible del trazo tiene ese mismo color
+   compuesto, sólo cambia CUÁNTA superficie se ve, no de qué color es.
+   Sigue verificado ≥4.5:1 en los dos temas (re-medido en F-23 con la
+   geometría nueva, ver el reporte).
 
    Caja contenida: `left`/`right` en em chicos y sin `translate`, para
    que el pseudo no asome fuera del contenedor ni genere scroll
-   horizontal en mobile o con el texto al 200 %. */
+   horizontal en mobile o con el texto al 200 %. F-23 los agrandó un
+   poco (de 0,5em a 0,55em) — sigue siendo un em chico, re-verificado sin
+   overflow (ver el reporte). */
 @property --heading-stroke-progress {
   syntax: "<percentage>";
   inherits: false;
-  initial-value: 15%;
+  initial-value: 22%;
 }
 
 .section-heading__mark {
@@ -1875,30 +2081,35 @@ html[data-theme="light"] .section-heading__mark {
   content: "";
   position: absolute;
   z-index: -1;
-  left: -0.5em;
-  right: -0.5em;
-  top: 0.5em;
-  height: 2em;
-  border: 0.5em solid
+  left: -0.55em;
+  right: -0.55em;
+  top: 0.1em;
+  height: 3.6em;
+  border: 0.4em solid
     color-mix(in srgb, var(--color-accent) var(--heading-stroke-ink), transparent);
   border-radius: 50%;
   rotate: -1.5deg;
-  /* Dos capas de máscara, intersectadas:
-     1. La cónica, centrada muy por debajo de la caja (12em): vista
-        desde tan lejos, el arco superior subtiende pocos grados y el
-        barrido avanza casi lineal de izquierda a derecha. 15 % de 360°
-        = 54°, de -27° a +27°: alcanza para el título más ancho; en los
-        más cortos el trazo simplemente termina antes.
-     2. Un corte horizontal fijo a 0,62em del borde superior: descarta
-        los extremos del arco donde la elipse se curva hacia abajo, y
-        deja las puntas afinadas, como la entrada y salida de un
-        marcador. */
+  /* Dos capas de máscara, intersectadas (F-23 recalibra las dos
+     constantes, ver el comentario de arriba del `@property` para el
+     porqué):
+     1. La cónica, centrada a 6em debajo de la caja (antes 12em, más
+        lejos): más cerca de la caja, el mismo barrido angular cubre MÁS
+        curvatura real del borde — se ve más redondeado, menos recto.
+        22 % de 360° = 79,2°, de -34° a +45,2°: alcanza para el título
+        más ancho con el centro nuevo (antes 15 %/54° alcanzaba con el
+        centro viejo); en los títulos más cortos el trazo simplemente
+        termina antes, igual que siempre.
+     2. Un corte horizontal fijo a 1,3em del borde superior (antes
+        0,62em): revela más de esa curva ya más pronunciada, así los
+        extremos bajan y envuelven un poco los costados del texto — la
+        sensación "circular" que pidió Diego — en vez de cortarse a la
+        tira finísima de antes. */
   mask-image: conic-gradient(
-      from -27deg at 50% 12em,
+      from -34deg at 50% 6em,
       #000 var(--heading-stroke-progress),
       #0000 0
     ),
-    linear-gradient(#000 0.62em, #0000 0.62em);
+    linear-gradient(#000 1.3em, #0000 1.3em);
   mask-composite: intersect;
   pointer-events: none;
 }
@@ -1906,10 +2117,11 @@ html[data-theme="light"] .section-heading__mark {
 /* Revelado atado al scroll, sin JS: el trazo se dibuja mientras el
    título sube desde el borde inferior de la ventana hasta el 20 % de su
    recorrido, y queda completo arriba de eso. Sólo `from`: el `to` es el
-   valor de reposo (15 %), así que sin soporte de scroll-driven
-   animations o con movimiento reducido el trazo se ve completo, nunca
-   vacío. El kill-switch global de `prefers-reduced-motion` no aplica
-   acá: con `reduce` esta animación directamente no existe. */
+   valor de reposo (22 %, recalibrado en F-23 junto con la geometría de
+   arriba), así que sin soporte de scroll-driven animations o con
+   movimiento reducido el trazo se ve completo, nunca vacío. El
+   kill-switch global de `prefers-reduced-motion` no aplica acá: con
+   `reduce` esta animación directamente no existe. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .section-heading__mark {
@@ -2075,41 +2287,45 @@ h3 {
    `.carousel` se mueve acá — la fórmula sigue siendo el mismo álgebra de
    F-6/T-C, sólo cambió la constante que se resta (ver el comentario de
    `.carousel__dots`, más abajo: los puntos crecieron de 0.4rem a 1.75rem
-   de área táctil real por el hallazgo de Lighthouse de F-19). */
+   de área táctil real por el hallazgo de Lighthouse de F-19).
+
+   ADR-0022 (F-23): el `/ 0.9` que dividía este cálculo ya no corresponde
+   — existía porque el ítem ocupaba el 90% del carrusel, y había que
+   agrandar el carrusel entero para que ESE 90% diera el alto de imagen
+   buscado. Con el ítem al 100% (ver `.carousel__item` más abajo), el
+   ancho del carrusel y el ancho del ítem son el mismo número: se saca la
+   división y el alto de imagen resultante es idéntico al de antes del
+   cambio (verificado con Puppeteer, ver el reporte de F-23). */
 .carousel-frame {
   position: relative;
-  max-width: calc((25vh - 2.35rem) * 16 / 9 / 0.9);
+  max-width: calc((25vh - 2.35rem) * 16 / 9);
   margin-inline: auto;
 }
 
 /* Carrusel sin JS (ADR-0008): `scroll-snap` + contenedor enfocable.
-   Cada slide ocupa el 90% del ancho del carrusel a propósito: el 10%
-   restante deja ver el borde de la imagen siguiente ("peek"), que es la
-   señal de que hay más de una sin necesidad de interactuar ni de JS.
 
-   El `max-width` de `.carousel-frame` (arriba) es lo que resuelve "la
-   imagen se ve muy grande" — no achica el ítem/slide respecto del
-   carrusel (seguiría siendo 90%), achica el carrusel entero. Es a
-   propósito, no al revés: los puntos activos (más abajo,
-   `animation-timeline: view()`) asumen que UN slide llena casi todo el
-   carrusel a la vez — esa es la premisa con la que "cover" calcula
-   cuándo un slide está a mitad de su recorrido. Si en cambio se achica
-   sólo el `flex-basis` del ítem dejando el carrusel a su ancho completo,
-   entran 2-3 slides a la vez en pantalla y el punto activo deja de
-   moverse con el scroll (verificado con Puppeteer: quedaba fijo en el
-   del medio sin importar la posición real de scroll — es la forma exacta
-   de romperlos que pedía evitar el brief). Con el carrusel entero
-   achicado, la proporción 90%/10% se mantiene igual que siempre y el
-   cálculo de los puntos no cambia.
+   ADR-0022 (F-23) deroga el "peek" de ADR-0008: cada slide ocupa el 100%
+   del carrusel, sin dejar asomar el borde del anterior ni el siguiente.
+   El peek (90%/10%, con `gap` entre ítems) existía para señalar "hay más
+   de una imagen" sin JS ni controles — desde ADR-0019 el carrusel tiene
+   flechas y puntos, esa señal ya está dada por controles explícitos, y lo
+   que quedaba del peek era un borde ajeno asomando dentro de la tarjeta,
+   reportado por Diego como defecto.
 
-   Álgebra (misma de F-6, sólo cambió de selector y de constante — ver
-   `.carousel__dots` más abajo): si el ítem (90% del carrusel) tiene que
-   dar, a 16:9, un alto de imagen de `25vh - 2.35rem` (el resto son los
-   puntos), el ancho del ITEM es `(25vh - 2.35rem) * 16/9`, y el ancho del
-   CARRUSEL es ese valor dividido por 0.9 (porque el ítem es el 90% del
-   carrusel, no el 100%). Sin `min()`: `max-width` ya no actúa cuando el
-   resultado supera el ancho disponible de la tarjeta (mobile), así que
-   el comportamiento angosto de siempre queda intacto ahí. */
+   El `max-width` de `.carousel-frame` (arriba) sigue resolviendo "la
+   imagen se ve muy grande" — no cambia con este ajuste, achica el
+   carrusel entero, y como el ítem ahora ES el carrusel (100%, no 90%),
+   la fórmula se simplifica (ver el comentario de `.carousel-frame`).
+
+   Los puntos activos (más abajo, `animation-timeline: view()`) asumen
+   que UN slide llena casi todo el carrusel a la vez — esa es la premisa
+   con la que "cover" calcula cuándo un slide está a mitad de su
+   recorrido. Al 100% esa premisa se cumple MEJOR que al 90% (antes había
+   un 10% de "otro slide visible" que ya rompía un poco la premisa) — pero
+   igual se volvió a verificar con Puppeteer, scrolleando entre slides y
+   leyendo el estado real de cada punto, en los dos carruseles (Proyectos
+   y Acerca de mí): el punto activo sigue el slide real en cada posición
+   de scroll, ver el reporte de F-23. */
 .carousel {
   overflow-x: auto;
   /* F-12: consistencia con `.site-nav__anchors`, el otro scroller
@@ -2140,14 +2356,21 @@ h3 {
 
 .carousel__track {
   display: flex;
-  gap: 0.5rem;
+  /* ADR-0022 (F-23): sin gap. Con el ítem al 100% (abajo) un gap volvía a
+     dejar ver un borde ajeno a mitad de scroll — el mismo síntoma que el
+     peek que esta ADR saca, sólo que producido por el espaciado en vez
+     del ancho del ítem. */
+  gap: 0;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
+/* ADR-0022 (F-23): 100%, no 90% — el peek se va (ver el comentario de
+   `.carousel`, arriba). Cuando el slide activo está en reposo, no se ve
+   ninguna porción del anterior ni del siguiente. */
 .carousel__item {
-  flex: 0 0 90%;
+  flex: 0 0 100%;
   scroll-snap-align: start;
 }
 
@@ -2424,8 +2647,19 @@ h3 {
     align-items: center;
   }
 
+  /* F-23: 39.6%, no 44% — este `flex-basis` es OTRO lugar (además del
+     `max-width` de `.carousel-frame` base, ya ajustado más arriba) donde
+     estaba agazapada la misma suposición del 90%/peek de ADR-0008: con
+     `max-width: none` acá, ES este 44% el que fija el ancho del marco en
+     desktop (≥768px), sin pasar por el álgebra de 16:9/vh. Con el ítem al
+     90% de un marco al 44%, la imagen ocupaba 0.9 × 44% = 39.6% de la
+     tarjeta; con el ítem al 100% (ADR-0022) y el 44% sin tocar, la imagen
+     había pasado a ocupar el 44% completo — un 11% más grande que antes
+     (medido con Puppeteer: 383px → 425px de ancho a 1440px). 39.6% =
+     44% × 0.9 sostiene el mismo ancho de foto que había antes de
+     ADR-0022, sólo que ahora sin peek. */
   .project-card .carousel-frame {
-    flex: 0 0 44%;
+    flex: 0 0 39.6%;
     max-width: none;
     margin-inline: 0;
   }
@@ -3096,9 +3330,23 @@ h3 {
    `auto`, a diferencia de `.carousel-frame` base): con `.hobby-card`
    ahora centrada por `margin-inline: auto` (F-22b, más arriba), es la
    tarjeta la que se centra -- el marco vuelve a alinearse a la izquierda
-   DENTRO de esa tarjeta ya angosta, como el resto del contenido. */
+   DENTRO de esa tarjeta ya angosta, como el resto del contenido.
+
+   F-23 escala los tres valores × 0.9 (16→14.4rem, 36vw→32.4vw,
+   27→24.3rem): este marco nunca dependió del `max-width` base de
+   `.carousel-frame` (usa su propio `clamp`, sin relación con el álgebra
+   de 16:9/vh de ahí), así que ADR-0022 no lo tocaba por transitividad —
+   pero el ítem SÍ pasó de 90% a 100% acá también (misma clase
+   `.carousel__item`, ver arriba), y con el marco sin escalar la foto
+   habría quedado 11% más grande que antes (medido con Puppeteer: 389px
+   → 432px de ancho a 1440px de viewport). El criterio de aceptación de
+   F-23 es que NINGUNA foto de carrusel cambie de tamaño, no sólo la de
+   Proyectos — escalar el propio `clamp` por el mismo factor (0.9, el
+   inverso de 90%→100%) es la forma de sostenerlo sin volver a acoplar
+   este marco al presupuesto de `vh` de Proyectos, que es un caso
+   distinto (16:9 contra 3:4) a propósito. */
 .carousel-frame.carousel-frame--portrait {
-  max-width: clamp(16rem, 36vw, 27rem);
+  max-width: clamp(14.4rem, 32.4vw, 24.3rem);
   margin-inline: 0;
 }
 

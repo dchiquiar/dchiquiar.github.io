@@ -1,6 +1,6 @@
 # Diego Chiquiar — Portfolio & CV
 
-**[dchiquiar.github.io](https://dchiquiar.github.io/)**
+**[diegochiquiar.dev](https://diegochiquiar.dev/)**
 
 I'm a .NET backend developer based in Montevideo, Uruguay. This repository
 is the source for my personal portfolio and online CV — the site itself,

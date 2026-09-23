@@ -3,13 +3,13 @@
 # Un solo archivo, bilingüe por campo (en/es), igual que proyectos.yaml.
 # Cada item puede llevar `description` e `images`. Un item sin `images` no
 # se renderiza — ver el motivo en data/schemas/hobbies.schema.json.
-# `description` es opcional y todavía no está escrita: la agrega Diego más
-# adelante. No completar ninguno de los dos campos con contenido inventado.
+# `description` es opcional. No completar ninguno de los dos campos con
+# contenido inventado.
 #
 # Validar contra data/schemas/hobbies.schema.json.
 
 meta:
-  lastUpdated: "2026-09-22"
+  lastUpdated: "2026-09-23"
 
 section:
   title:
@@ -22,6 +22,14 @@ items:
     title:
       es: "Mi setup"
       en: "My setup"
+
+    description:
+      es: >-
+        Me encantan las PCs, y este es mi lugar favorito para desarrollar
+        software, concentrarme y trabajar cómodo.
+      en: >-
+        I love PCs, and this is my favorite spot in the house to build
+        software, focus, and settle in to work.
 
     images:
       - src: "/hobbies/setup-01.webp"
@@ -57,6 +65,14 @@ items:
     title:
       es: "Fito"
       en: "Fito"
+
+    description:
+      es: >-
+        Mi mejor amigo canino y mi compañero de todos los días en casa.
+        Es un perro salchicha fanático de su pelota azul.
+      en: >-
+        He's my best friend and my everyday companion at home.
+        A dachshund who's obsessed with his blue ball.
 
     images:
       - src: "/hobbies/fito-01.webp"
