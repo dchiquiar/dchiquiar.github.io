@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dchiquiar.github.io/schemas/hobbies.schema.json",
+  "title": "Hobbies data",
+  "description": "Sección personal ('Acerca de mí'), entre Formación y Contacto. Un solo archivo, bilingüe por campo (en/es), mismo criterio que proyectos.schema.json. REGLA DE NEGOCIO: un item SIN `images` no se renderiza (mismo criterio que `status: planned` en proyectos — el sitio no muestra marcadores vacíos ni 'próximamente'). `description` es opcional y NO condiciona el renderizado: puede faltar (Diego todavía no escribió los textos) sin que eso bloquee la sección. El schema deja `images` como opcional a nivel de tipo (para poder declarar items antes de tener fotos), pero el componente que consume este archivo debe filtrar cualquier item sin al menos una imagen.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "section", "items"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lastUpdated"],
+      "properties": {
+        "lastUpdated": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "properties": {
+        "title": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["en", "es"],
+          "properties": {
+            "en": { "type": "string" },
+            "es": { "type": "string" }
+          }
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "order", "title"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+            "description": "kebab-case, sin espacios ni mayúsculas (ej. 'setup', 'mi-perro')."
+          },
+          "order": { "type": "integer" },
+          "title": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["en", "es"],
+            "properties": {
+              "en": { "type": "string" },
+              "es": { "type": "string" }
+            }
+          },
+          "description": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["en", "es"],
+            "properties": {
+              "en": { "type": "string" },
+              "es": { "type": "string" }
+            }
+          },
+          "images": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["src", "width", "height", "alt"],
+              "properties": {
+                "src": {
+                  "type": "string",
+                  "description": "Ruta pública de la imagen (ej. /hobbies/setup-01.webp)."
+                },
+                "width": { "type": "integer" },
+                "height": {
+                  "type": "integer",
+                  "description": "width y height son obligatorios: sin ellos el navegador no reserva el espacio y la página salta al cargar (CLS)."
+                },
+                "alt": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["en", "es"],
+                  "properties": {
+                    "en": { "type": "string" },
+                    "es": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

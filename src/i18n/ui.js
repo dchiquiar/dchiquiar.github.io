@@ -24,6 +24,12 @@ export const ui = {
       experience: "Experience",
       skills: "Stack",
       education: "Education",
+      // F-22: mismo texto que data/hobbies.yaml → section.title.en. El nav
+      // no tiene acceso a los datos de la sección (SiteNav.astro sólo
+      // recibe ids + este diccionario), así que la etiqueta se repite acá
+      // a mano — mismo patrón ya existente para el resto de las secciones
+      // (p. ej. "education"/"Education" también está en sections.education).
+      hobbies: "About me",
       about: "About",
       contact: "Contact",
       // Nombra el <nav> de anclas de sección (F-11) — reemplaza el
@@ -57,7 +63,7 @@ export const ui = {
       contact: "Contact",
     },
     projects: {
-      problemLabel: "The hard part",
+      problemLabel: "Challenges I found",
       screenshotsLabel: "Screenshots",
       viewCode: "View code",
       viewLive: "Live demo",
@@ -99,14 +105,32 @@ export const ui = {
       locationLabel: "Location",
       emailLabel: "Email",
     },
+    hobbies: {
+      // F-22: mismos dos niveles de navegación que "projects" (cambiar de
+      // item / cambiar de foto), con sustantivos propios porque estas son
+      // fotos personales, no capturas de pantalla — reusar el texto de
+      // "projects" ("screenshot") describiría mal el contenido para quien
+      // usa lector de pantalla.
+      prevItem: "Previous topic",
+      nextItem: "Next topic",
+      counterTemplate: "{current} / {total}",
+      announceTemplate: "{title}: {current} of {total}",
+      slideLabelTemplate: "{current} of {total}",
+      photosLabel: "Photos",
+      prevPhoto: "Previous photo",
+      nextPhoto: "Next photo",
+      photoLabelTemplate: "Photo {current} of {total}",
+    },
     contact: {
       emailCta: "Email me",
       heading: "Let's talk",
     },
     footer: {
-      builtWith: "Built with Astro. Source on",
-      githubFallback: "GitHub",
-      rights: "All rights reserved.",
+      // F-21: única frase del footer, con placeholders literales
+      // `{heart}`/`{robot}`/`{coffee}` en el lugar de cada emoji —
+      // SiteFooter.astro los separa del texto para envolverlos en su
+      // propio `<span aria-hidden>` + alternativa accesible.
+      tagline: "Made with {heart}, a bit of {robot} and lots and lots and lots of {coffee}",
     },
   },
   es: {
@@ -122,6 +146,7 @@ export const ui = {
       experience: "Experiencia",
       skills: "Stack",
       education: "Formación",
+      hobbies: "Acerca de mí",
       about: "Sobre mí",
       contact: "Contacto",
       sectionsLabel: "Navegación de secciones",
@@ -170,14 +195,23 @@ export const ui = {
       locationLabel: "Ubicación",
       emailLabel: "Email",
     },
+    hobbies: {
+      prevItem: "Tema anterior",
+      nextItem: "Tema siguiente",
+      counterTemplate: "{current} / {total}",
+      announceTemplate: "{title}: {current} de {total}",
+      slideLabelTemplate: "{current} de {total}",
+      photosLabel: "Fotos",
+      prevPhoto: "Foto anterior",
+      nextPhoto: "Foto siguiente",
+      photoLabelTemplate: "Foto {current} de {total}",
+    },
     contact: {
       emailCta: "Escribime",
       heading: "Hablemos",
     },
     footer: {
-      builtWith: "Construido con Astro. Código en",
-      githubFallback: "GitHub",
-      rights: "Todos los derechos reservados.",
+      tagline: "Hecho con {heart}, un poco de {robot} y mucho, mucho, mucho {coffee}",
     },
   },
 };

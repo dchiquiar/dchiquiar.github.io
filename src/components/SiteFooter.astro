@@ -1,4 +1,25 @@
 ---
+// F-21 (pedido de Diego): el footer deja de listar stack/repo/copyright
+// y pasa a una sola frase con tres emojis fijos. El link a GitHub no se
+// pierde -- sigue en el hero y en Contacto.
+//
+// `t.footer.tagline` trae la frase completa en su idioma con tres
+// placeholders literales `{heart}`/`{robot}`/`{coffee}` en el lugar de
+// cada emoji (ver ui.js) -- un solo string legible de punta a punta para
+// quien lo traduzca, en vez de partirlo en 3 claves sueltas (before/
+// middle/after) que obligarían a adivinar el orden de las piezas.
+//
+// Accesibilidad: cada emoji se saca del árbol de accesibilidad
+// (`aria-hidden`) y se reemplaza, sólo para lector de pantalla, por una
+// palabra corta en `.visually-hidden` (la misma clase que ya usa
+// ProjectsSection.astro para su región aria-live) inmediatamente
+// después. Así un lector de pantalla anuncia "Hecho con corazón, un poco
+// de robot y mucho, mucho, mucho café" de corrido, en vez de: (a)
+// deletrear los nombres Unicode del emoji tal cual los expone el sistema
+// operativo -- que para ❤️ incluye el selector de variación U+FE0F, que
+// algunos lectores anuncian aparte y que no es consistente entre
+// plataformas/voces --, o (b) quedarse mudo si el emoji se ocultara sin
+// alternativa.
 import { ui } from "../i18n/ui.js";
 
 interface Props {
@@ -6,15 +27,39 @@ interface Props {
 }
 const { lang } = Astro.props;
 const t = ui[lang];
-const year = new Date().getFullYear();
-const repoUrl = "https://github.com/dchiquiar/dchiquiar.github.io";
+
+// Los tres emojis en sí no se traducen (mismo glifo en los dos idiomas,
+// pedido explícito de Diego) -- lo único que cambia por idioma es la
+// palabra que los describe para el lector de pantalla.
+const EMOJI: Record<string, string> = { heart: "❤️", robot: "🤖", coffee: "☕" };
+const LABEL: Record<"en" | "es", Record<string, string>> = {
+  en: { heart: "heart", robot: "robot", coffee: "coffee" },
+  es: { heart: "corazón", robot: "robot", coffee: "café" },
+};
+const labels = LABEL[lang];
+
+// Divide la frase en fragmentos de texto alternados con los nombres de
+// placeholder capturados ("heart"/"robot"/"coffee"): `String.split` con
+// un grupo de captura conserva esos nombres como elementos propios del
+// array, intercalados con el texto que va alrededor. No asume cuántas
+// veces aparece cada uno ni en qué orden -- si mañana cambia la frase en
+// un idioma, esto no se rompe.
+const taglineParts = t.footer.tagline.split(/\{(heart|robot|coffee)\}/g);
 ---
 
 <footer class="site-footer">
   <div class="container">
-    <p>
-      {t.footer.builtWith} <a href={repoUrl}>{t.footer.githubFallback}</a>.
-      © {year} Diego Chiquiar. {t.footer.rights}
+    <p class="site-footer__tagline">
+      {taglineParts.map((part) =>
+        EMOJI[part] ? (
+          <>
+            <span class="site-footer__emoji" aria-hidden="true">{EMOJI[part]}</span>
+            <span class="visually-hidden">{labels[part]}</span>
+          </>
+        ) : (
+          part
+        )
+      )}
     </p>
   </div>
 </footer>

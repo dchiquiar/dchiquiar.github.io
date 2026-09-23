@@ -1019,11 +1019,50 @@ html[data-theme="dark"] .hero__media img {
    letras, pasos 0 a 13): la última letra (step=13) arranca a
    13×0,08s=1,04s y termina de caer a 1,84s — el "~2s en total" pedido
    (medido igual en el navegador real, ver reporte F-16). */
+/* F-21 (corrección post-reporte, pedido de Diego probando el sitio en
+   vivo): el hueco baja de 15s a 8s, sin tocar `animation-delay` (sigue
+   siendo el stagger por letra de F-16/F-16b, sin cambios). El truco: en
+   vez de una animación corta con `iteration-count` infinito (que
+   reiniciaría cada letra cada 0,8s, sin pausa), `hero-name-letter-in`
+   pasa a durar el CICLO COMPLETO (9,84s) y el `@keyframes` de abajo
+   mete la caída sólo en el primer 8,13% de ese tiempo (0,8s reales,
+   igual que antes de este cambio) y sostiene el resto quieta — el mismo
+   mecanismo que ya usa `hero-cursor-hold-then-blink` más abajo para su
+   propia pausa de 5s, aplicado acá a escala mayor.
+
+   Por qué 9,84s y no 8s parejos: 8s es el hueco pedido "desde que
+   termina una hasta que arranca la siguiente", no la duración total del
+   ciclo. La ÚLTIMA letra (step=13, "r" de Chiquiar) termina de caer a
+   1,04s + 0,8s = 1,84s (ver el cálculo completo en el comentario de
+   arriba, sin cambios). La PRIMERA letra (step=0, sin delay) repite en
+   el instante `animation-delay + animation-duration` = `0 + duration`,
+   así que para que ese reinicio caiga 8s después de 1,84s hace falta
+   `duration = 1,84 + 8 = 9,84s`. Con `animation-duration` fijo e igual
+   para las 14 letras, esto vale para cualquiera de ellas: el hueco
+   entre el fin de su propia caída y el inicio de la siguiente es
+   siempre `duration - 0,8s = 9,04s`, constante, sin importar el delay
+   individual — así que ninguna letra especial necesita su propio
+   cálculo (mismo razonamiento que con 16,84s, sólo cambia el número).
+
+   Con `iteration-count: infinite` esta animación NUNCA llega a un
+   último ciclo, así que el antecedente de F-16b (un `forwards` que se
+   congela del lado equivocado por redondeo de punto flotante AL
+   TERMINAR una animación finita) no aplica acá por diseño: no hay un
+   final que congelar. Verificado igual con `document.getAnimations()`
+   en el navegador real sobre >2 ciclos completos, con el valor de 8s
+   (ver reporte F-21): ninguna letra queda a mitad de camino ni
+   invisible fuera de su propia ventana de caída de 0,8s.
+
+   El kill-switch global de `prefers-reduced-motion` (arriba de este
+   archivo) ya fuerza `animation-iteration-count: 1 !important` en TODO
+   el sitio, pero la regla específica de abajo (`animation: none`) es la
+   que realmente desactiva la repetición para estas letras — se queda
+   sin tocar. */
 .hero__name-letter {
   display: inline-block;
   position: relative;
-  animation: hero-name-letter-in 0.8s
-    var(--ease-back-out-1-4, cubic-bezier(0.34, 1.47, 0.64, 1)) both;
+  animation: hero-name-letter-in 9.84s
+    var(--ease-back-out-1-4, cubic-bezier(0.34, 1.47, 0.64, 1)) both infinite;
   animation-delay: calc(var(--letter-step, 0) * 0.08s);
 }
 
@@ -1085,14 +1124,50 @@ html[data-theme="dark"] .hero__media img {
    su eje horizontal inferior, coherente con "cae hacia su lugar" del
    brief (el espejo geométrico exacto de F-14, que con -50deg simulaba
    una letra viniendo desde abajo/atrás). */
+/* Porcentajes en vez de `from`/`to` (F-21, recalculados al bajar el
+   hueco de 15s a 8s): sobre una duración total de 9,84s, `8.13%`
+   equivale a 0,8s reales — el mismo tramo de caída de siempre (mismo
+   stagger, misma duración de entrada, sólo cambia CADA CUÁNTO se repite
+   el ciclo completo), con la MISMA curva `back.out(1.4)` (queda como
+   timing-function por defecto del `animation` shorthand, sin override
+   en `0%`, así que gobierna el tramo `0%→8.13%` igual que antes de este
+   cambio).
+
+   `8.13%→99.9%`: la letra ya aterrizó, se sostiene quieta (mismo valor a
+   los dos extremos, así que la timing-function de este tramo no puede
+   producir ningún movimiento — `linear` explícito de todas formas, para
+   no heredar por accidente la curva con overshoot en un tramo donde no
+   debería importar).
+
+   `99.9%→100%`: único tramo que SÍ cambia de valor sin ser la entrada —
+   vuelve a "no dibujada" un instante antes de que el ciclo reinicie en
+   el `0%` de la siguiente iteración. Mismo punto de corte que con
+   16,84s (no se recalculó: sigue siendo el 0,1% final del ciclo, ahora
+   ~10ms en vez de ~17ms — la diferencia es sub-frame en cualquiera de
+   los dos casos, no cambia nada perceptible). `linear` a propósito (no
+   `back.out`): esa curva tiene overshoot (se pasa del valor final antes
+   de asentar), pensado para una ENTRADA que se nota durante 0,8s enteros
+   — aplicado a un tramo de milisegundos que además se aleja de cámara,
+   el overshoot no aporta nada y sólo agrega un cálculo no lineal a un
+   tramo que tiene que ser predecible. */
 @keyframes hero-name-letter-in {
-  from {
+  0% {
     opacity: 0;
     transform: translateY(-40px) rotateX(50deg);
   }
-  to {
+  8.13% {
     opacity: 1;
     transform: translateY(0) rotateX(0);
+    animation-timing-function: linear;
+  }
+  99.9% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+    animation-timing-function: linear;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) rotateX(50deg);
   }
 }
 
@@ -2852,114 +2927,199 @@ h3 {
   max-width: 26rem;
 }
 
-/* ── About ───────────────────────────────────────────────────────── */
-/* Dos columnas (flex wrap): `.about__text` y, desde 768px, la
-   `.about__sidebar` de datos (F-12, corrige P0-3 de analisis-taste.md —
-   ver el comentario de AboutSection.astro con el markup exacto). Sin la
-   columna de datos (mobile), `.about__text` ocupa el ancho completo por
-   `flex-grow`, así que no queda un hueco a la derecha. */
+/* ── Hobbies (Acerca de mí) ──────────────────────────────────────── */
+/* F-22: AboutSection.astro/.about__* se borró acá (quedó huérfano cuando
+   el orden del ADR dejó fuera "Sobre mí" — ver el comentario de
+   HomePage.astro). Este bloque reemplaza su lugar en el archivo.
 
-.about__layout {
+   Mismo patrón de dos niveles que "── Projects ──" (F-19): nivel 1 cambia
+   de ítem (flechas externas + contador), nivel 2 cambia de foto dentro
+   del ítem activo. El nivel 2 REUSA tal cual `.carousel`/`.carousel-frame`/
+   `.carousel__track`/`.carousel__item`/`.carousel__nav`/`.carousel__dots`
+   de más arriba (nunca estuvieron prefijadas "project") — sólo se agregan
+   los dos modificadores `--portrait` de abajo, porque estas fotos son
+   verticales (~3:4) y esas reglas de base asumen 16:9.
+
+   El nivel 1 (`.hobbies-carousel*`/`.hobby-grid`) NO reusa las clases de
+   `.projects-carousel*`/`.project-grid`: son idénticas a propósito (mismo
+   botón circular de 44px, mismo contador, mismo fundido al cambiar de
+   ítem), pero renombrarlas a un nombre genérico compartido implicaría
+   tocar ProjectsSection.astro (F-19, ya shippeada) para ahorrarse ~40
+   líneas — no valía el riesgo mientras esa sección está en producción.
+   Si en algún momento se quiere compartirlas, es un refactor aislado:
+   promover estas reglas a un nombre neutral (`.item-carousel*`) y
+   actualizar los dos consumidores. */
+.hobbies-carousel {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 2rem;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.about__text {
-  flex: 1 1 28rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  /* Medida de lectura (ADR-0013): va en el contenedor que agrupa
-     `.about__lead` y `.about__paragraph`, no en cada uno — si no, el lead
-     (fuente más grande) queda con una columna más ancha que los párrafos
-     que introduce y "Sobre mí" toma forma de T. */
-  max-width: var(--medida-lectura);
-}
+@media (max-width: 767px) {
+  .hobbies-carousel {
+    align-items: flex-start;
+  }
 
-/* El primer párrafo sólo es "lead" cuando hay más abajo (AboutSection.astro
-   decide la clase): ocho líneas a 1.5rem sin nada después no es un lead,
-   es una pared de texto grande. */
-.about__lead {
-  font-size: 1.35rem;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.about__paragraph {
-  font-size: 1.05rem;
-  color: var(--color-text);
-  margin: 0;
-}
-
-/* Columna de datos (F-12): oculta por defecto -- en mobile repetiría
-   disponibilidad, ubicación y el botón de CV que ya están en el primer
-   pantallazo del hero (ver AboutSection.astro), así que se omite ahí en
-   vez de alargar el mobile. Desde 768px pasa a visible, con el mismo
-   lenguaje de tarjeta de datos que `.stack-card`/`.job__project` (fondo
-   elevado, filete, radio 0.5rem) -- se lee como una unidad de datos, no
-   como texto corrido. `flex-grow` con un `max-width` (no un `flex-basis`
-   fijo): crece para achicar el vacío a la derecha de `.about__text` sin
-   pasar de un ancho que se sienta como columna de datos, no como
-   segundo bloque de lectura. */
-.about__sidebar {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .about__sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    flex: 1 1 20rem;
-    max-width: 22rem;
-    background: var(--color-bg-elevated);
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    padding: 1.25rem 1.4rem 1.5rem;
+  .hobbies-carousel__arrow {
+    margin-top: 2.4rem;
   }
 }
 
-.about__facts {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  margin: 0;
+.hobbies-carousel__viewport {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-/* Tipografía de datos (DESIGN.md rol "data"): mono, 0.9rem/14,4px, por
-   encima del piso de 13px. La etiqueta reusa `.eyebrow` (rol "label") en
-   vez de duplicar la regla -- mismo componente que ya usa
-   `.project-card__problem-label`. */
-.about__fact dt {
-  margin-bottom: 0.2rem;
-}
-
-.about__fact dd {
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  color: var(--color-text);
-  margin: 0;
-  overflow-wrap: break-word;
-}
-
-/* Link de texto, no `.btn`: DESIGN.md reserva un botón primario por
-   bloque ("Descargar CV (PDF)" en el hero); acá es una segunda vía al
-   mismo PDF, con el mismo peso visual que el resto de la columna de
-   datos, no un segundo CTA compitiendo con el del hero. min-height
-   28px (mismo criterio que `.site-footer a`) para el destino táctil. */
-.about__cv-link {
+.hobbies-carousel__arrow {
+  appearance: none;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
   display: inline-flex;
   align-items: center;
-  min-height: 1.75rem;
-  align-self: flex-start;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--color-control-border);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: border-color 150ms ease, color 150ms ease,
+    transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.hobbies-carousel__arrow[disabled] {
+  display: none;
+}
+
+.hobbies-carousel__arrow:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.hobbies-carousel__arrow:active {
+  transform: scale(0.93);
+}
+
+.hobbies-carousel__counter {
+  margin: 0 0 0.6rem;
+  text-align: center;
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  transition: color 120ms ease;
+  color: var(--color-text-muted);
+}
+
+.hobby-grid {
+  display: grid;
+  gap: 1.75rem;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.hobby-grid[data-swapping] {
+  opacity: 0;
+  transform: translateY(0.4rem);
+}
+
+/* F-22b: la primera versión estiraba la tarjeta al ancho completo de
+   `.hobby-grid` (mismo criterio que `.project-grid`, pensado para una
+   tarjeta con columna de texto a `--medida-lectura`) — con la foto
+   angosta y sin `description` todavía, eso dejaba ~70% de la tarjeta
+   vacío a la derecha (medido con Puppeteer a 1440px: tarjeta 968px, foto
+   288px). Diego decidió "foto más grande y tarjeta más angosta", NO una
+   grilla de varias fotos a la vez.
+
+   `max-width: var(--medida-lectura)` + `margin-inline: auto` topa el
+   ancho por defecto ("auto", que en un grid con `justify-items: normal`
+   se estira a la columna completa) y centra lo que queda. Se probó
+   primero con `width: fit-content` para que la tarjeta se achicara al
+   ancho real de la foto -- roto: con `width:100%` en `.carousel__item
+   img` (regla base, no tocada acá) el porcentaje no tiene una base
+   definida dentro de un ancestro `fit-content` (tamaño circular: el hijo
+   necesita el ancho del padre para resolver su 100%, el padre necesita
+   el ancho del hijo para resolver su fit-content), y Chrome lo colapsaba
+   a ~113px en vez de a los ~432px del marco (medido con Puppeteer, no a
+   ojo). `max-width` fijo evita esa cadena por completo.
+
+   Reusa `--medida-lectura` (34rem) a propósito, no un valor nuevo: es
+   exactamente el ancho que va a necesitar la columna de texto cuando
+   Diego agregue `description` (ver `.hobby-card__description` más abajo,
+   mismo token) -- la tarjeta no cambia de composición cuando eso pase,
+   ya está dimensionada para ese caso desde ahora. El marco de la foto
+   (`.carousel-frame--portrait`, más abajo) queda por debajo de este
+   valor una vez restado el padding, así que nunca es el cuello de
+   botella. */
+.hobby-card {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-accent);
+  border-radius: 0.5rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.5rem, 5vw, 2.75rem)
+    clamp(1.75rem, 5vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: var(--medida-lectura);
+  margin-inline: auto;
+}
+
+.hobby-card h3 {
+  font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+  margin: 0;
+}
+
+/* `description` es opcional (data/hobbies.yaml, todavía sin escribir):
+   sin ella la tarjeta pasa directo de título a fotos, sin hueco -- el
+   `gap` del flex column de `.hobby-card` es el mismo haya o no párrafo
+   de por medio. */
+.hobby-card__description {
+  color: var(--color-text);
+  margin: 0;
+  font-size: 1.05rem;
+  max-width: var(--medida-lectura);
+}
+
+/* Fotos verticales (~3:4, ver data/hobbies.yaml): a diferencia de las
+   capturas 16:9 de Proyectos, acá el ancho del marco NO se deriva de un
+   presupuesto de alto -- se limita directamente (brief F-22: "una foto
+   vertical a ancho completo ocupa casi una pantalla de alto"). `clamp`:
+   nunca la foto domina la sección, ni en mobile angosto ni en desktop
+   ancho -- pero el alto es el límite real (F-22b), no el ancho: a más de
+   27rem de ancho la foto ya pasa los 36rem/576px de alto, así que subir
+   el tope más allá de esto vuelve a comerse el final de la página. Tope
+   elegido para quedar por debajo de `--medida-lectura` menos el padding
+   de `.hobby-card` (34rem - ~5.5rem ≈ 28.5rem): así el marco nunca es el
+   que fuerza a la tarjeta a superar esa medida. `margin-inline: 0` (no
+   `auto`, a diferencia de `.carousel-frame` base): con `.hobby-card`
+   ahora centrada por `margin-inline: auto` (F-22b, más arriba), es la
+   tarjeta la que se centra -- el marco vuelve a alinearse a la izquierda
+   DENTRO de esa tarjeta ya angosta, como el resto del contenido. */
+.carousel-frame.carousel-frame--portrait {
+  max-width: clamp(16rem, 36vw, 27rem);
+  margin-inline: 0;
+}
+
+/* `object-fit: cover` + `aspect-ratio` fijo (en vez de heredar el 16/9 de
+   `.carousel__item img`): las seis fotos no comparten exactamente la
+   misma proporción (varían entre 0.75 y 0.83), así que un aspect-ratio
+   fijo por CSS -- no el intrínseco de cada `<img>` -- evita que el marco
+   salte de alto entre una foto y la siguiente del mismo ítem. El
+   `width`/`height` del HTML (CLS) sigue siendo el real de cada archivo;
+   esto sólo cambia CÓMO se recorta dentro de una caja ya reservada por
+   `width: 100%` + este aspect-ratio, no si se reserva espacio. Sombra y
+   radio propios (F-9, `--shadow-portrait`) porque acá el marco no queda
+   a ras del borde de la tarjeta -- a diferencia de `.carousel__item img`
+   dentro de `.project-card`, que se apoya en el `overflow: hidden` de la
+   tarjeta para el recorte de esquinas. */
+.carousel--portrait .carousel__item img {
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-portrait);
 }
 
 /* ── Contact ─────────────────────────────────────────────────────── */
@@ -3003,18 +3163,27 @@ h3 {
   padding-block: 2rem;
 }
 
-.site-footer a {
-  color: var(--color-text-muted);
-  /* min-height 1.75rem/28px (F-3): el link a GitHub medía 43,7 x 19,0px,
-     por debajo del mínimo de destino táctil en el eje vertical.
-     inline-flex + align-items:center crece el alto sin tocar el tamaño
-     del texto ni el ancho. */
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.75rem;
-  transition: color 120ms ease;
+/* F-21: el footer ya no tiene links (el de GitHub sigue en el hero y en
+   Contacto) -- sólo queda la frase con emojis. `line-height` explícito
+   (no el 1.55 heredado de `html`) porque la fuente de emoji del sistema
+   trae su propia caja de línea, más alta que la de Source Serif 4 a este
+   tamaño; sin fijarlo acá, el renglón que contiene los tres emojis se ve
+   más separado del resto del párrafo (line-height normal calcula sobre
+   la métrica más alta de las dos fuentes mezcladas en la línea). */
+.site-footer__tagline {
+  line-height: 1.7;
 }
 
-.site-footer a:hover {
-  color: var(--color-accent);
+/* `font-size` uno debajo del texto que lo rodea (0.85rem heredado de
+   `.site-footer`): a tamaño 1:1, la fuente de emoji del sistema se ve
+   visualmente más grande que Source Serif 4 al mismo `font-size` (las
+   fuentes de emoji tienden a llenar más su em-box). `vertical-align:
+   -0.05em` corrige el ligerísimo desnivel hacia arriba que queda una vez
+   achicado, contra la línea base del texto de alrededor -- calibrado a
+   ojo contra el texto plano circundante, mismo criterio que ya usa el
+   cursor de máquina de escribir del hero (sin API de métricas de fuente
+   exacta en CSS). */
+.site-footer__emoji {
+  font-size: 0.9em;
+  vertical-align: -0.05em;
 }

@@ -19,12 +19,13 @@ meta:
     - projects
     - experience
     - education
+    - hobbies
     - contact
 
 person:
   name: "Diego Chiquiar"
 
-  headline: "Desarrollador de Software & DevOps"
+  headline: "Desarrollador de Software. (DevOps Engineer en Proceso)"
 
   tagline: >-
     Integraciones, automatización y software pensado para funcionar
@@ -32,18 +33,14 @@ person:
 
   location: "Montevideo, Uruguay"
 
-  greeting: "Hola, soy Diego."
+  greeting: "Bienvenido!"
 
   intro: >-
-    Desarrollo software principalmente en .NET/C#, con foco en integraciones,
+    Desarrollo arquitectura y software principalmente en .NET/C#, con foco en integraciones,
     automatización y sistemas empresariales.
 
     Mi experiencia previa en soporte e infraestructura hace que diseñe pensando
     también en operación, fallos y mantenibilidad.
-
-  featuredFact: >-
-    Uno de los sistemas que desarrollé procesa unas 1.500 operaciones diarias,
-    se integra con seis bancos y lleva más de un año funcionando en producción.
 
   availability: "Disponible para nuevas oportunidades."
 
@@ -70,13 +67,11 @@ experience:
     current: false
 
     summary: >-
-      Diseñé y desarrollé aplicaciones .NET para automatizar procesos
-      bancarios, operativos y comerciales, incluyendo integraciones con seis
-      bancos y sistemas que procesan aproximadamente 1.500 operaciones diarias
-      en producción.
+      Encargado de diseñar y desarrollar aplicaciones para brindar soluciones específicas a la empresa y sus clientes.
+      Estuve involucrado en varios proyectos, en algunos desde cero hasta producción y en otros integrando funcionalidades nuevas.
 
     projects:
-      - name: "TAAS — Sistema automático de acreditaciones"
+      - name: "TAAS. Sistema automático de acreditaciones"
 
         description: >-
           Desarrollé un sistema que automatiza las acreditaciones bancarias
@@ -102,7 +97,7 @@ experience:
           - "Azure"
 
 
-      - name: "Aplicación de rastreo de valores"
+      - name: "Aplicación Android de rastreo de valores"
 
         description: >-
           Desarrollé una aplicación Android para el seguimiento operativo de
@@ -124,7 +119,7 @@ experience:
           - "Google Play Console"
 
 
-      - name: "Sistema de suscripciones y pagos"
+      - name: "Venta de alarmas - Sistema de suscripciones y pagos"
 
         description: >-
           Desarrollé una API interna que integra la plataforma comercial con

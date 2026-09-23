@@ -26,6 +26,12 @@ DESIGN.md
 DESIGN.*.json
 .impeccable/
 
+# ─── Fotos originales de la sección personal: NUNCA se publican ──
+# Los originales que Diego deja acá (setup, Fito) son fotos de su casa y
+# pesan de más. Al sitio va SÓLO la versión optimizada que genera
+# scripts/convert-hobby-images.mjs en public/hobbies/.
+about-me-photos/
+
 # ─── Capa privada del CV: NUNCA se publica ─────────────────────
 # Teléfono y nombres reales de empleadores (ver ADR-0002). Sólo la consume
 # la generación del PDF, en local. Ver data/schemas/cv.private.schema.json.

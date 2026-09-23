@@ -35,6 +35,7 @@ const FILES = [
   { data: "cv.es.yaml", schema: "cv.schema.json" },
   { data: "proyectos.yaml", schema: "proyectos.schema.json" },
   { data: "now.yaml", schema: "now.schema.json" },
+  { data: "hobbies.yaml", schema: "hobbies.schema.json" },
 ];
 
 // Capa privada (data/private/, gitignored): no existe en CI ni en un clon

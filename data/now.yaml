@@ -12,7 +12,7 @@
 command: "cat now.txt"
 
 items:
-  - label: "DevOps (ORT)"
+  - label: "DevOps Engineer (ORT)"
     status: "in progress"
 
   - label: "English C1 Advanced"

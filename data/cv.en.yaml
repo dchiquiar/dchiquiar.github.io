@@ -32,31 +32,27 @@ meta:
     - projects
     - experience
     - education
+    - hobbies
     - contact
 
 person:
   name: "Diego Chiquiar"
 
-  headline: "Software & DevOps Developer"
+  headline: "Software Developer. (DevOps Engineer in Progress)"
 
   tagline: >-
     Integrations, automation, and software built to run in production.
 
   location: "Montevideo, Uruguay"
 
-  greeting: "Hi, I'm Diego."
+  greeting: "Welcome!"
 
   intro: >-
-    I develop software mainly in .NET/C#, with a focus on integrations,
+    I develop architecture and software mainly in .NET/C#, with a focus on integrations,
     automation, and enterprise systems.
 
     My background in support and infrastructure shapes how I design
     software, with an eye on operations, failure modes, and maintainability.
-
-  featuredFact: >-
-    One of the systems I built processes around 1,500 operations a day,
-    integrates with six banks, and has been running in production for
-    over a year.
 
   availability: "Open to new opportunities."
 
@@ -83,13 +79,14 @@ experience:
     current: false
 
     summary: >-
-      I designed and built .NET applications to automate banking,
-      operational, and commercial processes, including integrations with
-      six banks and systems that process around 1,500 operations a day
-      in production.
+      Responsible for designing and developing applications to provide
+      tailored solutions for the company and its clients.
+      I was involved in several projects, some taken from scratch through
+      to production and others integrating new functionality into
+      existing systems.
 
     projects:
-      - name: "TAAS — Tecnisegur Automatic Accreditation System"
+      - name: "TAAS. Tecnisegur Automatic Accreditation System"
 
         description: >-
           I built a system that automates the bank settlements generated
@@ -115,7 +112,7 @@ experience:
           - "Azure"
 
 
-      - name: "Valuables Tracking App"
+      - name: "Android Valuables Tracking App"
 
         description: >-
           I built an Android app for the operational tracking of
@@ -137,7 +134,7 @@ experience:
           - "Google Play Console"
 
 
-      - name: "Subscriptions and Payments System"
+      - name: "Alarm Sales - Subscriptions and Payments System"
 
         description: >-
           I built an internal API that integrates the commercial platform

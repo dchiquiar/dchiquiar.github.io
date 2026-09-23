@@ -26,7 +26,7 @@
           "description": "Orden de renderizado de las secciones de la home, de arriba hacia abajo. Opcional: mientras no está presente, el orden lo fija el código. ES y EN deben declarar la misma lista (mismos ids, mismo orden); si sólo uno de los dos idiomas la trae, es una inconsistencia transitoria a resolver, no un error de esquema.",
           "items": {
             "type": "string",
-            "enum": ["intro", "projects", "experience", "skills", "education", "about", "contact"]
+            "enum": ["intro", "projects", "experience", "skills", "education", "hobbies", "about", "contact"]
           },
           "uniqueItems": true
         }

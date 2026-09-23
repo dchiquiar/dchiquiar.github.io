@@ -3,24 +3,28 @@
 // sólo le pasan `lang`. Cero markup duplicado entre idiomas.
 //
 // F-18 (ADR-0019 §1): el orden de las secciones sale de
-// `cv.meta.sectionOrder` (cv.es.yaml ya lo trae; cv.en.yaml todavía no —
-// ver DEFAULT_SECTION_ORDER más abajo, que coincide con el orden que ES
-// declara hoy). Una sección cuyo contenido no existe (about sin summary,
-// education sin items) no entra al orden final: ni se renderiza ni
-// aparece en el nav. "about" NO está en el fallback por defecto — el
-// orden nuevo del ADR (Hero → Stack → Proyectos → Experiencia →
-// Formación → Contacto) no tiene "Sobre mí"; sólo reaparecería si un
-// idioma la declara explícitamente en su propio sectionOrder Y tiene
-// summary confirmado.
+// `cv.meta.sectionOrder` (cv.es.yaml y cv.en.yaml ya lo traen — ver
+// DEFAULT_SECTION_ORDER más abajo, que coincide con ese orden). Una
+// sección cuyo contenido no existe (education sin items, hobbies sin
+// ítems con fotos) no entra al orden final: ni se renderiza ni aparece en
+// el nav.
+//
+// AboutSection.astro ("Sobre mí", person.summary) se quitó en F-22: quedó
+// huérfana desde que el orden del ADR (Hero → Stack → Proyectos →
+// Experiencia → Formación → Contacto) dejó de incluirla — ningún
+// cv.*.yaml declara "about" en sectionOrder ni trae person.summary, así
+// que el componente nunca llegaba a renderizarse (verificado con grep
+// antes de borrarlo). ui.js conserva las claves nav.about/sections.about/
+// about.* sin usar por si se retoma más adelante.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "./Hero.astro";
 import ProjectsSection from "./ProjectsSection.astro";
 import ExperienceSection from "./ExperienceSection.astro";
 import EducationSection from "./EducationSection.astro";
 import SkillsSection from "./SkillsSection.astro";
-import AboutSection from "./AboutSection.astro";
+import HobbiesSection from "./HobbiesSection.astro";
 import ContactSection from "./ContactSection.astro";
-import { loadCv, loadProjects, cleanField } from "../lib/content.js";
+import { loadCv, loadProjects, loadHobbies, cleanField } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
@@ -29,19 +33,17 @@ const { lang } = Astro.props;
 const cv = loadCv(lang);
 const { person } = cv;
 
-// person.summary puede no estar confirmado todavía (queda null, ausente,
-// o con nota TODO en el YAML): si no hay valor limpio, la sección
-// "Sobre mí" no existe — nada de encabezado ni entrada de nav para una
-// sección vacía. cv.es.yaml ya no trae person.summary en absoluto
-// (ADR-0019: la sección sale del orden nuevo), así que esto también
-// cubre ese caso sin cambios.
-const summary = cleanField(person.summary);
 const stackIntro = cleanField(cv.skills?.intro ?? null);
 const experienceItems = cv.experience ?? [];
 const educationItems = cv.education ?? [];
 const visibleProjectsCount = loadProjects().filter((p) => p.status !== "planned").length;
+// F-22: mismo criterio que visibleProjectsCount — un ítem sin fotos no
+// cuenta (hobbies.schema.json: "un item SIN images no se renderiza").
+const visibleHobbiesCount = (loadHobbies().items ?? []).filter(
+  (h) => (h.images ?? []).length > 0,
+).length;
 
-const DEFAULT_SECTION_ORDER = ["intro", "skills", "projects", "experience", "education", "contact"];
+const DEFAULT_SECTION_ORDER = ["intro", "skills", "projects", "experience", "education", "hobbies", "contact"];
 const rawOrder = cv.meta?.sectionOrder ?? DEFAULT_SECTION_ORDER;
 
 // Presencia de contenido por id semántico — el único filtro que decide si
@@ -56,7 +58,7 @@ const sectionHasContent = {
   projects: visibleProjectsCount > 0,
   experience: experienceItems.length > 0,
   education: educationItems.length > 0,
-  about: Boolean(summary),
+  hobbies: visibleHobbiesCount > 0,
   contact: true,
 };
 
@@ -134,8 +136,8 @@ const jsonLd = {
           return (
             <EducationSection lang={lang} number={sectionNumbers.education} education={educationItems} />
           );
-        case "about":
-          return <AboutSection lang={lang} number={sectionNumbers.about} summary={summary} person={person} />;
+        case "hobbies":
+          return <HobbiesSection lang={lang} number={sectionNumbers.hobbies} />;
         case "contact":
           return <ContactSection lang={lang} number={sectionNumbers.contact} person={person} />;
         default:

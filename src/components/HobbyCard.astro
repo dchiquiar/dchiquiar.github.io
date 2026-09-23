@@ -1,0 +1,120 @@
+---
+// F-22: carrusel de fotos de un ítem de "Acerca de mí" (nivel 2, misma
+// mecánica que ProjectCard.astro). Reusa tal cual las clases genéricas
+// `.carousel`/`.carousel-frame`/`.carousel__track`/`.carousel__item`/
+// `.carousel__nav`/`.carousel__dots` (ADR-0008, F-19) — nunca estuvieron
+// prefijadas "project", así que no hace falta duplicarlas. Sólo se agrega
+// el modificador `--portrait` (global.css, sección "Hobbies") porque estas
+// fotos son verticales (~3:4, ver data/hobbies.yaml), a diferencia de las
+// capturas de Proyectos (16:9).
+//
+// El script que activa flechas/puntos vive en HobbiesSection.astro,
+// acotado a la raíz `#hobbies` para no volver a enganchar el carrusel de
+// Proyectos (que ya se conecta solo, con su propia consulta acotada a su
+// sección) — los atributos data-carousel* son los mismos a propósito.
+//
+// Todas las fotos están al final de la página: sin `fetchpriority="high"`
+// para la primera (a diferencia de ProjectCard, donde el primer proyecto
+// puede estar cerca del viewport inicial).
+import { ui } from "../i18n/ui.js";
+import { splitParagraphs } from "../lib/content.js";
+
+interface HobbyImage {
+  src: string;
+  width: number;
+  height: number;
+  alt: { en: string; es: string };
+}
+
+interface Props {
+  lang: "en" | "es";
+  id: string;
+  title: string;
+  description: string | null;
+  images: HobbyImage[];
+}
+const { lang, id, title, description, images } = Astro.props;
+const t = ui[lang];
+const carouselLabel = `${title} — ${t.hobbies.photosLabel}`;
+const trackId = `hobby-carousel-track-${id}`;
+
+function fillTemplate(tpl: string, current: number, total: number) {
+  return tpl.replace("{current}", String(current)).replace("{total}", String(total));
+}
+
+// `description` es opcional (data/hobbies.yaml): hoy ningún ítem lo trae
+// todavía. Sin él, la tarjeta muestra sólo título + fotos, sin hueco ni
+// placeholder — mismo criterio anti-placeholder del resto del sitio.
+const paragraphs = description ? splitParagraphs(description) : [];
+---
+
+<article class="hobby-card">
+  <h3>{title}</h3>
+  {paragraphs.map((paragraph) => (
+    <p class="hobby-card__description">{paragraph}</p>
+  ))}
+  <div class="carousel-frame carousel-frame--portrait">
+    <div
+      class="carousel carousel--portrait"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={carouselLabel}
+      tabindex="0"
+      data-carousel
+    >
+      <ul class="carousel__track" id={trackId}>
+        {images.map((img) => (
+          <li class="carousel__item" data-carousel-item>
+            <img
+              src={img.src}
+              width={img.width}
+              height={img.height}
+              alt={img.alt[lang]}
+              loading="lazy"
+              decoding="async"
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+    {images.length > 1 && (
+      <>
+        <button
+          type="button"
+          class="carousel__nav carousel__nav--prev"
+          data-carousel-prev
+          aria-label={t.hobbies.prevPhoto}
+          aria-controls={trackId}
+          disabled
+          aria-hidden="true"
+        >
+          <span aria-hidden="true">‹</span>
+        </button>
+        <button
+          type="button"
+          class="carousel__nav carousel__nav--next"
+          data-carousel-next
+          aria-label={t.hobbies.nextPhoto}
+          aria-controls={trackId}
+          disabled
+          aria-hidden="true"
+        >
+          <span aria-hidden="true">›</span>
+        </button>
+        <div class="carousel__dots">
+          {images.map((_, i) => (
+            <button
+              type="button"
+              class="carousel__dot"
+              data-carousel-dot
+              aria-label={fillTemplate(t.hobbies.photoLabelTemplate, i + 1, images.length)}
+              aria-controls={trackId}
+              disabled
+              aria-hidden="true"
+            ></button>
+          ))}
+        </div>
+      </>
+    )}
+  </div>
+</article>

@@ -1,0 +1,74 @@
+# Sección personal ("Acerca de mí"), entre Formación y Contacto.
+#
+# Un solo archivo, bilingüe por campo (en/es), igual que proyectos.yaml.
+# Cada item puede llevar `description` e `images`. Un item sin `images` no
+# se renderiza — ver el motivo en data/schemas/hobbies.schema.json.
+# `description` es opcional y todavía no está escrita: la agrega Diego más
+# adelante. No completar ninguno de los dos campos con contenido inventado.
+#
+# Validar contra data/schemas/hobbies.schema.json.
+
+meta:
+  lastUpdated: "2026-09-22"
+
+section:
+  title:
+    es: "Acerca de mí"
+    en: "About me"
+
+items:
+  - id: "setup"
+    order: 1
+    title:
+      es: "Mi setup"
+      en: "My setup"
+
+    images:
+      - src: "/hobbies/setup-01.webp"
+        width: 800
+        height: 1062
+        alt:
+          es: "Escritorio con la torre de PC abierta y ventiladores iluminados en naranja, monitor con un fondo de pantalla pixel art de un barco al atardecer, teclado y mouse rojos"
+          en: "Desk with the PC tower open and fans glowing orange, a monitor showing a pixel-art wallpaper of a boat at sunset, and a red keyboard and mouse"
+
+      - src: "/hobbies/setup-02.webp"
+        width: 800
+        height: 1067
+        alt:
+          es: "Vista interior del gabinete de la PC, con la placa de video GeForce RTX, memorias RAM iluminadas en verde y dos ventiladores con luz blanca junto al panel perforado"
+          en: "Interior view of the PC case, showing the GeForce RTX graphics card, RAM sticks lit up green, and two white-lit fans next to the perforated side panel"
+
+      - src: "/hobbies/setup-03.webp"
+        width: 800
+        height: 1067
+        alt:
+          es: "Primer plano de un teclado retroiluminado en celeste, con un peluche de oso apoyado al lado y una planta por encima"
+          en: "Close-up of a keyboard with cyan backlighting, a small teddy bear plush resting beside it, and a plant hanging above"
+
+      - src: "/hobbies/setup-04.webp"
+        width: 800
+        height: 1050
+        alt:
+          es: "Escritorio con dos monitores: uno con una terminal de código y el otro con el editor de Unity mostrando un mapa de pixel art, más teclado y mouse negros, un teléfono en un soporte y un globo terráqueo"
+          en: "Desk with two monitors: one showing a code terminal and the other the Unity editor with a pixel-art map, plus a black keyboard and mouse, a phone on a stand, and a desktop globe"
+
+  - id: "fito"
+    order: 2
+    title:
+      es: "Fito"
+      en: "Fito"
+
+    images:
+      - src: "/hobbies/fito-01.webp"
+        width: 800
+        height: 983
+        alt:
+          es: "Primer plano de Fito, un perro salchicha de pelo corto y manchas atigradas, con la lengua afuera mirando de frente a cámara"
+          en: "Close-up of Fito, a short-haired dapple dachshund, with his tongue out looking straight at the camera"
+
+      - src: "/hobbies/fito-02.webp"
+        width: 800
+        height: 962
+        alt:
+          es: "Primer plano de Fito mirando hacia arriba y al costado, con la boca entreabierta"
+          en: "Close-up of Fito looking up and to the side, with his mouth slightly open"

@@ -31,6 +31,15 @@ export function loadNow() {
   return load(fs.readFileSync(file, "utf-8"));
 }
 
+// F-22: fuente de la sección personal "Acerca de mí"/"About me"
+// (data/hobbies.yaml). Un solo archivo bilingüe por campo, mismo criterio
+// que loadProjects() con proyectos.yaml — no depende de `lang` para leer
+// el archivo, sólo quien lo consume elige qué campo devolver.
+export function loadHobbies() {
+  const file = path.join(dataDir, "hobbies.yaml");
+  return load(fs.readFileSync(file, "utf-8"));
+}
+
 // Algunos campos de data/cv.*.yaml todavía llevan una nota "TODO:" o
 // "<<PREGUNTA" incrustada en el propio string (no sólo `null`), porque son
 // pendientes de confirmación de Diego que se dejaron documentados ahí mismo.

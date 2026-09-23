@@ -1,0 +1,270 @@
+---
+// F-22: sección personal "Acerca de mí"/"About me", entre Formación y
+// Contacto. Fuente: data/hobbies.yaml (bilingüe por campo, mismo criterio
+// que proyectos.yaml — ver loadHobbies() en src/lib/content.js).
+//
+// Regla de negocio (data/schemas/hobbies.schema.json): un ítem sin
+// `images` no se renderiza. Si ningún ítem tiene fotos, HomePage.astro no
+// instancia este componente en absoluto (sectionHasContent.hobbies) — acá
+// no hace falta un guard adicional, mismo contrato que ProjectsSection.astro
+// con `visibleProjectsCount`.
+//
+// Mecánica (mismo patrón de dos niveles que ProjectsSection.astro, F-19):
+// nivel 1 cambia de ítem (flechas externas de 44px + contador), nivel 2
+// cambia de foto dentro del ítem activo (HobbyCard.astro: flechas de 28px
+// + puntos). El script de abajo reimplementa el nivel 1 con clases y
+// atributos data-* propios — no los de ProjectsSection.astro — porque
+// `document.querySelector` de un atributo repetido se queda con el primer
+// match del documento y este sitio no tiene módulos JS compartidos (0
+// archivos JS externos): duplicar estas ~40 líneas es más seguro que
+// reusarlas sin un módulo que las preste. El nivel 2 sí reusa los
+// atributos genéricos `data-carousel*` de ProjectCard.astro tal cual
+// (nunca tuvieron prefijo "project"), pero la consulta va acotada a la
+// raíz de esta sección (`#hobbies`) para no volver a enganchar el
+// carrusel de Proyectos, que ya se conectó solo con su propia consulta
+// acotada a su sección.
+import { ui } from "../i18n/ui.js";
+import SectionHeading from "./SectionHeading.astro";
+import HobbyCard from "./HobbyCard.astro";
+import { loadHobbies } from "../lib/content.js";
+
+interface Props {
+  lang: "en" | "es";
+  number: string;
+}
+const { lang, number } = Astro.props;
+const t = ui[lang];
+
+const hobbies = loadHobbies();
+const items = (hobbies.items ?? [])
+  .filter((item) => (item.images ?? []).length > 0)
+  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  .map((item) => ({
+    id: item.id,
+    title: item.title[lang],
+    description: item.description ? item.description[lang] : null,
+    images: item.images ?? [],
+  }));
+
+const multiple = items.length > 1;
+const sectionTitle = hobbies.section.title[lang];
+
+function fillTemplate(tpl: string, current: number, total: number) {
+  return tpl.replace("{current}", String(current)).replace("{total}", String(total));
+}
+---
+
+<section id="hobbies" class="section">
+  <div class="container">
+    <SectionHeading number={number} title={sectionTitle} id="hobbies" />
+    <div
+      class="hobbies-carousel"
+      data-hobbies-carousel
+      data-counter-template={t.hobbies.counterTemplate}
+      data-announce-template={t.hobbies.announceTemplate}
+      {...multiple
+        ? { role: "region", "aria-roledescription": "carousel", "aria-labelledby": "hobbies-heading" }
+        : {}}
+    >
+      {multiple && (
+        <button
+          type="button"
+          class="hobbies-carousel__arrow hobbies-carousel__arrow--prev"
+          data-hobbies-prev
+          aria-label={t.hobbies.prevItem}
+          aria-controls="hobby-track"
+          disabled
+          aria-hidden="true"
+        >
+          <span aria-hidden="true">‹</span>
+        </button>
+      )}
+      <div class="hobbies-carousel__viewport">
+        {multiple && (
+          <p class="hobbies-carousel__counter" data-hobbies-counter hidden></p>
+        )}
+        <div class="hobby-grid" data-hobbies-track id="hobby-track">
+          {items.map((item, index) => (
+            <div
+              class="hobby-slide"
+              data-hobby-slide
+              data-title={item.title}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={fillTemplate(t.hobbies.slideLabelTemplate, index + 1, items.length)}
+            >
+              <HobbyCard lang={lang} {...item} />
+            </div>
+          ))}
+        </div>
+      </div>
+      {multiple && (
+        <button
+          type="button"
+          class="hobbies-carousel__arrow hobbies-carousel__arrow--next"
+          data-hobbies-next
+          aria-label={t.hobbies.nextItem}
+          aria-controls="hobby-track"
+          disabled
+          aria-hidden="true"
+        >
+          <span aria-hidden="true">›</span>
+        </button>
+      )}
+    </div>
+    {multiple && (
+      <p class="visually-hidden" aria-live="polite" data-hobbies-announcer></p>
+    )}
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    var root = document.getElementById("hobbies");
+    if (!root) return;
+
+    var reduceMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function fill(tpl, current, total, title) {
+      return tpl
+        .replace("{current}", String(current))
+        .replace("{total}", String(total))
+        .replace("{title}", title || "");
+    }
+
+    // Nivel 1: cambia de ítem. Mismo mecanismo que ProjectsSection.astro
+    // (F-19), con atributos propios — ver el comentario del frontmatter.
+    var wrap = root.querySelector("[data-hobbies-carousel]");
+    var track = root.querySelector("[data-hobbies-track]");
+    var prevItem = root.querySelector("[data-hobbies-prev]");
+    var nextItem = root.querySelector("[data-hobbies-next]");
+    var counter = root.querySelector("[data-hobbies-counter]");
+    var announcer = root.querySelector("[data-hobbies-announcer]");
+    var slides = track
+      ? Array.prototype.slice.call(track.querySelectorAll("[data-hobby-slide]"))
+      : [];
+
+    if (wrap && track && prevItem && nextItem && slides.length > 1) {
+      var active = 0;
+      var counterTpl = wrap.getAttribute("data-counter-template") || "";
+      var announceTpl = wrap.getAttribute("data-announce-template") || "";
+
+      var render = function () {
+        slides.forEach(function (slide, i) {
+          slide.hidden = i !== active;
+        });
+        if (counter) {
+          counter.hidden = false;
+          counter.textContent = fill(counterTpl, active + 1, slides.length);
+        }
+        if (announcer) {
+          announcer.textContent = fill(
+            announceTpl,
+            active + 1,
+            slides.length,
+            slides[active].getAttribute("data-title"),
+          );
+        }
+      };
+
+      var goTo = function (index) {
+        var next = (index + slides.length) % slides.length;
+        if (next === active) return;
+        if (reduceMotion) {
+          active = next;
+          render();
+          return;
+        }
+        track.setAttribute("data-swapping", "");
+        setTimeout(function () {
+          active = next;
+          render();
+          track.removeAttribute("data-swapping");
+        }, 120);
+      };
+
+      prevItem.addEventListener("click", function () {
+        goTo(active - 1);
+      });
+      nextItem.addEventListener("click", function () {
+        goTo(active + 1);
+      });
+      prevItem.disabled = false;
+      nextItem.disabled = false;
+      prevItem.removeAttribute("aria-hidden");
+      nextItem.removeAttribute("aria-hidden");
+      render();
+    }
+
+    // Nivel 2: cambia de foto dentro del ítem activo. Reusa los mismos
+    // atributos data-carousel* que ProjectCard.astro (genéricos, nunca
+    // tuvieron prefijo "project") pero acotado a `root` (#hobbies): así
+    // no vuelve a enganchar el carrusel de Proyectos, que ya se conectó
+    // solo con su propia consulta acotada a su sección.
+    var galleries = Array.prototype.slice.call(root.querySelectorAll("[data-carousel]"));
+    galleries.forEach(function (carousel) {
+      var frame = carousel.parentElement;
+      var photos = Array.prototype.slice.call(carousel.querySelectorAll("[data-carousel-item]"));
+      if (photos.length < 2 || !frame) return;
+
+      var prevShot = frame.querySelector("[data-carousel-prev]");
+      var nextShot = frame.querySelector("[data-carousel-next]");
+      var dots = Array.prototype.slice.call(frame.querySelectorAll("[data-carousel-dot]"));
+      var behavior = reduceMotion ? "auto" : "smooth";
+      var current = 0;
+
+      var setActiveDot = function (index) {
+        dots.forEach(function (dot, i) {
+          if (i === index) dot.setAttribute("aria-current", "true");
+          else dot.removeAttribute("aria-current");
+        });
+      };
+
+      var goToPhoto = function (index) {
+        current = (index + photos.length) % photos.length;
+        photos[current].scrollIntoView({ behavior: behavior, block: "nearest", inline: "start" });
+      };
+
+      if (prevShot && nextShot) {
+        prevShot.addEventListener("click", function () {
+          goToPhoto(current - 1);
+        });
+        nextShot.addEventListener("click", function () {
+          goToPhoto(current + 1);
+        });
+        prevShot.disabled = false;
+        nextShot.disabled = false;
+        prevShot.removeAttribute("aria-hidden");
+        nextShot.removeAttribute("aria-hidden");
+      }
+
+      dots.forEach(function (dot, i) {
+        dot.addEventListener("click", function () {
+          goToPhoto(i);
+        });
+        dot.disabled = false;
+        dot.removeAttribute("aria-hidden");
+      });
+
+      if (dots.length && "IntersectionObserver" in window) {
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+                setActiveDot(photos.indexOf(entry.target));
+              }
+            });
+          },
+          { root: carousel, threshold: 0.6 },
+        );
+        photos.forEach(function (photo) {
+          observer.observe(photo);
+        });
+      } else if (dots.length) {
+        setActiveDot(0);
+      }
+    });
+  })();
+</script>
