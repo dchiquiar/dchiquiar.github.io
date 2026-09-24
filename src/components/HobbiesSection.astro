@@ -57,8 +57,12 @@ function fillTemplate(tpl: string, current: number, total: number) {
 <section id="hobbies" class="section">
   <div class="container">
     <SectionHeading number={number} title={sectionTitle} id="hobbies" />
+    {/* F-26 (ADR-0026): "entrada suave del bloque, controles coherentes
+       con Projects" — mismo `data-reveal` de conjunto que
+       ProjectsSection.astro. */}
     <div
       class="hobbies-carousel"
+      data-reveal
       data-hobbies-carousel
       data-counter-template={t.hobbies.counterTemplate}
       data-announce-template={t.hobbies.announceTemplate}
@@ -169,7 +173,10 @@ function fillTemplate(tpl: string, current: number, total: number) {
         }
       };
 
-      var goTo = function (index) {
+      // F-26: mismo criterio de dirección que ProjectsSection.astro —
+      // `data-swapping` lleva "next"/"prev" para que el CSS nudgee el
+      // track hacia el lado coherente con la flecha usada.
+      var goTo = function (index, direction) {
         var next = (index + slides.length) % slides.length;
         if (next === active) return;
         if (reduceMotion) {
@@ -177,7 +184,7 @@ function fillTemplate(tpl: string, current: number, total: number) {
           render();
           return;
         }
-        track.setAttribute("data-swapping", "");
+        track.setAttribute("data-swapping", direction);
         setTimeout(function () {
           active = next;
           render();
@@ -186,10 +193,10 @@ function fillTemplate(tpl: string, current: number, total: number) {
       };
 
       prevItem.addEventListener("click", function () {
-        goTo(active - 1);
+        goTo(active - 1, "prev");
       });
       nextItem.addEventListener("click", function () {
-        goTo(active + 1);
+        goTo(active + 1, "next");
       });
       prevItem.disabled = false;
       nextItem.disabled = false;
@@ -222,9 +229,22 @@ function fillTemplate(tpl: string, current: number, total: number) {
         });
       };
 
+      // F-26: mismo fundido corto que ProjectsSection.astro (150ms, sólo
+      // en flecha/punto — el arrastre/scroll ya tiene su propio movimiento
+      // real).
       var goToPhoto = function (index) {
         current = (index + photos.length) % photos.length;
+        if (!reduceMotion) {
+          carousel.setAttribute("data-transitioning", "");
+          setTimeout(function () {
+            carousel.removeAttribute("data-transitioning");
+          }, 150);
+        }
         photos[current].scrollIntoView({ behavior: behavior, block: "nearest", inline: "start" });
+        // F-25: marca el punto acá, sincrónico, en vez de esperar al
+        // listener de scroll de abajo (F-26) — mismo criterio que
+        // ProjectsSection.astro.
+        setActiveDot(current);
       };
 
       if (prevShot && nextShot) {
@@ -248,23 +268,32 @@ function fillTemplate(tpl: string, current: number, total: number) {
         dot.removeAttribute("aria-hidden");
       });
 
-      if (dots.length && "IntersectionObserver" in window) {
-        var observer = new IntersectionObserver(
-          function (entries) {
-            entries.forEach(function (entry) {
-              if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-                setActiveDot(photos.indexOf(entry.target));
-              }
-            });
-          },
-          { root: carousel, threshold: 0.6 },
-        );
-        photos.forEach(function (photo) {
-          observer.observe(photo);
-        });
-      } else if (dots.length) {
+      // F-25: marca el primer punto siempre — antes vivía en el `else` de
+      // abajo y por lo tanto no corría en ningún navegador actual.
+      if (dots.length) {
         setActiveDot(0);
       }
+
+      // F-26 (Parte C): mismo listener determinista que
+      // ProjectsSection.astro, en vez del IntersectionObserver que nunca
+      // marcaba el punto al scrollear/deslizar. Cubre sólo el
+      // arrastre/scroll manual del carrusel; clic de flecha o de punto ya
+      // marcan sincrónico, arriba (goToPhoto).
+      var scrollDebounce;
+      carousel.addEventListener(
+        "scroll",
+        function () {
+          clearTimeout(scrollDebounce);
+          scrollDebounce = setTimeout(function () {
+            if (carousel.clientWidth === 0) return;
+            var index = Math.round(carousel.scrollLeft / carousel.clientWidth);
+            index = Math.max(0, Math.min(photos.length - 1, index));
+            current = index;
+            setActiveDot(index);
+          }, 120);
+        },
+        { passive: true },
+      );
     });
   })();
 </script>

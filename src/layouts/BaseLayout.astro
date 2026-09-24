@@ -81,6 +81,36 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
       href="/fonts/source-serif4-400-italic.woff2"
       crossorigin
     />
+    <!--
+      F-27: dos preloads más, para los títulos de sección (bajo el
+      pliegue, pero igual — ver global.css, comentario del @font-face de
+      cada una). Sin esto, con `font-display: optional` medí Comic Sans MS
+      pintando el título en 5 de 8 cargas frías (CDP
+      CSS.getPlatformFontsForNode, no document.fonts.check(): esa última
+      sólo dice si la fuente está disponible, no si se usó para pintar) —
+      el respaldo `cursive` genérico de Windows/Chrome ES Comic Sans MS.
+      El preload adelanta el pedido al principio del `<head>` en vez de
+      esperar a que el navegador lo descubra por el `<link
+      rel="stylesheet">` que Astro genera al final; la prioridad de
+      descarga ya era `VeryHigh` desde antes (un @font-face referenciado
+      en el DOM compite a esa prioridad aunque el texto esté fuera de
+      pantalla), así que esto no la sube, sólo adelanta un pedido que de
+      todos modos iba a competir por el mismo ancho de banda.
+    -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/playwrite-is-400.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/poppins-700.woff2"
+      crossorigin
+    />
     <script is:inline>
       // Aplica el tema antes del primer pintado (sin esto, flash del tema
       // equivocado). Oscuro por defecto; respeta prefers-color-scheme sólo
@@ -101,6 +131,25 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
         } catch (e) {
           document.documentElement.setAttribute("data-theme", "dark");
         }
+      })();
+    </script>
+    <script is:inline>
+      // F-26 (ADR-0026): gate de "oculto antes de revelar" para
+      // [data-reveal] (global.css, "Reveals al scroll") — puesto ANTES del
+      // primer pintado, como el tema de arriba, para no mostrar el
+      // contenido y después esconderlo de golpe. Sólo se agrega si hay
+      // IntersectionObserver y no se pidió menos movimiento: sin esta
+      // clase, `[data-reveal]` no tiene ningún estilo oculto (ver
+      // global.css) y el contenido es simplemente visible, como si esta
+      // tarea no existiera — la defensa real contra "contenido invisible
+      // para siempre" es que la clase NUNCA se agrega si no va a haber
+      // quien la revele.
+      (function () {
+        var reduceMotion =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduceMotion || !("IntersectionObserver" in window)) return;
+        document.documentElement.classList.add("js-reveal");
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -155,5 +204,75 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
     <SiteNav lang={lang} sections={sections} />
     <slot />
     <SiteFooter lang={lang} />
+    <script is:inline>
+      // F-26 (ADR-0026): único IntersectionObserver del sitio para los
+      // reveals al scroll — de acá cuelgan tanto el contenido de las seis
+      // secciones como el trazo de los títulos (`data-reveal` en el propio
+      // `<h2>`, ver SectionHeading.astro/global.css). Nada de esto corre
+      // si el script de <head> no puso `.js-reveal` (sin JS,
+      // `prefers-reduced-motion: reduce`, o sin IntersectionObserver): en
+      // esos casos `[data-reveal]` ya es visible por CSS y no hace falta
+      // tocar nada acá.
+      (function () {
+        if (!document.documentElement.classList.contains("js-reveal")) return;
+
+        function revealAll() {
+          var all = document.querySelectorAll("[data-reveal]");
+          for (var i = 0; i < all.length; i++) {
+            all[i].classList.add("is-revealed");
+          }
+        }
+
+        try {
+          var targets = Array.prototype.slice.call(
+            document.querySelectorAll("[data-reveal]"),
+          );
+          if (!targets.length) return;
+
+          var observer = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("is-revealed");
+                  observer.unobserve(entry.target);
+                }
+              });
+            },
+            // La zona inferior visible, no el viewport completo: revela
+            // antes de que el usuario llegue a leer el bloque (pedido del
+            // brief), no cuando ya está a mitad de pantalla.
+            { threshold: 0.1, rootMargin: "0px 0px -10% 0px" },
+          );
+          targets.forEach(function (el) {
+            observer.observe(el);
+          });
+
+          // Defensa de teclado/enlace directo (ADR-0026, obligatoria): si
+          // el foco llega a un [data-reveal] antes de que el observer lo
+          // haya marcado, se revela de inmediato — nunca queda un control
+          // enfocado dentro de contenido invisible. Cubre además el caso
+          // de navegar por ancla (`/es/#contacto`): el navegador mueve el
+          // scroll al cargar, el observer ya ve la sección intersectando
+          // en su primer callback y la revela sola, pero esto agrega una
+          // segunda red de seguridad si algo llega a interrumpir eso.
+          document.addEventListener("focusin", function (e) {
+            var el = e.target.closest
+              ? e.target.closest("[data-reveal]")
+              : null;
+            if (el && !el.classList.contains("is-revealed")) {
+              el.classList.add("is-revealed");
+              observer.unobserve(el);
+            }
+          });
+
+          // Red de seguridad final: si por lo que sea el observer nunca
+          // disparó para algo, no se queda oculto para siempre.
+          setTimeout(revealAll, 4000);
+        } catch (err) {
+          document.documentElement.classList.remove("js-reveal");
+          revealAll();
+        }
+      })();
+    </script>
   </body>
 </html>

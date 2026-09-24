@@ -21,8 +21,10 @@ const t = ui[lang];
   <div class="container">
     <SectionHeading number={number} title={t.sections.education} id="education" />
     <ul class="education-list">
-      {education.map((ed) => (
-        <li>
+      {education.map((ed, i) => (
+        // F-26 (ADR-0026): orden de lectura, escalonado corto (tope de
+        // 240ms en el CSS, ver "Reveals al scroll" en global.css).
+        <li data-reveal style={`--reveal-index: ${i}`}>
           <strong>{ed.title}</strong> — {ed.institution}
           {ed.year ? `, ${ed.year}` : ""}
           <div class="status">

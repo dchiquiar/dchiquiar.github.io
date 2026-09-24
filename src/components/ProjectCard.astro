@@ -71,16 +71,22 @@ const descriptionParagraphs = splitParagraphs(description);
         data-carousel
       >
         <ul class="carousel__track" id={trackId}>
-          {images.map((img, i) => (
+          {images.map((img) => (
             <li class="carousel__item" data-carousel-item>
+              {/* F-24 (P1): sin caso especial para la primera captura. Antes
+                  llevaba fetchpriority="high" asumiendo que era el LCP, pero
+                  medido queda muy por debajo del pliegue (2.976px a 375×812,
+                  2.458px a 1440×900) — competía por ancho de banda con el
+                  retrato del hero (el elemento real de LCP en mobile, que sí
+                  lleva fetchpriority="high") y con las fuentes, sin ninguna
+                  ganancia real. Todas las capturas van lazy. */}
               <img
                 src={img.src}
                 width={img.width}
                 height={img.height}
                 alt={img.alt[lang]}
-                loading={i === 0 ? undefined : "lazy"}
-                decoding={i === 0 ? undefined : "async"}
-                fetchpriority={i === 0 ? "high" : undefined}
+                loading="lazy"
+                decoding="async"
               />
             </li>
           ))}

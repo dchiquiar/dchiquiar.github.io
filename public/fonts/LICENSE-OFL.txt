@@ -1,6 +1,7 @@
 Copyright © 2017 IBM Corp. with Reserved Font Name "Plex"
 Copyright 2014-2023 Adobe (http://www.adobe.com/), with Reserved Font Name "Source"
 Copyright 2023 The Playwrite Project Authors (https://github.com/TypeTogether/Playwrite)
+Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 

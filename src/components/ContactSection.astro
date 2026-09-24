@@ -15,8 +15,13 @@ const linkedin = person.links?.linkedin ?? null;
 const github = person.links?.github ?? null;
 ---
 
+{/* F-26 (ADR-0026): "aparición simple del conjunto" — un solo
+   `data-reveal` para todo el bloque (info + CTAs), sin escalonar. El
+   `opacity:0` inicial no afecta que los botones sean usables: no es
+   `pointer-events:none` ni `visibility:hidden`, siguen siendo
+   focuseables/cliqueables desde el primer instante (ver ADR). */}
 <section id="contact" class="section">
-  <div class="container contact">
+  <div class="container contact" data-reveal>
     <div class="contact__info">
       <SectionHeading number={number} title={t.sections.contact} id="contact" />
       <div class="contact__lines">

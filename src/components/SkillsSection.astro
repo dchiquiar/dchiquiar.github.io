@@ -56,7 +56,10 @@ const learningBlock =
   <div class="container">
     <SectionHeading number={number} title={t.sections.skills} id="skills" />
 
-    <div class="stack__orbit-wrap">
+    {/* F-26 (ADR-0026): la órbita entra como bloque propio, antes que las
+       tarjetas — su animación de rotación sigue igual (no se toca), esto
+       sólo agrega la aparición del CONTENEDOR. */}
+    <div class="stack__orbit-wrap" data-reveal>
       <StackOrbit />
     </div>
 
@@ -66,9 +69,15 @@ const learningBlock =
        una línea. El campo (y el prop `intro`) se mantienen intactos: es
        contenido de Diego en el YAML, esto sólo deja de mostrarlo. */}
 
+    {/* F-26: cada tarjeta revela en orden de lectura (Backend, Data,
+       Desktop/Mobile, Tools…), escalonada por `--reveal-index` — el CSS
+       la topa a 240ms totales (ver "Reveals al scroll" en global.css), así
+       que no importa si algún día hay más de 4 categorías. Las etiquetas
+       de adentro (`.tag`) NO llevan `data-reveal`: la tarjeta entera es la
+       unidad, pedido explícito del brief ("no animes cada etiqueta"). */}
     <div class="stack-grid">
       {displayCategories.map((cat, i) => (
-        <div class="stack-card">
+        <div class="stack-card" data-reveal style={`--reveal-index: ${i}`}>
           <div class="stack-card__header">
             <h3 class="stack-card__title">{cat.label}</h3>
             <span class="stack-card__num" aria-hidden="true">
@@ -83,7 +92,14 @@ const learningBlock =
         </div>
       ))}
       {learningBlock && (
-        <div class="stack-card stack-card--learning">
+        // "Currently"/"En formación" es su propio bloque (brief), no un
+        // ítem más del escalonado de arriba — por eso no sigue la
+        // secuencia de `i`, tiene su propio índice después de todas.
+        <div
+          class="stack-card stack-card--learning"
+          data-reveal
+          style={`--reveal-index: ${displayCategories.length}`}
+        >
           <div class="stack-card__header">
             <h3 class="stack-card__title">{learningBlock.label}</h3>
             <span class="stack-card__num" aria-hidden="true">
@@ -101,7 +117,9 @@ const learningBlock =
     </div>
 
     {languages.length > 0 && (
-      <div class="stack__languages">
+      // Bloque propio (brief: "idiomas como bloque propio"), sin
+      // escalonar cada idioma por separado.
+      <div class="stack__languages" data-reveal>
         <h3>{t.skills.languages}</h3>
         <ul class="languages-list">
           {languages.map((l) => (

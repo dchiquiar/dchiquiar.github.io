@@ -48,8 +48,11 @@ function fillTemplate(tpl: string, current: number, total: number) {
 <section id="projects" class="section">
   <div class="container">
     <SectionHeading number={number} title={t.sections.projects} id="projects" />
+    {/* F-26 (ADR-0026): "revelá el carrusel como conjunto" — un solo
+       `data-reveal`, nunca por slide (sólo uno está visible a la vez). */}
     <div
       class="projects-carousel"
+      data-reveal
       data-projects-carousel
       data-counter-template={t.projects.counterTemplate}
       data-announce-template={t.projects.announceTemplate}
@@ -169,7 +172,13 @@ function fillTemplate(tpl: string, current: number, total: number) {
       // `reduceMotion` se resuelve una sola vez arriba: se salta el paso
       // intermedio entero, no depende de que la transición CSS quede en
       // 0.01ms por la regla global de `*`.
-      var goTo = function (index) {
+      //
+      // F-26 (ADR-0026): `data-swapping` pasa a llevar la DIRECCIÓN
+      // ("next"/"prev") como valor, no un booleano vacío — el CSS
+      // (`.project-grid[data-swapping="next|prev"]`) usa eso para nudgear
+      // el track hacia el lado del que "vino"/"se va" el proyecto
+      // siguiente, en vez del `translateY` genérico de antes.
+      var goTo = function (index, direction) {
         var next = (index + slides.length) % slides.length;
         if (next === active) return;
         if (reduceMotion) {
@@ -177,7 +186,7 @@ function fillTemplate(tpl: string, current: number, total: number) {
           render();
           return;
         }
-        track.setAttribute("data-swapping", "");
+        track.setAttribute("data-swapping", direction);
         setTimeout(function () {
           active = next;
           render();
@@ -186,10 +195,10 @@ function fillTemplate(tpl: string, current: number, total: number) {
       };
 
       prevProject.addEventListener("click", function () {
-        goTo(active - 1);
+        goTo(active - 1, "prev");
       });
       nextProject.addEventListener("click", function () {
-        goTo(active + 1);
+        goTo(active + 1, "next");
       });
       prevProject.disabled = false;
       nextProject.disabled = false;
@@ -221,9 +230,30 @@ function fillTemplate(tpl: string, current: number, total: number) {
         });
       };
 
+      // F-26 (ADR-0026): fundido corto (150ms, más corto que los ~240ms
+      // del cambio de PROYECTO) sólo cuando el cambio de CAPTURA lo
+      // dispara una flecha/punto — el gesto de arrastrar/scrollear ya
+      // tiene su propio movimiento real (el scroll nativo), no hace falta
+      // agregarle nada encima. Así las dos interacciones se distinguen:
+      // cambiar de proyecto es un nudge horizontal; cambiar de captura acá
+      // es un parpadeo breve de opacidad sobre el carrusel entero.
       var goToItem = function (index) {
         current = (index + items.length) % items.length;
+        if (!reduceMotion) {
+          carousel.setAttribute("data-transitioning", "");
+          setTimeout(function () {
+            carousel.removeAttribute("data-transitioning");
+          }, 150);
+        }
         items[current].scrollIntoView({ behavior: behavior, block: "nearest", inline: "start" });
+        // F-25: marca el punto acá, sincrónico, en vez de esperar al
+        // scroll (ver el listener de scroll más abajo, F-26). Ese
+        // listener sigue siendo el único mecanismo para el gesto real de
+        // arrastre/rueda (nunca pasa por goToItem), pero para clic de
+        // flecha o de punto no hace falta esperar a que el navegador
+        // dispare el evento de scroll — el estado no queda pendiente de
+        // eso.
+        setActiveDot(current);
       };
 
       if (prevShot && nextShot) {
@@ -247,23 +277,44 @@ function fillTemplate(tpl: string, current: number, total: number) {
         dot.removeAttribute("aria-hidden");
       });
 
-      if (dots.length && "IntersectionObserver" in window) {
-        var observer = new IntersectionObserver(
-          function (entries) {
-            entries.forEach(function (entry) {
-              if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-                setActiveDot(items.indexOf(entry.target));
-              }
-            });
-          },
-          { root: carousel, threshold: 0.6 },
-        );
-        items.forEach(function (item) {
-          observer.observe(item);
-        });
-      } else if (dots.length) {
+      // F-25: marca el primer punto siempre, sin condicionar a si existe
+      // IntersectionObserver — antes vivía en el `else` de abajo, así que
+      // en cualquier navegador con soporte (todos los actuales) nunca
+      // llegaba a correr y el carrusel nacía sin ningún punto marcado.
+      if (dots.length) {
         setActiveDot(0);
       }
+
+      // F-26 (Parte C): reemplaza al `IntersectionObserver` que nunca
+      // marcaba el punto al scrollear/deslizar (medido por el
+      // orquestador: `scrollLeft` movido a mano, dos segundos de espera,
+      // el punto seguía en el primero). Determinista: el índice sale de
+      // `scrollLeft / clientWidth` directamente, sin depender de que el
+      // navegador decida cuándo recalcular una intersección. Sólo cubre
+      // lo que `goToItem` NO cubre (clic de flecha/punto ya marca
+      // sincrónico, arriba): el usuario arrastrando o scrolleando el
+      // carrusel con el dedo o la rueda. `debounce` con `clearTimeout`:
+      // dispara una sola vez cuando el scroll se aquieta, no en cada
+      // frame del gesto (que puede durar varios cientos de ms con
+      // scroll-snap + `scroll-behavior: smooth`).
+      var scrollDebounce;
+      carousel.addEventListener(
+        "scroll",
+        function () {
+          clearTimeout(scrollDebounce);
+          scrollDebounce = setTimeout(function () {
+            // Carrusel oculto (proyecto no activo, nivel 1 le puso
+            // `hidden`): `clientWidth` da 0 y el cálculo de abajo
+            // dividiría por cero — no hay nada que marcar todavía.
+            if (carousel.clientWidth === 0) return;
+            var index = Math.round(carousel.scrollLeft / carousel.clientWidth);
+            index = Math.max(0, Math.min(items.length - 1, index));
+            current = index;
+            setActiveDot(index);
+          }, 120);
+        },
+        { passive: true },
+      );
     });
   })();
 </script>

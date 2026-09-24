@@ -45,7 +45,15 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
         .filter((p) => p.name && p.description);
       return (
         <div class="job">
-          <div class="job__header">
+          {/* F-26 (ADR-0026): "cada encabezado de puesto... cuando le
+             toque entrar" — la sección completa mide ~2100px, así que cada
+             `.job` revela por separado (el observer compartido dispara uno
+             por uno, nunca todos juntos al cargar). Sin `data-reveal-index`
+             a propósito: no son un grupo chico para escalonar con
+             `--reveal-stagger-step` (eso dejaría a los últimos puestos con
+             el mismo delay tope, atrasando su aparición sin motivo) — cada
+             uno dispara por su propia entrada real en pantalla. */}
+          <div class="job__header" data-reveal>
             <h3 class="job__role">{job.role}</h3>
             <span class="job__dates">{formatDateRange(job, lang)}</span>
           </div>
@@ -59,7 +67,11 @@ const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
           {projects.length > 0 && (
             <div class="job__projects">
               {projects.map((project) => (
-                <div class="job__project">
+                // F-26: "cada tarjeta" — un puesto con 2-3 proyectos puede
+                // ocupar mucho más alto que un pantallazo; cada
+                // `.job__project` revela cuando LE toca, no junto con el
+                // encabezado del puesto.
+                <div class="job__project" data-reveal>
                   <h4 class="job__project-name">{project.name}</h4>
                   {/* `description` puede traer varios párrafos separados
                       por línea en blanco (TAS, hoy el único caso) — mismo

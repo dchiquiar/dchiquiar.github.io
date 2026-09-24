@@ -7,9 +7,14 @@ interface Props {
 const { number, title, id } = Astro.props;
 ---
 
-<h2 class="section-heading" id={`${id}-heading`}>
+<h2 class="section-heading" id={`${id}-heading`} data-reveal>
   <span class="section-heading__mark">
     <span class="num" aria-hidden="true">{number}</span>
+    {/* F-26 (enmienda de ADR-0023): separador decorativo de "01 - Stack".
+       `aria-hidden`: no es contenido, un lector de pantalla sigue leyendo
+       sólo el título (el `.num` de arriba ya es aria-hidden desde antes de
+       esta tarea, así que el nombre accesible del h2 no cambia). */}
+    <span class="section-heading__sep" aria-hidden="true">-</span>
     <span class="section-heading__text">{title}</span>
   </span>
 </h2>

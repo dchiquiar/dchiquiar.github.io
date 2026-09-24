@@ -88,46 +88,85 @@
    cercano disponible en la familia) — igual que el 800→700 de las otras
    dos, sólo que acá el techo real es más bajo.
 
-   `font-display: optional`, NO `block` (a diferencia de las otras dos —
-   medido, no copiado por costumbre). Verificado con el audit
-   `network-requests` de Lighthouse: un `@font-face` sin uso visible
-   todavía en el primer layout igual dispara su descarga a prioridad
-   `VeryHigh` en cuanto el navegador hace el primer layout y encuentra
-   texto que la usa ("02 — Proyectos" existe en el DOM desde el primer
-   render, aunque esté fuera de la pantalla — el navegador no sabe
-   todavía qué es "visible" en esa pasada), la misma prioridad que las
-   fuentes SÍ precargadas — es decir, esta familia compite de verdad por
-   ancho de banda temprano con Source Serif 4/IBM Plex Mono en una
-   conexión lenta, aunque nunca se pinte antes del scroll.
+   `font-display: swap` + preload (F-27, corrige `optional` sin preload de
+   F-23/ADR-0023). Medido con Puppeteer real (8 cargas, contexto de
+   navegador nuevo por carga — caché vacía, como un visitante nuevo — CDP
+   `CSS.getPlatformFontsForNode` sobre `.section-heading__text`, que
+   pregunta con QUÉ fuente se pintó de verdad, no si la fuente estaba
+   disponible): con `optional` y sin preload, esta familia perdía la
+   ventana de bloqueo de ~100ms en 5 de 8 cargas — no es un caso límite
+   raro, es más frecuente que el caso que sí funciona. `optional`, una vez
+   que pierde esa ventana, se queda con el respaldo el resto de la visita
+   sin ninguna oportunidad de corregirse — el riesgo que el comentario
+   anterior daba por controlado ("cero riesgo de reflow, a cambio de un
+   respaldo ocasional en red lenta") en la práctica pasaba en caché vacía
+   normal, no sólo en red lenta.
 
-   Aclaración importante (para no repetir la confusión): Lighthouse mobile
-   mide hoy un CLS de 0,068 en este sitio con `font-display: block` en
-   esta fuente — pero **ese CLS ya existe en el HEAD del repo sin ningún
-   cambio de F-23**, reproducido explícitamente construyendo el sitio con
-   `git show HEAD:...` antes de tocar nada (ver el reporte de F-23): es
-   un problema preexistente de `.hero__intro`/Source Serif 4, no algo que
-   esta fuente causa. Lo que SÍ es cierto y motiva igual el cambio a
-   `optional`: por la prioridad `VeryHigh` de arriba, dejarla en `block`
-   suma un riesgo real (no sólo teórico) de agravar ESE problema
-   preexistente al competir por el mismo ancho de banda — y es además la
-   elección semánticamente correcta para una fuente puramente decorativa
-   (los 5 títulos, no el cuerpo del sitio): con `optional` el navegador
-   bloquea como mucho ~100ms, y si no llegó a tiempo usa el respaldo
-   (`cursive` genérico) para TODA esa visita, sin swap posterior — cero
-   riesgo de reflow propio, a cambio de que en una red lenta el título
-   quede en la fuente de respaldo esa vez (aceptable para un detalle
-   editorial, no lo sería para texto de lectura). Sin preload (mismo
-   motivo de siempre: no está por encima del pliegue) y sin fallback de
-   métricas ajustadas — con `optional` ninguna de las dos cosas puede
-   causar CLS propio, así que la entrada original de ADR-0023 sobre "si
-   no hay fallback, verificar el CLS" queda resuelta por el propio
-   `font-display`, no por una cara Fallback calculada. */
+   El preload (ver BaseLayout.astro) adelanta el pedido de este archivo al
+   principio del `<head>`, en vez de esperar a que el navegador lo
+   descubra vía el `<link rel="stylesheet">` que Astro genera al final —
+   mismo mecanismo que ya usan Source Serif 4/IBM Plex Mono, aplicado acá
+   por la misma razón. La prioridad de descarga de este archivo YA era
+   `VeryHigh` desde F-23 (un `@font-face` referenciado en el DOM compite a
+   esa prioridad aunque el texto esté fuera de pantalla, sin importar si
+   se precarga o no — ver ese comentario más abajo, sigue vigente); el
+   preload no la sube, sólo hace que el pedido empiece antes, así que no
+   agrega presión nueva de ancho de banda, adelanta una que ya iba a
+   pasar.
+
+   `swap`, no `optional`, sobre ese preload: con `optional` un préstamo
+   perdido en la ventana de ~100ms es definitivo para toda la visita, sin
+   una segunda oportunidad aunque el archivo termine de llegar 50ms
+   después. `swap` sí permite ese swap tardío — y como el título está
+   bajo el pliegue, ese swap ocurre casi siempre antes de que haya algo
+   que mostrar en pantalla, así que no debería sumar CLS medible (ver
+   [[feedback_font_swap_needs_preload_not_just_metrics]] sobre por qué
+   "font-display no alcanza sin preload" aplica también al revés: preload
+   sin el `font-display` correcto tampoco alcanza). Verificado de nuevo
+   con las mismas 8 cargas limpias tras el cambio: Playwrite IS en 10/10 —
+   ver el reporte de F-27.
+
+   El respaldo de la línea `src` (más abajo, en `--font-script`) deja de
+   ser `cursive` genérico: en Windows/Chrome ese genérico resuelve a Comic
+   Sans MS, que es lo que de verdad estaba pintando el sitio en la mayoría
+   de las cargas frías (visible con el mismo CDP, nunca con
+   `document.fonts.check()`, que sólo dice "disponible", no "usada para
+   pintar"). El respaldo ahora es la serif itálica del propio sitio (ver
+   `--font-script`) — real, ya alojada, casi siempre lista antes que esta
+   familia por estar precargada desde F-4/T-K. */
 @font-face {
   font-family: "Playwrite IS";
   font-style: normal;
   font-weight: 400;
-  font-display: optional;
+  font-display: swap;
   src: url("/fonts/playwrite-is-400.woff2") format("woff2");
+}
+
+/* Cuarta familia (F-26, enmienda de ADR-0023 del 2026-09-23 tarde): Poppins,
+   sólo para el número y el separador de los 5 títulos de sección ("01 -
+   Stack"). Deroga la decisión de esa misma mañana de dejar el número en
+   IBM Plex Mono. Mismo criterio de siempre: se pidió el CSS2 de la API con
+   un User-Agent de escritorio (URL de fonts.gstatic.com), se descargó el
+   woff2 y se recortó con pyftsubset — acá el subset es mínimo de verdad:
+   sólo dígitos, guion y espacio (`U+0020,U+002D,U+0030-0039`), lo único que
+   seis números de dos dígitos y un separador necesitan. 7,8 KB → 1,2 KB
+   tras el recorte. Un solo peso (700, el que ya usaba el número en mono —
+   Poppins sí tiene negrita real, a diferencia de Playwrite IS, así que acá
+   no hace falta que el navegador aproxime a otro peso).
+
+   `font-display: swap` + preload (F-27, mismo cambio y mismo motivo que
+   Playwrite IS arriba). El respaldo genérico `sans-serif` de
+   `--font-number` no tiene el problema de Comic Sans de Playwrite IS (en
+   Windows/Chrome resuelve a Arial, no a algo fuera de lugar), pero el
+   archivo es de apenas 1,2 KB — precargarlo no suma nada de peso real, y
+   `swap` evita el mismo "se pierde la ventana de 100ms y queda pegado al
+   respaldo toda la visita" que `optional` mostraba en Playwrite IS. */
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/poppins-700.woff2") format("woff2");
 }
 
 /* Métricas calculadas con fontTools comparando cada estilo de Source
@@ -315,12 +354,30 @@ html[data-theme="light"] {
     "Times New Roman", serif;
   --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace,
     "Cascadia Code", "Consolas", monospace;
-  /* ADR-0023: sólo para el texto de los 5 títulos de sección
-     (`.section-heading__text`) — en ningún otro lugar. Sin cara de
-     respaldo con métricas ajustadas (ver el comentario del `@font-face`,
-     arriba): el respaldo genérico `cursive` alcanza porque `font-display:
-     block` ya evita que se llegue a pintar con él en la práctica. */
-  --font-script: "Playwrite IS", cursive;
+  /* ADR-0023, respaldo corregido en F-27: `cursive` genérico salía de la
+     lista — en Windows/Chrome ese genérico ES Comic Sans MS, y con
+     `font-display: optional` sin preload (la elección original de F-23)
+     el sitio terminaba pintando esa fuente en la mayoría de las cargas
+     frías (medido con Puppeteer + CDP, ver el `@font-face` más abajo). El
+     respaldo pasa a ser la serif del sitio en itálica — "Source Serif 4"
+     ya tiene esa cara (400 itálica, alojada y precargada desde F-4/T-K,
+     normalmente lista antes que Playwrite IS) y "Source Serif 4 Fallback"
+     detrás por si ni siquiera esa llegó a tiempo. `font-style: italic` +
+     `font-synthesis: style none` en `.section-heading__text` (más abajo)
+     son lo que hace que este respaldo se pinte en itálica REAL sin que el
+     navegador le aplique una itálica sintética a Playwrite IS (que no
+     tiene cara itálica propia) cuando esa sí carga — con `font-synthesis:
+     style none` Playwrite IS se sigue viendo exactamente igual que
+     siempre, sin inclinarse. */
+  --font-script: "Playwrite IS", "Source Serif 4", "Source Serif 4 Fallback",
+    Georgia, "Times New Roman", serif;
+  /* F-26 (enmienda de ADR-0023): sólo para `.section-heading .num` y
+     `.section-heading__sep` — el número y el guion de "01 - Stack". El
+     respaldo genérico (`sans-serif`) no tiene el problema de Comic Sans
+     de `--font-script` (en Windows/Chrome resuelve a Arial), así que se
+     queda igual; lo que cambia en F-27 es sólo el `font-display` del
+     `@font-face` (ver más abajo), no este respaldo. */
+  --font-number: "Poppins", sans-serif;
 
   --container-width: 72rem;
 
@@ -333,6 +390,55 @@ html[data-theme="light"] {
      defecto: mismo ancho que tenía `.job__summary`, ~74 caracteres a
      16,8px, dentro del rango cómodo de 45-75. */
   --medida-lectura: 34rem;
+}
+
+/* ── Reveals al scroll (F-26, ADR-0026) ─────────────────────────────
+   Un solo IntersectionObserver compartido (BaseLayout.astro, script al
+   final de <body>) agrega `.is-revealed` a cada `[data-reveal]` cuando
+   entra en la zona inferior visible — de acá cuelga también el trazo de
+   los títulos de sección (ver "Section heading" más abajo), no sólo el
+   contenido. Valores de motion centralizados en estos 5 tokens: ninguna
+   sección los repite con los suyos propios.
+
+   Patrón "oculto por excepción", no "visible por excepción" — el estado
+   de REPOSO de `[data-reveal]` (sin ninguna clase extra) es SIEMPRE
+   visible (nada lo cambia fuera de las reglas de abajo), así que sin
+   JS, con `prefers-reduced-motion: reduce`, o si `IntersectionObserver`
+   no existe en el navegador, el contenido NUNCA queda invisible — es el
+   riesgo #1 que marca la ADR ("un fallo peor que no tener animación").
+   Sólo cuando las DOS condiciones puestas por el script de `<head>` se
+   cumplen (hay `IntersectionObserver` Y no se pidió menos movimiento) se
+   agrega `.js-reveal` a `<html>`, ANTES del primer pintado — recién ahí
+   un `[data-reveal]` arranca oculto y espera su `.is-revealed`. */
+:root {
+  --reveal-distance: 14px;
+  --reveal-duration: 480ms;
+  --reveal-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --reveal-stagger-step: 70ms;
+  --reveal-stagger-max: 240ms;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .js-reveal [data-reveal] {
+    opacity: 0;
+    transform: translateY(var(--reveal-distance));
+    transition: opacity var(--reveal-duration) var(--reveal-ease),
+      transform var(--reveal-duration) var(--reveal-ease);
+    /* `--reveal-index` (0 si el elemento no lo trae, la mayoría: sólo lo
+       usan los grupos de F-26 que piden escalonado — tarjetas de Stack,
+       Formación) multiplicado por el paso, topado a
+       `--reveal-stagger-max` con `min()` — ningún grupo puede escalonar
+       más de eso, sin importar cuántos elementos tenga. */
+    transition-delay: min(
+      calc(var(--reveal-index, 0) * var(--reveal-stagger-step)),
+      var(--reveal-stagger-max)
+    );
+  }
+
+  .js-reveal [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 *,
@@ -514,7 +620,21 @@ section[id] {
   border-bottom: 1px solid var(--color-border);
 }
 
-@media (min-width: 768px) {
+/* F-25 (decisión de Diego): breakpoint PROPIO del nav — 900px, no el
+   768px global del sitio (Stack, .project-card, la órbita de #stack,
+   scroll-margin-top de section[id]; ésos no se tocan). F-24 había resuelto
+   el apriete de marca+6 anclas+controles reusando 768px y agregando scroll
+   horizontal oculto a `.site-nav__anchors` — técnicamente estable (63,1px
+   de alto de 700 a 1000px) pero con efecto lateral inaceptable: a 800px
+   (ES) quedaban 101px de anclas ocultas y "Contacto" —donde está el email—
+   totalmente fuera de vista, sin scrollbar visible en desktop con mouse.
+   900px es el punto donde marca + 6 anclas + controles entran en una sola
+   fila SIN apretar en ninguno de los dos idiomas (verificado con Puppeteer,
+   700-1000px de 20 en 20, ver log F-25); por debajo, el nav cae al layout
+   mobile de más abajo, que le da a las anclas su propia fila completa en
+   vez de recortarlas. Sin scroll oculto: lo que no entra en una fila deja
+   de intentar entrar en una fila. */
+@media (min-width: 900px) {
   .site-nav {
     position: sticky;
     top: 0;
@@ -546,6 +666,14 @@ section[id] {
 
   .site-nav__brand {
     order: 1;
+    /* nowrap + flex-shrink:0: con marca+anclas+controles en una sola fila,
+       la marca no tiene que angostarse ni partirse en dos renglones antes
+       que cualquier otro ítem — es el elemento menos "compresible" del
+       grupo (un nombre propio no se abrevia). Documentado en F-24 sobre la
+       franja de apriete original (770-870px); sigue vigente como
+       protección aunque F-25 movió el punto de entrada a 900px. */
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .site-nav__anchors {
@@ -554,10 +682,13 @@ section[id] {
 
   .site-nav__controls {
     order: 3;
+    flex-shrink: 0;
   }
 
   .site-nav__links {
+    display: inline-flex;
     font-size: 0.95rem;
+    white-space: nowrap;
   }
 }
 
@@ -576,7 +707,13 @@ section[id] {
   }
 }
 
-@media (max-width: 767px) {
+/* F-25: 899px, espejo exacto del 900px propio del nav de arriba — NO es
+   el 768px global (Stack, .project-card, la órbita, scroll-margin-top),
+   que sigue intacto. De 768 a 899 el nav ahora cae acá: anclas en su
+   propia fila completa (con scroll horizontal sólo si de verdad no
+   entran, igual que en mobile chico), nunca la fila única apretada de
+   F-24 que dejaba anclas ocultas sin aviso. */
+@media (max-width: 899px) {
   /* Sin esto, `.site-nav` (el <header>) queda como caja normal (no
      sticky, alto = barra + anclas, ~108px) y `.site-nav__bar` — sticky
      dentro de ella — se despega apenas el scroll supera esos ~108px (el
@@ -695,7 +832,9 @@ section[id] {
   padding: 0;
 }
 
-@media (max-width: 767px) {
+/* F-25: 899px, mismo breakpoint propio del nav (ver los dos comentarios
+   grandes de arriba en `.site-nav`) — NO el 768px global. */
+@media (max-width: 899px) {
   /* `inline-flex`, no `flex` (F-11): con `display:flex` la lista es un
      bloque normal que SIEMPRE ocupa el ancho disponible completo (375px),
      sin importar cuánto pida su contenido — cuando el contenido real pide
@@ -1095,7 +1234,10 @@ html[data-theme="dark"] .hero__media img {
     #000 var(--hero-media-border-progress),
     #0000 0
   );
-  transition: --hero-media-border-progress 500ms ease;
+  /* F-24: 350ms, no 500ms (pedido por Diego) — simétrico entrada/salida a
+     propósito, sigue siendo el gesto "se dibuja / se borra", no una
+     respuesta a que el usuario haya completado algo. */
+  transition: --hero-media-border-progress 350ms ease;
 }
 
 @supports (corner-shape: squircle) {
@@ -1961,6 +2103,22 @@ html[data-theme="dark"] .hero__media img {
   border-top: 1px solid var(--color-border);
 }
 
+/* F-27: el trazo de `.section-heading__text::before` (más abajo) es un
+   segmento de un círculo de 1000% del ancho de la palabra — el círculo
+   COMPLETO (invisible salvo el ~10° que la máscara revela) sigue
+   ocupando área de overflow del documento, aunque `.container` (F-19) ya
+   lo recorta en el eje horizontal. Sin recorte vertical propio, ese
+   círculo empujaba el alto del documento hasta 1.670px más allá del pie
+   real de la página (medido en "Contacto", el título donde nada tapaba
+   el sobrante) — measurable con `document.documentElement.scrollHeight`
+   contra la posición real del footer.
+   `overflow: clip` en el propio `<h2>` (no en `.container`, que ya cumple
+   su función en el eje horizontal) contiene el círculo sin afectar nada
+   fuera de este elemento. `overflow-clip-margin` en vez de 0: el trazo
+   real (la porción que la máscara revela) y el anillo de `:focus-visible`
+   de cualquier hijo necesitan margen de sobra para no cortarse — el valor
+   se fijó midiendo con Puppeteer los 6 títulos, ES/EN, dos temas, 375 y
+   1440px, y a 200% de zoom de texto (ver el reporte de F-27). */
 .section-heading {
   display: flex;
   align-items: baseline;
@@ -1968,22 +2126,38 @@ html[data-theme="dark"] .hero__media img {
   margin: 0 0 2rem;
   font-size: clamp(1.4rem, 3vw, 1.9rem);
   font-weight: 800;
+  overflow: clip;
+  overflow-clip-margin: 1.2em;
 }
 
-/* ADR-0011 queda superado (T-L): el número de sección vuelve a llevar
-   el acento. Sigue en mono para distinguirse tipográficamente del
-   título — ahora una manuscrita (ver `.section-heading__text` abajo),
-   antes serif; la distinción mono/no-mono es la misma de siempre. */
+/* F-26 (enmienda de ADR-0023): el número deja IBM Plex Mono por Poppins,
+   igual que el separador de abajo — Diego prefiere esa lectura sobre
+   distinguir número/título por familia mono/no-mono. Poppins SÍ tiene
+   negrita real (a diferencia de Playwrite IS), así que el 700 de acá no
+   depende de que el navegador aproxime a otro peso. */
 .section-heading .num {
   color: var(--color-accent);
-  font-family: var(--font-mono);
+  font-family: var(--font-number);
   font-size: 0.9em;
   font-weight: 700;
 }
 
-/* ADR-0023: Playwrite IS sólo en el TEXTO del título — el número (arriba)
-   se queda en `--font-mono`, así que la familia no puede ir en el `h2`
-   entero (heredaría al número también). `.section-heading__text` es el
+/* F-26: separador decorativo de "01 - Stack" (SectionHeading.astro,
+   `aria-hidden="true"`) — no es contenido, así que un lector de pantalla
+   no puede toparse con "01 guion Stack"; sigue leyendo el nombre de la
+   sección igual que antes de este cambio. Mismo tratamiento tipográfico
+   que el número (Poppins 700): son las dos piezas "de dato" del título,
+   distintas de la manuscrita del nombre. */
+.section-heading__sep {
+  color: var(--color-accent);
+  font-family: var(--font-number);
+  font-size: 0.9em;
+  font-weight: 700;
+}
+
+/* ADR-0023: Playwrite IS sólo en el TEXTO del título — el número/separador
+   (arriba) se quedan en `--font-number`, así que la familia no puede ir en
+   el `h2` entero (heredaría a los dos). `.section-heading__text` es el
    `<span>` que envuelve sólo el texto (SectionHeading.astro).
 
    Peso: Playwrite IS no tiene negrita (eje `wght` 100..400, esta familia
@@ -1991,11 +2165,11 @@ html[data-theme="dark"] .hero__media img {
    de `.section-heading`) a 400 es consecuencia directa de la fuente, no
    una elección estética aparte (ver ADR-0023).
 
-   Tamaño: a igual `font-size` que el título serif que reemplaza, una
+   Tamaño: 1.4em (F-26, sube de 1.2em — la referencia que pasó Diego usa
+   ese valor). A igual `font-size` que el título serif que reemplaza, una
    manuscrita de trazo fino se lee más chica/liviana (menos tinta por
-   letra que un serif en negrita) — 1.2em compensa esa pérdida de
-   presencia visual. Verificado comparando capturas reales del título
-   antes/después (Puppeteer), no a ojo en el valor solo.
+   letra que un serif en negrita); 1.4em compensa esa pérdida de presencia
+   visual, verificado con capturas reales (Puppeteer) en los 6 títulos.
 
    `line-height` propio (no el 1.55 heredado de `html`): la familia tiene
    ascendentes/descendentes de lazo mucho más altos que un serif (fracción
@@ -2006,149 +2180,195 @@ html[data-theme="dark"] .hero__media img {
    por baseline de `.section-heading__mark`. */
 .section-heading__text {
   font-family: var(--font-script);
+  /* F-27: itálica pedida a propósito, sólo para que el RESPALDO (Source
+     Serif 4, ver `--font-script`) se pinte en su cara itálica real en vez
+     de en la redonda — `font-synthesis: style none` bloquea la itálica
+     sintética que el navegador aplicaría sobre Playwrite IS (que no tiene
+     cara itálica propia) cuando esa sí carga, así que su aspecto no
+     cambia ni un píxel respecto de antes de esta tarea. */
+  font-style: italic;
+  font-synthesis: style none;
   font-weight: 400;
-  font-size: 1.2em;
+  font-size: 1.4em;
   line-height: 1.35;
+  /* F-26b: el trazo se ancla ACÁ (ver `::before` abajo), no en
+     `.section-heading__mark` — ese contenedor incluye el número y el
+     separador, y anclar el trazo contra su ancho lo dejaba corto en
+     títulos cortos (arrancaba bajo "01 -" y se apagaba antes de llegar a
+     la palabra) y desproporcionado en títulos largos. Anclado a la
+     palabra, el trazo escala con ELLA sola, en los 6 títulos por igual. */
+  position: relative;
+  isolation: isolate;
+  /* F-28 (WCAG 1.4.4): último recurso, sólo para el puñado de combos donde
+     ni siquiera un renglón propio (ver `.mark` arriba) alcanza — "Experience"/
+     "Education"/"Experiencia"/"Formación"/"Proyectos" a 200% de zoom +
+     375px son más anchas que el `.container` entero, medido con un `Range`
+     sobre el nodo de texto real (no `scrollWidth`, que no delata el
+     recorte). `overflow-wrap: anywhere` (no `hyphens: auto`: no se agrega
+     ningún guion) deja partir la palabra letra a letra SÓLO si de verdad no
+     entra en su propio renglón — es lo único que evita perder texto en esos
+     cinco casos sin re-decidir el tamaño de fuente del título entero.
+     `min-width: 0` saca el piso de `min-width: auto` (= el ancho completo
+     de la palabra sin este `overflow-wrap`) que impedía que el flex item
+     se achicara lo suficiente para que el wrap interno se activara.
+     En los demás 43 combos medidos (y en el 100% de zoom, siempre) la
+     palabra entra en una sola línea y esta propiedad no tiene ningún
+     efecto visible. */
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
-/* Trazo de marcador detrás del título de sección. Decorativo: un
-   `::before` cuyo BORDE es una elipse chata; una máscara
-   `conic-gradient` deja ver sólo el arco superior. Un solo lugar para
-   los cinco títulos, en los dos idiomas.
+/* Trazo de marcador detrás de la PALABRA del título — segundo rediseño
+   (F-26b, corrige F-26: Diego/el orquestador compararon las capturas
+   contra la referencia real y encontraron tres problemas). Mismo
+   mecanismo desde F-19 (un `::before` cuyo BORDE es un anillo +
+   `border-radius: 50%` + máscara `conic-gradient` animada por
+   `@property`) — lo que cambia en F-26b es el ANCLAJE y las proporciones:
 
-   Ajuste de F-23 (pedido de Diego, look más cercano a su referencia): el
-   mecanismo NO cambió (sigue siendo el mismo `::before` con borde +
-   `border-radius: 50%` + máscara cónica animada por `@property`, la
-   misma técnica de la referencia) — lo que cambió son los NÚMEROS, para
-   que el trazo se lea más envolvente y circular alrededor del texto, con
-   aire, en vez de una pasada de resaltador casi recta por debajo. Antes:
-   centro de la cónica a 12em (muy lejos → el arco revelado subtendía
-   pocos grados, casi una línea recta) y un corte vertical a 0,62em
-   (revelaba sólo una tira finísima arriba del todo). Ahora: centro a 6em
-   (más cerca → el mismo barrido angular cubre MÁS curvatura real del
-   borde) + un corte vertical más alto (1,3em, revela más de esa curva,
-   así los extremos bajan y envuelven un poco los costados del texto, no
-   sólo lo cruzan por arriba). Verificado con capturas reales de
-   Puppeteer en los 5 títulos, en los dos idiomas — no a ojo en el CSS
-   solo (ver el reporte de F-23): con el centro más cerca, el mismo % de
-   barrido angular cubre MENOS ancho físico que antes, así que
-   `--heading-stroke-progress` (abajo) también subió, para seguir
-   alcanzando el título más ancho ("Acerca de mí"/"About me").
+   1. Ancla: `.section-heading__text::before` (la palabra), no
+      `.section-heading__mark::before` (número + separador + palabra).
+      Ver el comentario de `.section-heading__text` arriba.
+   2. Curva mucho más chata: radio del círculo = 10× el ancho de la
+      palabra (`width: 1000%` + `aspect-ratio: 1/1`, con el ancho fijado
+      por el propio `.section-heading__text`), barrido angular de sólo
+      10° (`from -10deg` a `--heading-stroke-progress: 2.8%` = 10° de
+      360°). Con F-26 (27°-30° de barrido sobre un radio mucho menor) la
+      curva se notaba como una pendiente marcada; con un radio 10 veces
+      más grande el mismo tipo de segmento se ve casi recto — "una
+      pincelada", no un arco. El extremo en 0° (el más alto) sigue
+      cayendo SIEMPRE en el borde superior real del círculo, sin importar
+      el radio — es lo que garantiza que el trazo NUNCA suba por encima
+      de ese punto fijo, en ningún título: el pico está capado por
+      construcción, no por un ángulo que dependa del ancho de cada
+      palabra (ese fue el bug de F-26 en "Acerca de mí"/títulos largos).
+   3. Centrado: `left: 93%` con `translate: -50% 0` pone el CENTRO del
+      círculo al 93% del ancho de la palabra (no en su borde derecho,
+      100%, para que el segmento visible quede centrado bajo la palabra
+      completa en vez de recortado del lado izquierdo). Con el barrido de
+      10° el segmento visible cubre aproximadamente el 87% del ancho de
+      la palabra — "aproximadamente su ancho", como pide la referencia —
+      centrado en vez de pegado a un extremo.
+   4. Grosor y tinta: borde de 0.5em → 0.65em (más presencia) y
+      `--heading-stroke-ink` sube de 22%/18% a 28%/23% (dark/light) — el
+      techo real antes de que el contraste texto/trazo baje de 4.5:1 en
+      tema claro (medido con el mismo método analítico que ya usa este
+      archivo para la paleta, ver el reporte de F-26b): a 28%/23% da
+      5.54:1 oscuro / 4.62:1 claro; el escalón siguiente (30%/25%) ya cae
+      a 4.08:1 en claro. Subir la opacidad ACERCA el color compuesto del
+      trazo al propio color del texto (los dos usan `--color-accent`), así
+      que hay un techo real, no sólo una preferencia — no es posible
+      "subir más" sin perder el piso de WCAG en tema claro.
 
-   Envoltorio: el `h2` es flex a lo ancho del contenedor, así que el
-   trazo no puede medirse contra él. `.section-heading__mark` ajusta al
-   ancho real de "número + título" y replica el flex del `h2` (`gap:
-   inherit`, misma alineación por baseline), de modo que la caja del
-   `h2` no cambia. `isolation: isolate` + `z-index: -1` deja el trazo
-   detrás del texto pero delante del fondo de la sección.
+   Envoltorio: el `h2` es flex a lo ancho del contenedor;
+   `.section-heading__mark` (número + separador + palabra) sigue
+   replicando ese flex sólo para el layout (gap, alineación por
+   baseline) — ya NO es la caja de referencia del trazo, sólo el
+   agrupador visual de los tres `<span>`.
 
-   Color (The One Ink Rule): la tinta del propio tema, translúcida sobre
-   el papel — no un matiz nuevo. El número y el título comparten el
-   mismo `--color-accent` (regla `h1, h2, h3`), así que el peor caso es
-   uno solo: ese color sobre el trazo pleno (fondo compuesto con la
-   opacidad de abajo). La opacidad (`--heading-stroke-ink`) NO cambió en
-   F-23 — el contraste compuesto es el mismo con cualquier geometría,
-   porque cualquier píxel visible del trazo tiene ese mismo color
-   compuesto, sólo cambia CUÁNTA superficie se ve, no de qué color es.
-   Sigue verificado ≥4.5:1 en los dos temas (re-medido en F-23 con la
-   geometría nueva, ver el reporte).
-
-   Caja contenida: `left`/`right` en em chicos y sin `translate`, para
-   que el pseudo no asome fuera del contenedor ni genere scroll
-   horizontal en mobile o con el texto al 200 %. F-23 los agrandó un
-   poco (de 0,5em a 0,55em) — sigue siendo un em chico, re-verificado sin
-   overflow (ver el reporte). */
+   Caja contenida: aunque el círculo mide 1000% del ancho de la palabra,
+   `overflow-x: clip` en `.container` (F-19) lo contiene igual que a la
+   versión de F-26 (300%) — re-verificado sin overflow en 375-1920px y a
+   200% de zoom, ver el reporte de F-26b. El único overflow que aparece a
+   200%/1440px es el de `.site-nav` (preexistente desde F-23, no tocado
+   acá). */
 @property --heading-stroke-progress {
   syntax: "<percentage>";
   inherits: false;
-  initial-value: 22%;
+  initial-value: 2.8%;
 }
 
 .section-heading__mark {
-  --heading-stroke-ink: 22%;
-  position: relative;
-  isolation: isolate;
+  --heading-stroke-ink: 28%;
   display: inline-flex;
   align-items: baseline;
-  gap: inherit;
+  gap: 0.5em;
+  /* F-28 (WCAG 1.4.4): a 200% de zoom de texto + 375px de ancho, la
+     PALABRA sola (sin el número) ya no entra en el ancho disponible del
+     `.container` — antes se cortaba en silencio contra el `overflow: clip`
+     de `.section-heading` (F-27) y el `overflow-x: clip` de `.container`
+     (F-19), sin aparecer nunca en `scrollWidth` (por eso F-27 no lo vio:
+     mide overflow de layout, no si el contenido entero es visible).
+     `flex-wrap: wrap` deja que la palabra baje a su propio renglón cuando
+     no entra junto a "01 -"; `min-width: 0` saca el piso de
+     `min-width: auto` que un flex item tiene por defecto (= su
+     min-content, que sin wrap es el ancho completo de la fila) — sin él,
+     este `wrap` no tenía margen para activarse nunca.
+     A 100% de zoom, en los anchos probados (375/768/1440, EN/ES), la
+     palabra siempre entra junto al número en una sola línea — medido con
+     Puppeteer, ningún título cambia de layout ahí: `wrap` sólo actúa
+     cuando de verdad no hay espacio. */
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 html[data-theme="light"] .section-heading__mark {
-  --heading-stroke-ink: 18%;
+  --heading-stroke-ink: 23%;
 }
 
-.section-heading__mark::before {
+.section-heading__text::before {
   content: "";
   position: absolute;
   z-index: -1;
-  left: -0.55em;
-  right: -0.55em;
-  top: 0.1em;
-  height: 3.6em;
-  border: 0.4em solid
+  /* `top: 78%` del alto de línea de `.section-heading__text` (no del
+     alto del círculo, que es 10× más grande) pone el punto MÁS ALTO del
+     círculo (ángulo 0°, ver la máscara abajo) justo a la altura de la
+     base del texto — calibrado contra capturas reales (Puppeteer) en los
+     6 títulos, ver el reporte de F-26b. */
+  top: 78%;
+  left: 93%;
+  translate: -50% 0;
+  width: 1000%;
+  aspect-ratio: 1 / 1;
+  border: 0.65em solid
     color-mix(in srgb, var(--color-accent) var(--heading-stroke-ink), transparent);
   border-radius: 50%;
-  rotate: -1.5deg;
-  /* Dos capas de máscara, intersectadas (F-23 recalibra las dos
-     constantes, ver el comentario de arriba del `@property` para el
-     porqué):
-     1. La cónica, centrada a 6em debajo de la caja (antes 12em, más
-        lejos): más cerca de la caja, el mismo barrido angular cubre MÁS
-        curvatura real del borde — se ve más redondeado, menos recto.
-        22 % de 360° = 79,2°, de -34° a +45,2°: alcanza para el título
-        más ancho con el centro nuevo (antes 15 %/54° alcanzaba con el
-        centro viejo); en los títulos más cortos el trazo simplemente
-        termina antes, igual que siempre.
-     2. Un corte horizontal fijo a 1,3em del borde superior (antes
-        0,62em): revela más de esa curva ya más pronunciada, así los
-        extremos bajan y envuelven un poco los costados del texto — la
-        sensación "circular" que pidió Diego — en vez de cortarse a la
-        tira finísima de antes. */
+  /* Máscara centrada en el propio círculo (`at 50% 50%`, el default: sin
+     `at` explícito) — el ángulo 0° coincide exactamente con el punto más
+     alto real del anillo, sea cual sea el radio. Ventana de sólo 10°
+     (`from -10deg` a `--heading-stroke-progress`, tope 2.8% = 10° de
+     360°): con un radio 10× el ancho de la palabra, esos 10° ya cubren
+     ~87% de su ancho (ver el comentario de arriba) — MENOS barrido
+     angular que F-26 (20-27°) es lo que aplana la curva. */
   mask-image: conic-gradient(
-      from -34deg at 50% 6em,
-      #000 var(--heading-stroke-progress),
-      #0000 0
-    ),
-    linear-gradient(#000 1.3em, #0000 1.3em);
-  mask-composite: intersect;
+    from -10deg,
+    #000 var(--heading-stroke-progress),
+    #0000 0
+  );
   pointer-events: none;
 }
 
-/* Revelado atado al scroll, sin JS: el trazo se dibuja mientras el
-   título sube desde el borde inferior de la ventana hasta el 20 % de su
-   recorrido, y queda completo arriba de eso. Sólo `from`: el `to` es el
-   valor de reposo (22 %, recalibrado en F-23 junto con la geometría de
-   arriba), así que sin soporte de scroll-driven animations o con
-   movimiento reducido el trazo se ve completo, nunca vacío. El
-   kill-switch global de `prefers-reduced-motion` no aplica acá: con
-   `reduce` esta animación directamente no existe. */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .section-heading__mark {
-      view-timeline-name: --section-heading-mark;
-    }
+/* Revelado (F-26, ADR-0026): se dibuja UNA vez, colgado del mismo
+   IntersectionObserver que el resto del contenido (ver los tokens de
+   "Reveals al scroll", arriba en este archivo, y el script de
+   BaseLayout.astro) — reemplaza a `animation-timeline: view()` (F-19),
+   que nunca llegó a resolver en ningún Chrome probado (F-23: la
+   animación quedaba con `timeline: null`, verificado con
+   `document.getAnimations()`).
 
-    .section-heading__mark::before {
-      animation-name: heading-stroke-draw;
-      animation-duration: 1ms;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: --section-heading-mark;
-      animation-range: entry 0% cover 20%;
-    }
-  }
-}
-
-@keyframes heading-stroke-draw {
-  from {
+   Mismo patrón "oculto por excepción" que el resto de los reveals: en
+   reposo (sin `.js-reveal`, o con `prefers-reduced-motion: reduce`) el
+   trazo está en su valor final (2.8%, el `initial-value` de arriba) —
+   completo desde el primer pintado, nunca vacío. Sólo con `.js-reveal`
+   puesto arranca en 0% y sube a 2.8% al recibir `.is-revealed` en el
+   `<h2>` (SectionHeading.astro lo marca con `data-reveal`) — el
+   selector sigue apuntando al `<h2>.is-revealed`, aunque el pseudo ahora
+   viva en `.section-heading__text`, un descendiente suyo. */
+@media (prefers-reduced-motion: no-preference) {
+  .js-reveal .section-heading__text::before {
     --heading-stroke-progress: 0%;
+    transition: --heading-stroke-progress var(--reveal-duration)
+      var(--reveal-ease);
+  }
+
+  .js-reveal .section-heading.is-revealed .section-heading__text::before {
+    --heading-stroke-progress: 2.8%;
   }
 }
 
 /* "Aumentar contraste" y colores forzados: sin trazo. En forced-colors
    el borde se pintaría con un color de sistema opaco detrás del texto. */
 @media (prefers-contrast: more), (forced-colors: active) {
-  .section-heading__mark::before {
+  .section-heading__text::before {
     display: none;
   }
 }
@@ -2234,9 +2454,14 @@ h3 {
   display: none;
 }
 
-.projects-carousel__arrow:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+/* F-24: gateado detrás de hover:hover, mismo criterio que .hero__media
+   (~línea 1101) — sin esto, un tap en táctil deja el color de acento
+   pegado sin forma de "soltarlo". */
+@media (hover: hover) {
+  .projects-carousel__arrow:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
 }
 
 .projects-carousel__arrow:active {
@@ -2263,9 +2488,25 @@ h3 {
   transition: opacity 120ms ease, transform 120ms ease;
 }
 
+/* F-26 (ADR-0026, Parte B): nudge horizontal, no vertical — el brief pide
+   "transición horizontal breve coherente con la dirección" para distinguir
+   este cambio (de PROYECTO) del fundido más corto del cambio de CAPTURA
+   (`.carousel[data-transitioning]`, más abajo). `data-swapping` ahora lleva
+   "next"/"prev" (antes un booleano vacío): el proyecto saliente se corre
+   hacia el lado por el que "se va" y el entrante aparece viniendo de ahí —
+   el mismo valor de atributo gobierna las dos mitades del intercambio (JS
+   lo pone al arrancar el fade-out y lo saca al terminar el fade-in, ver el
+   script), así que la dirección es consistente en las dos mitades. */
 .project-grid[data-swapping] {
   opacity: 0;
-  transform: translateY(0.4rem);
+}
+
+.project-grid[data-swapping="next"] {
+  transform: translateX(-0.6rem);
+}
+
+.project-grid[data-swapping="prev"] {
+  transform: translateX(0.6rem);
 }
 
 .project-card {
@@ -2342,6 +2583,22 @@ h3 {
      la scrollbar nativa no hacía falta para eso. Sigue siendo
      recorrible con teclado y rueda/gesto: esto sólo la esconde. */
   scrollbar-width: none;
+  /* F-26 (ADR-0026, Parte B): fundido corto del cambio de CAPTURA —
+     `[data-transitioning]` lo pone el script inline de
+     ProjectsSection.astro/HobbiesSection.astro sólo cuando el cambio lo
+     dispara una flecha o un punto (150ms, más corto que los ~240ms del
+     nudge horizontal de `.project-grid`/`.hobby-grid` al cambiar de
+     PROYECTO — las dos interacciones se distinguen por eso). El gesto de
+     arrastrar/scrollear no pasa por acá: ya tiene su propio movimiento
+     real (el scroll nativo), no hace falta agregarle un fundido encima.
+     `prefers-reduced-motion` ya fuerza `transition-duration: 0.01ms`
+     sobre `*` (arriba en este archivo) — `.carousel` es un elemento real,
+     no un pseudo, así que le alcanza el catch-all global. */
+  transition: opacity 150ms ease;
+}
+
+.carousel[data-transitioning] {
+  opacity: 0.55;
 }
 
 .carousel::-webkit-scrollbar {
@@ -2410,15 +2667,25 @@ h3 {
   touch-action: manipulation;
   user-select: none;
   -webkit-touch-callout: none;
-  transition: border-color 150ms ease, transform 150ms ease;
+  /* F-24: 140ms + cubic-bezier(0.23, 1, 0.32, 1), igual que
+     .projects-carousel__arrow/.hobbies-carousel__arrow (mismo propósito,
+     mismo :active { scale(0.93) }) — antes 150ms ease, único de los tres
+     con una curva distinta pese a ser el mismo sistema de control. */
+  transition: border-color 150ms ease,
+    transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .carousel__nav[disabled] {
   display: none;
 }
 
-.carousel__nav:hover {
-  border-color: var(--color-accent);
+/* F-24: gateado detrás de hover:hover, mismo criterio que .hero__media
+   (~línea 1101) — sin esto, un tap en táctil deja el borde de acento
+   pegado sin forma de "soltarlo" (no hay hover real en táctil). */
+@media (hover: hover) {
+  .carousel__nav:hover {
+    border-color: var(--color-accent);
+  }
 }
 
 .carousel__nav:active {
@@ -2484,72 +2751,47 @@ h3 {
   height: 0.4rem;
   border-radius: 50%;
   background: var(--color-control-border);
+  transition: background-color 150ms ease,
+    transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Dot activo por scroll (F-3, decidido por Diego): CSS puro, sin JS
-   (ADR-0008 no se toca). `view-timeline-name` en cada slide crea una
-   línea de tiempo de progreso de visibilidad ligada a ESE elemento
-   dentro del scroller (.carousel); `timeline-scope` en el propio
-   .carousel se la presta a los dots, que son hermanos del track, no
-   descendientes del slide, y por default no la verían. Hasta 4 slides
-   porque data/schemas/proyectos.schema.json no permite más imágenes
-   por proyecto. Envuelto en @supports: sin soporte (Safari estable a
-   esta fecha) la regla entera no aplica y los dots quedan exactamente
-   como estaban — fallback explícito, no bug. Sigue siendo puramente
-   visual: el estado accesible activo (`aria-current`) lo pone el script
-   de F-19 vía IntersectionObserver, no esta animación. */
-@supports (animation-timeline: view()) {
-  .carousel__item:nth-child(1) {
-    view-timeline-name: --carousel-slide-1;
-    view-timeline-axis: inline;
+/* F-24 (P1): único control interactivo del sitio sin ningún feedback de
+   puntero — ni siquiera el border-color que ya tienen las flechas. Se
+   pinta en el ::after (el punto visible, 0.4rem), nunca en el <button>
+   de 28px: la caja táctil no cambia (ver el comentario de arriba sobre
+   `target-size`). hover:hover evita que un tap en táctil deje el color
+   pegado sin forma de "soltarlo". Va ANTES de la regla de
+   `[aria-current]` de abajo a propósito: mismo peso de especificidad,
+   así que en el dot activo gana la de `aria-current` (viene después en
+   la hoja) — hover no apaga el color de "seleccionado" mientras el
+   puntero pasa por encima. */
+@media (hover: hover) {
+  .carousel__dot:hover::after {
+    background: var(--color-text-muted);
   }
-  .carousel__item:nth-child(2) {
-    view-timeline-name: --carousel-slide-2;
-    view-timeline-axis: inline;
-  }
-  .carousel__item:nth-child(3) {
-    view-timeline-name: --carousel-slide-3;
-    view-timeline-axis: inline;
-  }
-  .carousel__item:nth-child(4) {
-    view-timeline-name: --carousel-slide-4;
-    view-timeline-axis: inline;
-  }
+}
 
-  .carousel {
-    timeline-scope: --carousel-slide-1, --carousel-slide-2,
-      --carousel-slide-3, --carousel-slide-4;
-  }
+.carousel__dot:active::after {
+  transform: scale(0.93);
+}
 
-  .carousel__dot::after {
-    animation-name: carousel-dot-active;
-    animation-duration: 1ms;
-    animation-fill-mode: both;
-    animation-timing-function: linear;
-  }
-
-  .carousel__dot:nth-child(1)::after {
-    animation-timeline: --carousel-slide-1;
-  }
-  .carousel__dot:nth-child(2)::after {
-    animation-timeline: --carousel-slide-2;
-  }
-  .carousel__dot:nth-child(3)::after {
-    animation-timeline: --carousel-slide-3;
-  }
-  .carousel__dot:nth-child(4)::after {
-    animation-timeline: --carousel-slide-4;
-  }
-
-  @keyframes carousel-dot-active {
-    0%,
-    100% {
-      background: var(--color-control-border);
-    }
-    50% {
-      background: var(--color-accent);
-    }
-  }
+/* Dot activo (F-24, reemplaza el mecanismo de F-3). El intento de F-3
+   pintaba el dot activo con `animation-timeline: view()` puro CSS
+   (`view-timeline-name` por slide + `timeline-scope` prestándosela a los
+   dots, hermanos del track) — nunca llegó a pintar nada: verificado que
+   `CSS.supports("animation-timeline", "view()")` da `true` en el Chrome
+   actual, pero `document.getAnimations()` mostraba la animación adjunta
+   con `timeline: null`, en dos binarios de Chrome distintos y en
+   headless/headed (ver vault, hallazgo de F-23). Se retira ese mecanismo
+   en vez de mantenerlo apagado: es código muerto que documentaba algo que
+   no ocurre, y si algún navegador futuro lo empezara a resolver
+   competiría con la regla real de abajo. La fuente de verdad pasa a ser
+   `aria-current="true"`, que el script de F-19 ya pone por clic y por
+   scroll (IntersectionObserver) — esto sólo le agrega la pintura que
+   faltaba. Sin JS los puntos nacen `disabled` + `aria-hidden`, así que no
+   hay regresión en el caso sin JavaScript. */
+.carousel__dot[aria-current="true"]::after {
+  background: var(--color-accent);
 }
 
 /* Padding/gap/tamaños: heredados de lo que antes era sólo `--featured`
@@ -2894,7 +3136,8 @@ h3 {
 
    Tokens en rem, sin `vw` ni mezcla de ejes en un mismo valor (ver nota
    de F-12 sobre `clamp()` con ejes mixtos): el tamaño cambia sólo en el
-   único breakpoint explícito del sitio (768px), redefiniendo las custom
+   breakpoint global de layout compartido (768px — F-25 le agregó al nav
+   uno propio en 900/899px, sin tocar éste), redefiniendo las custom
    properties, nunca con `clamp()`.
 
    Monocroma: ítems y anillos en `--color-border` / `--color-control-
@@ -3230,9 +3473,14 @@ h3 {
   display: none;
 }
 
-.hobbies-carousel__arrow:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+/* F-24: gateado detrás de hover:hover, mismo criterio que .hero__media
+   (~línea 1101) — sin esto, un tap en táctil deja el color de acento
+   pegado sin forma de "soltarlo". */
+@media (hover: hover) {
+  .hobbies-carousel__arrow:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
 }
 
 .hobbies-carousel__arrow:active {
@@ -3254,9 +3502,19 @@ h3 {
   transition: opacity 120ms ease, transform 120ms ease;
 }
 
+/* F-26: mismo criterio direccional que `.project-grid[data-swapping]`
+   (ver ese comentario, más arriba) — "controles coherentes con Projects"
+   pedido por el brief. */
 .hobby-grid[data-swapping] {
   opacity: 0;
-  transform: translateY(0.4rem);
+}
+
+.hobby-grid[data-swapping="next"] {
+  transform: translateX(-0.6rem);
+}
+
+.hobby-grid[data-swapping="prev"] {
+  transform: translateX(0.6rem);
 }
 
 /* F-22b: la primera versión estiraba la tarjeta al ancho completo de
@@ -3400,6 +3658,13 @@ h3 {
 
 .contact__email {
   overflow-wrap: break-word;
+  /* F-24 (P2): 187×22px medido — el único lugar donde la dirección
+     aparece literal, la que un recruiter copia a mano en un ATS. No es
+     violación WCAG (texto en línea dentro de un <p>, cae en la
+     excepción), pero es un blanco chico en el teléfono. `padding-block`
+     en un elemento inline no empuja el line-box (no cambia el alto del
+     párrafo) — sólo agranda la caja propia del link a ~28px. */
+  padding-block: 0.15rem;
 }
 
 /* ── Footer ──────────────────────────────────────────────────────── */
