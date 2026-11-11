@@ -35,7 +35,7 @@ if (!SRC) {
   process.exit(1);
 }
 
-const DEST = new URL("../public/images/diego-portrait.webp", import.meta.url).pathname.replace(
+const DEST = new URL("../public/images/diego-laughing.webp", import.meta.url).pathname.replace(
   /^\/([A-Za-z]:)/,
   "$1"
 );

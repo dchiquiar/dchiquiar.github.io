@@ -121,7 +121,7 @@ function buildFontFaces() {
 }
 
 function buildPortraitDataUri() {
-  const bytes = b64(path.join(PUBLIC_DIR, "images", "diego-portrait.webp"));
+  const bytes = b64(path.join(PUBLIC_DIR, "images", "diego-laughing.webp"));
   return `data:image/webp;base64,${bytes}`;
 }
 
