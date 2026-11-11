@@ -78,7 +78,7 @@ const jsonLd = {
         case "projects":
           return <WorkSection lang={lang} number={numbers.projects} job={featuredJob} cases={home.cases ?? []} projects={projects} />;
         case "experience":
-          return <ExperienceSection lang={lang} number={numbers.experience} experience={experienceItems} />;
+          return <ExperienceSection lang={lang} number={numbers.experience} experience={experienceItems} hiddenEmployers={home.hideEmployerNames ?? []} />;
         case "education":
           return <EducationSection lang={lang} number={numbers.education} education={educationItems} />;
         case "hobbies":

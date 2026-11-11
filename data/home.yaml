@@ -39,6 +39,12 @@ cover:
     es: "persistente por naturaleza:\nsi algo se rompe,\nlo sigo hasta el fondo."
     en: "persistent by nature:\nif something breaks,\nI follow it to the root."
 
+# Empleos (ids de experience en cv.*.yaml) cuyo nombre NO se muestra en la
+# web: en su lugar se muestra el rubro (employer.sector). Decisión de Diego,
+# 2026-11-11. El PDF del CV es aparte y sí lo nombra.
+hideEmployerNames:
+  - job-1
+
 # Tarjetas de "trabajo de campo": capacidades descritas en forma general, sin
 # nombrar al empleador ni a sus sistemas internos (decisión de Diego,
 # 2026-11-11). Los bancos sí se nombran: son contrapartes de integración.

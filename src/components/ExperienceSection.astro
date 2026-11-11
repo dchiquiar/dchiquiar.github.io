@@ -9,8 +9,12 @@ interface Props {
   lang: "en" | "es";
   number: string;
   experience: any[];
+  hiddenEmployers?: string[];
 }
-const { lang, number, experience } = Astro.props;
+const { lang, number, experience, hiddenEmployers = [] } = Astro.props;
+// Nombre público del empleador: el rubro cuando Diego pidió no nombrarlo.
+const employerLabel = (e: any) =>
+  hiddenEmployers.includes(e.id) && e.employer.sector ? e.employer.sector : e.employer.name;
 const t = ui[lang];
 const s = t.sections.experience;
 
@@ -40,7 +44,7 @@ const sorted = [...items].sort((a, b) => a.from - b.from);
           class={`timeline__bar ${i === sorted.length - 1 ? "is-latest" : ""}`}
           style={`left:${pct(e.from)}%;width:${Math.max(pct(e.to) - pct(e.from), 1.2)}%;--row:${i % 2}`}
         >
-          <span class="timeline__label">{e.employer.name.split(" — ")[0]}</span>
+          <span class="timeline__label">{employerLabel(e).split(" — ")[0]}</span>
         </div>
       ))}
       <div class="timeline__axis" aria-hidden="true">
@@ -62,13 +66,14 @@ const sorted = [...items].sort((a, b) => a.from - b.from);
         <li class="row">
           <details class="row__details">
             <summary class="row__summary row__summary--xp">
-              <span class="row__title">{e.employer.name}</span>
+              <span class="row__title">{employerLabel(e)}</span>
               <span class="row__role">{e.role}</span>
               <span class="row__years">{formatDateRange(e, lang)}</span>
               <span class="row__arrow" aria-hidden="true">→</span>
             </summary>
             <div class="row__more">
-              {e.employer.sector && <p class="kicker">{e.employer.sector}{e.location && ` · ${e.location}`}</p>}
+              {e.employer.sector && !hiddenEmployers.includes(e.id) && <p class="kicker">{e.employer.sector}{e.location && ` · ${e.location}`}</p>}
+              {hiddenEmployers.includes(e.id) && e.location && <p class="kicker">{e.location}</p>}
               {paras.map((p) => <p>{p}</p>)}
               {e.highlights?.length > 0 && (
                 <ul class="bullets">

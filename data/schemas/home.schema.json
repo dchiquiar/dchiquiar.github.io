@@ -47,6 +47,11 @@
         "note": { "$ref": "#/definitions/i18n" }
       }
     },
+    "hideEmployerNames": {
+      "type": "array",
+      "description": "Ids de experience cuyo nombre de empleador no se publica en la web; se muestra employer.sector en su lugar.",
+      "items": { "type": "string" }
+    },
     "cases": {
       "type": "array",
       "items": {
