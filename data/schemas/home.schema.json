@@ -52,12 +52,15 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["value", "unit", "caption", "figure"],
+        "required": ["value", "unit", "caption", "figure", "title", "text", "technologies"],
         "properties": {
           "value": { "type": "string" },
           "unit": { "$ref": "#/definitions/i18n" },
           "caption": { "$ref": "#/definitions/i18n" },
-          "figure": { "type": "string", "enum": ["banks", "signal", "states"] }
+          "figure": { "type": "string", "enum": ["banks", "signal", "states"] },
+          "title": { "$ref": "#/definitions/i18n" },
+          "text": { "$ref": "#/definitions/i18n" },
+          "technologies": { "type": "array", "items": { "type": "string" } }
         }
       }
     }

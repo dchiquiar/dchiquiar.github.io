@@ -17,49 +17,36 @@ const { lang, number, job, cases, projects } = Astro.props;
 const t = ui[lang];
 const s = t.sections.projects;
 const jobYears = job ? `${job.startDate.slice(0, 4)} — ${job.endDate ? job.endDate.slice(0, 4) : t.experience.now}` : "";
-const fieldProjects = job?.projects ?? [];
 ---
 <Chapter id="projects" number={number} kicker={s.kicker} title={s.title} emphasis={s.emphasis}>
   {job?.summary && <p class="chapter__intro" data-reveal>{splitParagraphs(job.summary)[0]}</p>}
 
-  {fieldProjects.length > 0 && (
+  {cases.length > 0 && (
     <div class="subhead" data-reveal>
       <p class="kicker">{t.projects.fieldWork}</p>
-      <p class="kicker muted">{job.employer.name} · {jobYears}</p>
+      {job && <p class="kicker muted">{job.role} · {jobYears}</p>}
     </div>
   )}
 
   <div class="cases">
-    {fieldProjects.map((p: any, i: number) => {
-      const meta = cases[i];
-      const paras = splitParagraphs(p.description);
-      return (
-        <article class="case" data-reveal>
-          <header class="case__head">
-            <span class="kicker">{t.projects.case} {String(i + 1).padStart(2, "0")}</span>
-          </header>
-          {meta && (
-            <div class="case__stat">
-              <span class="case__value">{meta.value}</span>
-              <span class="case__unit">{meta.unit[lang]}</span>
-            </div>
-          )}
-          {meta && <CaseFigure kind={meta.figure} />}
-          {meta && <p class="figcap">{meta.caption[lang]}</p>}
-          <h3 class="case__title">{p.name}</h3>
-          <p class="case__text">{paras[0]}</p>
-          {paras.length > 1 && (
-            <details class="disclose">
-              <summary><span>{t.experience.details}</span><span class="disclose__icon" aria-hidden="true">+</span></summary>
-              {paras.slice(1).map((para) => <p>{para}</p>)}
-            </details>
-          )}
-          <ul class="tags tags--small">
-            {p.technologies.map((tech: string) => <li>{tech}</li>)}
-          </ul>
-        </article>
-      );
-    })}
+    {cases.map((c: any, i: number) => (
+      <article class="case" data-reveal>
+        <header class="case__head">
+          <span class="kicker">{t.projects.case} {String(i + 1).padStart(2, "0")}</span>
+        </header>
+        <div class="case__stat">
+          <span class="case__value">{c.value}</span>
+          <span class="case__unit">{c.unit[lang]}</span>
+        </div>
+        <CaseFigure kind={c.figure} />
+        <p class="figcap">{c.caption[lang]}</p>
+        <h3 class="case__title">{c.title[lang]}</h3>
+        <p class="case__text">{c.text[lang]}</p>
+        <ul class="tags tags--small">
+          {c.technologies.map((tech: string) => <li>{tech}</li>)}
+        </ul>
+      </article>
+    ))}
   </div>
 
   {projects.length > 0 && (

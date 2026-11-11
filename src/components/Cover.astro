@@ -39,7 +39,7 @@ const noteLines = c.note[lang].split("\n");
       {previous && (
         <p class="previously">
           <span class="kicker">{t.previously}</span>{" "}
-          {previous.role} · {previous.employer.name}{previous.employer.sector && <span class="muted">, {previous.employer.sector.charAt(0).toLowerCase() + previous.employer.sector.slice(1)}</span>}.
+          {previous.role}{previous.employer.sector && <span class="muted">, {previous.employer.sector.charAt(0).toLowerCase() + previous.employer.sector.slice(1)}</span>}.
         </p>
       )}
 

@@ -75,14 +75,6 @@ const sorted = [...items].sort((a, b) => a.from - b.from);
                   {e.highlights.map((h: string) => <li>{h}</li>)}
                 </ul>
               )}
-              {e.projects?.length > 0 && (
-                <>
-                  <p class="kicker">{t.experience.projects}</p>
-                  <ul class="bullets">
-                    {e.projects.map((p: any) => <li>{p.name}</li>)}
-                  </ul>
-                </>
-              )}
               {e.technologies?.length > 0 && (
                 <ul class="tags tags--small">
                   {e.technologies.map((tech: string) => <li>{tech}</li>)}

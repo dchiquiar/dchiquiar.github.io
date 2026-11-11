@@ -39,18 +39,25 @@ cover:
     es: "persistente por naturaleza:\nsi algo se rompe,\nlo sigo hasta el fondo."
     en: "persistent by nature:\nif something breaks,\nI follow it to the root."
 
-# Cifras de las tarjetas de "trabajo de campo", en el mismo orden que
-# experience[0].projects de cv.*.yaml. Cada cifra sale literal de la
-# descripción del proyecto en el CV.
+# Tarjetas de "trabajo de campo": capacidades descritas en forma general, sin
+# nombrar al empleador ni a sus sistemas internos (decisión de Diego,
+# 2026-11-11). Los bancos sí se nombran: son contrapartes de integración.
 cases:
-  - value: "1,500"
+  - value: "5"
     unit:
-      es: "operaciones / día"
-      en: "operations / day"
+      es: "bancos integrados"
+      en: "banks integrated"
     caption:
-      es: "6 bancos integrados, sin intervención manual"
-      en: "6 banks integrated, no manual intervention"
+      es: "BBVA · Itaú · Santander · Scotiabank · Heritage"
+      en: "BBVA · Itaú · Santander · Scotiabank · Heritage"
     figure: banks
+    title:
+      es: "Integraciones bancarias"
+      en: "Bank integrations"
+    text:
+      es: "Experiencia hands-on integrando sistemas con bancos mediante web services e intercambio de archivos, con procesos automáticos que corren sin intervención manual."
+      en: "Hands-on experience integrating systems with banks through web services and file exchange, with automated processes that run without manual intervention."
+    technologies: ["C#", ".NET", "ASP.NET Core", "Web services", "SQL Server", "Quartz.NET"]
 
   - value: "Offline"
     unit:
@@ -60,12 +67,26 @@ cases:
       es: "guarda sin cobertura y sincroniza al volver la señal"
       en: "stores without coverage, syncs when signal returns"
     figure: signal
+    title:
+      es: "Apps Android de trazabilidad"
+      en: "Android traceability apps"
+    text:
+      es: "Experiencia en apps de trazabilidad en Android con Xamarin.Forms y .NET for Android: escaneo, geolocalización y sincronización, publicadas en Google Play Console."
+      en: "Experience building Android traceability apps with Xamarin.Forms and .NET for Android: scanning, geolocation and sync, published through Google Play Console."
+    technologies: [".NET for Android", "Xamarin.Forms", "SQLite", "Google Play Console"]
 
   - value: "6"
     unit:
-      es: "estados por transacción"
-      en: "states per transaction"
+      es: "estados de pago"
+      en: "payment states"
     caption:
-      es: "aprobada, rechazada, vencida, revertida, renovada, cancelada"
+      es: "aprobado, rechazado, vencido, revertido, renovado, cancelado"
       en: "approved, rejected, expired, reversed, renewed, cancelled"
     figure: states
+    title:
+      es: "Pasarelas de pago"
+      en: "Payment gateways"
+    text:
+      es: "Experiencia en integraciones con pasarelas de pago como Mercado Pago: pagos y suscripciones con todo su ciclo de vida y notificaciones asociadas."
+      en: "Experience integrating payment gateways such as Mercado Pago: payments and subscriptions across their full lifecycle, with the related notifications."
+    technologies: ["C#", ".NET", "REST APIs", "Mercado Pago API", "SQL Server"]
