@@ -49,6 +49,7 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
           if (ink) d.setAttribute("data-ink", ink);
           var motion = localStorage.getItem("motion");
           if (motion === "off") d.setAttribute("data-motion", "off");
+          if (localStorage.getItem("trail") === "off") d.setAttribute("data-trail", "off");
         } catch (e) {}
         var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         if (reduce && !d.hasAttribute("data-motion")) d.setAttribute("data-motion", "off");
@@ -89,6 +90,49 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
     <SiteFooter lang={lang} />
     <canvas class="pen-trail" aria-hidden="true"></canvas>
     <script is:inline>
+      // Preferencias (componente Prefs, en portada y pie): todas las copias
+      // se sincronizan entre sí y la elección se guarda por visitante.
+      (function () {
+        var d = document.documentElement;
+        function save(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+        function sync() {
+          var current = d.getAttribute("data-ink") || "ember";
+          document.querySelectorAll(".swatch").forEach(function (s) {
+            s.setAttribute("aria-checked", String(s.getAttribute("data-ink") === current));
+          });
+          document.querySelectorAll("[data-ink-name]").forEach(function (el) {
+            var on = document.querySelector('.swatch[data-ink="' + current + '"]');
+            el.textContent = on ? on.getAttribute("title") : "";
+          });
+          document.querySelectorAll("[data-pref-toggle]").forEach(function (b) {
+            var key = b.getAttribute("data-pref-toggle");
+            var on = d.getAttribute("data-" + key) !== "off";
+            var label = b.querySelector("[data-on]");
+            b.setAttribute("aria-pressed", String(on));
+            label.textContent = on ? label.getAttribute("data-on") : label.getAttribute("data-off");
+          });
+        }
+        document.querySelectorAll(".swatch").forEach(function (s) {
+          s.addEventListener("click", function () {
+            var id = s.getAttribute("data-ink");
+            d.setAttribute("data-ink", id);
+            save("ink", id);
+            sync();
+          });
+        });
+        document.querySelectorAll("[data-pref-toggle]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var key = b.getAttribute("data-pref-toggle");
+            var turnOff = d.getAttribute("data-" + key) !== "off";
+            if (turnOff) d.setAttribute("data-" + key, "off"); else d.removeAttribute("data-" + key);
+            save(key, turnOff ? "off" : "on");
+            sync();
+          });
+        });
+        sync();
+      })();
+    </script>
+    <script is:inline>
       // Trazo de tinta que sigue al mouse con retardo: un punto "pluma" se
       // acerca al cursor con easing y deja una estela fina que se desvanece.
       // Sólo con mouse fino y con movimiento activo.
@@ -116,7 +160,7 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
         new MutationObserver(function () { color = ink(); }).observe(d, { attributes: true, attributeFilter: ["data-ink", "data-theme"] });
         function frame() {
           ctx.clearRect(0, 0, innerWidth, innerHeight);
-          if (d.getAttribute("data-motion") === "off" || !mouse) { running = false; pts = []; return; }
+          if (d.getAttribute("data-motion") === "off" || d.getAttribute("data-trail") === "off" || !mouse) { running = false; pts = []; return; }
           pen.x += (mouse.x - pen.x) * EASE;
           pen.y += (mouse.y - pen.y) * EASE;
           pts.push({ x: pen.x, y: pen.y });

@@ -68,6 +68,7 @@ export const ui = {
     footer: {
       made: "Made in Montevideo, 2026",
       ink: "Ink",
+      trail: "Pen trail",
       motion: "Motion",
       on: "On",
       off: "Off",
@@ -141,6 +142,7 @@ export const ui = {
     footer: {
       made: "Hecho en Montevideo, 2026",
       ink: "Tinta",
+      trail: "Trazo",
       motion: "Movimiento",
       on: "Sí",
       off: "No",

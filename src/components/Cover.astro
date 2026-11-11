@@ -6,6 +6,7 @@ import { ui } from "../i18n/ui.js";
 import { richText } from "../lib/markup.js";
 import Underline from "./Underline.astro";
 import CitySketch from "./CitySketch.astro";
+import Prefs from "./Prefs.astro";
 
 interface Props {
   lang: "en" | "es";
@@ -62,6 +63,8 @@ const noteLines = c.note[lang].split("\n");
       {person.availability && (
         <p class="availability"><span class="pulse" aria-hidden="true"></span>{person.availability}</p>
       )}
+
+      <Prefs lang={lang} variant="cover" />
     </div>
 
     <aside class="cover__side">

@@ -1,0 +1,36 @@
+---
+// Preferencias del visitante: color de tinta, trazo del mouse y movimiento.
+// Se usa en la portada y en el pie; un único script (BaseLayout) mantiene
+// todas las copias sincronizadas y guarda la elección por visitante.
+import { ui } from "../i18n/ui.js";
+
+interface Props { lang: "en" | "es"; variant?: "cover" | "footer" }
+const { lang, variant = "footer" } = Astro.props;
+const t = ui[lang];
+const inks = [
+  { id: "ember", name: "Ember" },
+  { id: "dotnet", name: ".NET" },
+  { id: "rambla", name: "Rambla" },
+  { id: "mate", name: "Mate" },
+  { id: "sol", name: "Sol de Mayo" },
+];
+---
+<div class={`prefs prefs--${variant}`}>
+  <div class="prefs__group" role="radiogroup" aria-label={t.footer.ink}>
+    <span class="kicker">{t.footer.ink}</span>
+    {inks.map((ink) => (
+      <button type="button" class="swatch" data-ink={ink.id} role="radio" aria-checked="false" aria-label={ink.name} title={ink.name}></button>
+    ))}
+    <span class="kicker prefs__name" data-ink-name></span>
+  </div>
+  <div class="prefs__toggles">
+    <button type="button" class="prefs__toggle" data-pref-toggle="trail" aria-pressed="true">
+      <span class="kicker">{t.footer.trail}</span>
+      <span class="kicker kicker--ink" data-on={t.footer.on} data-off={t.footer.off}>{t.footer.on}</span>
+    </button>
+    <button type="button" class="prefs__toggle" data-pref-toggle="motion" aria-pressed="true">
+      <span class="kicker">{t.footer.motion}</span>
+      <span class="kicker kicker--ink" data-on={t.footer.on} data-off={t.footer.off}>{t.footer.on}</span>
+    </button>
+  </div>
+</div>

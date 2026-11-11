@@ -1100,7 +1100,17 @@ a.contact-card:hover .kicker,
 .swatch[data-ink="rambla"] { background: var(--ink-rambla); }
 .swatch[data-ink="mate"] { background: var(--ink-mate); }
 .swatch[data-ink="sol"] { background: var(--ink-sol); }
-.prefs__toggle { display: inline-flex; gap: 10px; align-items: center; }
+.prefs__toggle { display: inline-flex; gap: 10px; align-items: center; padding: 0; }
+.prefs__toggles { display: flex; gap: 24px; flex-wrap: wrap; }
+.prefs--cover {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: clamp(32px, 4vw, 44px);
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  max-width: 420px;
+}
 .site-footer__top { color: var(--text); text-decoration: none; }
 .site-footer__top:hover { color: var(--ink); }
 .wordmark-wrap {
@@ -1220,5 +1230,6 @@ a.contact-card:hover .kicker,
   height: 100vh;
   pointer-events: none;
 }
-:root[data-motion="off"] .pen-trail { display: none; }
+:root[data-motion="off"] .pen-trail,
+:root[data-trail="off"] .pen-trail { display: none; }
 @media (pointer: coarse), (hover: none) { .pen-trail { display: none; } }

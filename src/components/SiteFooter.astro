@@ -1,79 +1,20 @@
 ---
-// Pie: selector de tinta (color de acento), interruptor de movimiento,
-// volver a la portada y colofón. Las preferencias se guardan por visitante.
+// Pie: preferencias (tinta, trazo, movimiento), volver a la portada y el
+// nombre grande de fondo.
 import { ui } from "../i18n/ui.js";
+import Prefs from "./Prefs.astro";
 
 interface Props { lang: "en" | "es" }
 const { lang } = Astro.props;
 const t = ui[lang];
-const inks = [
-  { id: "ember", name: "Ember" },
-  { id: "dotnet", name: ".NET" },
-  { id: "rambla", name: "Rambla" },
-  { id: "mate", name: "Mate" },
-  { id: "sol", name: "Sol de Mayo" },
-];
 ---
 <footer class="site-footer">
   <div class="site-footer__inner">
     <p class="site-footer__made">{t.footer.made} <span class="dot" aria-hidden="true">●</span></p>
 
-    <div class="prefs">
-      <div class="prefs__group" role="radiogroup" aria-label={t.footer.ink}>
-        <span class="kicker">{t.footer.ink}</span>
-        {inks.map((ink) => (
-          <button type="button" class="swatch" data-ink={ink.id} role="radio" aria-checked="false" aria-label={ink.name} title={ink.name}></button>
-        ))}
-        <span class="kicker prefs__name" data-ink-name></span>
-      </div>
-      <button type="button" class="prefs__toggle" data-motion-toggle aria-pressed="true">
-        <span class="kicker">{t.footer.motion}</span>
-        <span class="kicker kicker--ink" data-on={t.footer.on} data-off={t.footer.off}>{t.footer.on}</span>
-      </button>
-    </div>
+    <Prefs lang={lang} />
 
     <a class="site-footer__top" href="#top">{t.footer.backToTop} <span aria-hidden="true">↑</span></a>
   </div>
   <div class="wordmark-wrap" aria-hidden="true"><p class="wordmark">diego chiquiar</p></div>
 </footer>
-<script is:inline>
-  (function () {
-    var d = document.documentElement;
-    var swatches = document.querySelectorAll(".swatch");
-    var nameEl = document.querySelector("[data-ink-name]");
-    function syncInk() {
-      var current = d.getAttribute("data-ink") || "ember";
-      swatches.forEach(function (s) {
-        var on = s.getAttribute("data-ink") === current;
-        s.setAttribute("aria-checked", String(on));
-        if (on && nameEl) nameEl.textContent = s.getAttribute("title");
-      });
-    }
-    swatches.forEach(function (s) {
-      s.addEventListener("click", function () {
-        var id = s.getAttribute("data-ink");
-        d.setAttribute("data-ink", id);
-        try { localStorage.setItem("ink", id); } catch (e) {}
-        syncInk();
-      });
-    });
-    syncInk();
-
-    var toggle = document.querySelector("[data-motion-toggle]");
-    if (toggle) {
-      var label = toggle.querySelector("[data-on]");
-      var sync = function () {
-        var on = d.getAttribute("data-motion") !== "off";
-        toggle.setAttribute("aria-pressed", String(on));
-        label.textContent = on ? label.getAttribute("data-on") : label.getAttribute("data-off");
-      };
-      toggle.addEventListener("click", function () {
-        var off = d.getAttribute("data-motion") !== "off";
-        if (off) d.setAttribute("data-motion", "off"); else d.removeAttribute("data-motion");
-        try { localStorage.setItem("motion", off ? "off" : "on"); } catch (e) {}
-        sync();
-      });
-      sync();
-    }
-  })();
-</script>
