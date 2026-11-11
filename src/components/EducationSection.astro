@@ -1,40 +1,33 @@
 ---
-// F-18 (ADR-0019 §1): Formación pasa a ser sección propia — antes vivía
-// como un <h3> dentro de ExperienceSection.astro. Mismo markup de lista
-// (`.education-list`) y las mismas etiquetas de estado, sólo con su
-// propio SectionHeading numerado. HomePage.astro sólo instancia este
-// componente cuando `education` no está vacío (mismo criterio que ya
-// usaba AboutSection con person.summary) — no hay versión vacía.
 import { ui } from "../i18n/ui.js";
-import SectionHeading from "./SectionHeading.astro";
+import Chapter from "./Chapter.astro";
 
 interface Props {
   lang: "en" | "es";
   number: string;
-  education: Array<Record<string, any>>;
+  education: any[];
 }
 const { lang, number, education } = Astro.props;
 const t = ui[lang];
+const s = t.sections.education;
 ---
-
-<section id="education" class="section">
-  <div class="container">
-    <SectionHeading number={number} title={t.sections.education} id="education" />
-    <ul class="education-list">
-      {education.map((ed, i) => (
-        // F-26 (ADR-0026): orden de lectura, escalonado corto (tope de
-        // 240ms en el CSS, ver "Reveals al scroll" en global.css).
-        <li data-reveal style={`--reveal-index: ${i}`}>
-          <strong>{ed.title}</strong> — {ed.institution}
-          {ed.year ? `, ${ed.year}` : ""}
-          <div class="status">
-            {ed.status === "completed"
-              ? t.experience.statusCompleted
-              : t.experience.statusInProgress}
-            {ed.detail ? ` · ${ed.detail}` : ""}
-          </div>
-        </li>
-      ))}
-    </ul>
-  </div>
-</section>
+<Chapter id="education" number={number} kicker={s.kicker} title={s.title} emphasis={s.emphasis}>
+  <ol class="edu" data-reveal>
+    {education.map((e) => (
+      <li class={`edu__item ${e.status === "in-progress" ? "is-live" : ""}`}>
+        <p class="edu__year">
+          {e.status === "in-progress" ? (
+            <span class="badge"><span class="pulse" aria-hidden="true"></span>{t.education.inProgress}</span>
+          ) : (
+            <span>{e.year ?? t.education.completed}</span>
+          )}
+        </p>
+        <div>
+          <h3 class="edu__title">{e.title}</h3>
+          <p class="kicker">{e.institution}</p>
+          {e.detail && <p class="edu__detail">{e.detail}</p>}
+        </div>
+      </li>
+    ))}
+  </ol>
+</Chapter>

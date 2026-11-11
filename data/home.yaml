@@ -1,0 +1,71 @@
+# Copy propia del rediseño de la home (portada, anotación y cifras de los
+# casos). Bilingüe por campo, igual que proyectos.yaml y hobbies.yaml.
+#
+# Todo lo que dice este archivo tiene que estar respaldado por algo que ya
+# está en data/cv.*.yaml o que Diego confirmó: no inventar cifras.
+# Validar contra data/schemas/home.schema.json.
+
+meta:
+  lastUpdated: "2026-11-11"
+
+cover:
+  kicker:
+    es: "Portfolio · 2026"
+    en: "Portfolio · 2026"
+
+  coordinates: "Montevideo · 34.90° S, 56.16° W"
+
+  # Título grande de la portada: `lead` va arriba, `emphasis` abajo con el
+  # subrayado a mano y el punto en color de acento.
+  title:
+    lead:
+      es: "Software pensado"
+      en: "Software built to"
+    emphasis:
+      es: "para producción"
+      en: "run in production"
+
+  # Entre [corchetes] = palabra resaltada en color de acento.
+  lede:
+    es: "Hoy desarrollo sistemas en [.NET / C#] como independiente y estudio [DevOps] en ORT."
+    en: "Currently building [.NET / C#] systems as an independent developer and studying [DevOps] at ORT."
+
+  # Entre {llaves} = palabra encerrada en un círculo a mano, con la nota al costado.
+  statement:
+    es: "Antes de escribir software pasé seis años en soporte e infraestructura. Por eso diseño pensando en la {operación}: en cómo falla, cómo se monitorea y quién lo mantiene."
+    en: "Before writing software I spent six years in support and infrastructure. So I design with {operations} in mind: how it fails, how it's monitored, and who keeps it running."
+
+  note:
+    es: "persistente por naturaleza:\nsi algo se rompe,\nlo sigo hasta el fondo."
+    en: "persistent by nature:\nif something breaks,\nI follow it to the root."
+
+# Cifras de las tarjetas de "trabajo de campo", en el mismo orden que
+# experience[0].projects de cv.*.yaml. Cada cifra sale literal de la
+# descripción del proyecto en el CV.
+cases:
+  - value: "1,500"
+    unit:
+      es: "operaciones / día"
+      en: "operations / day"
+    caption:
+      es: "6 bancos integrados, sin intervención manual"
+      en: "6 banks integrated, no manual intervention"
+    figure: banks
+
+  - value: "Offline"
+    unit:
+      es: "primero"
+      en: "first"
+    caption:
+      es: "guarda sin cobertura y sincroniza al volver la señal"
+      en: "stores without coverage, syncs when signal returns"
+    figure: signal
+
+  - value: "6"
+    unit:
+      es: "estados por transacción"
+      en: "states per transaction"
+    caption:
+      es: "aprobada, rechazada, vencida, revertida, renovada, cancelada"
+      en: "approved, rejected, expired, reversed, renewed, cancelled"
+    figure: states

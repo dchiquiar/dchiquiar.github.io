@@ -1,0 +1,43 @@
+---
+// Dibujos chicos de cada tarjeta de caso, en el mismo trazo que el resto
+// del sitio. Puramente decorativos: la cifra y el texto ya dicen lo mismo.
+interface Props { kind: "banks" | "signal" | "states" }
+const { kind } = Astro.props;
+const bankYs = [10, 24, 38, 52, 66, 80];
+const states = [20, 66, 112, 158, 204, 250];
+---
+<svg class="case-fig" viewBox="0 0 300 92" aria-hidden="true">
+  {kind === "banks" && (
+    <g>
+      {bankYs.map((y) => (
+        <>
+          <rect x="8" y={y - 5} width="22" height="10" pathLength="1" />
+          <path pathLength="1" d={`M30 ${y} C 90 ${y}, 110 46, 150 46`} />
+        </>
+      ))}
+      <circle class="ink" cx="162" cy="46" r="12" pathLength="1" />
+      <path pathLength="1" d="M174 46 H 268 M 260 39 L 268 46 L 260 53" />
+      <rect x="272" y="30" width="20" height="32" pathLength="1" />
+    </g>
+  )}
+  {kind === "signal" && (
+    <g>
+      <path pathLength="1" d="M6 60 H 96" />
+      <path class="dashed" d="M96 60 H 196" />
+      <path pathLength="1" d="M196 60 H 294" />
+      {[20, 44, 68, 92].map((x) => <circle cx={x} cy="60" r="3.5" class="fill" />)}
+      {[120, 144, 168].map((x) => <circle cx={x} cy="60" r="3.5" class="hollow" />)}
+      {[216, 240, 264].map((x) => <circle cx={x} cy="60" r="3.5" class="fill" />)}
+      <path class="ink" pathLength="1" d="M168 52 C 180 18, 220 14, 232 44 M 224 38 L 232 45 L 238 36" />
+      <path pathLength="1" d="M270 34 v -8 M 278 34 v -14 M 286 34 v -20" />
+    </g>
+  )}
+  {kind === "states" && (
+    <g>
+      <path pathLength="1" d="M20 46 H 250" />
+      {states.map((x, i) => <circle cx={x} cy="46" r={i === 0 ? 9 : 7} class={i === 0 ? "ink fill-ink" : "node"} pathLength="1" />)}
+      <path class="ink" pathLength="1" d="M250 46 C 264 10, 20 6, 20 34" />
+      <path class="ink" pathLength="1" d="M14 28 L 20 36 L 26 28" />
+    </g>
+  )}
+</svg>

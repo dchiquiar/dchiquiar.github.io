@@ -87,3 +87,10 @@ export function splitParagraphs(value) {
     .map((p) => p.trim())
     .filter((p) => p.length > 0);
 }
+
+// Copy propia de la home rediseñada (data/home.yaml): portada, anotación y
+// cifras de los casos. Bilingüe por campo, como proyectos.yaml.
+export function loadHome() {
+  const file = path.join(dataDir, "home.yaml");
+  return load(fs.readFileSync(file, "utf-8"));
+}

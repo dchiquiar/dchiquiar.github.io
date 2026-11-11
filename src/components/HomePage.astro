@@ -1,94 +1,59 @@
 ---
 // Único componente de página: src/pages/index.astro y src/pages/es/index.astro
-// sólo le pasan `lang`. Cero markup duplicado entre idiomas.
-//
-// F-18 (ADR-0019 §1): el orden de las secciones sale de
-// `cv.meta.sectionOrder` (cv.es.yaml y cv.en.yaml ya lo traen — ver
-// DEFAULT_SECTION_ORDER más abajo, que coincide con ese orden). Una
-// sección cuyo contenido no existe (education sin items, hobbies sin
-// ítems con fotos) no entra al orden final: ni se renderiza ni aparece en
-// el nav.
-//
-// AboutSection.astro ("Sobre mí", person.summary) se quitó en F-22: quedó
-// huérfana desde que el orden del ADR (Hero → Stack → Proyectos →
-// Experiencia → Formación → Contacto) dejó de incluirla — ningún
-// cv.*.yaml declara "about" en sectionOrder ni trae person.summary, así
-// que el componente nunca llegaba a renderizarse (verificado con grep
-// antes de borrarlo). ui.js conserva las claves nav.about/sections.about/
-// about.* sin usar por si se retoma más adelante.
+// sólo le pasan `lang`. El orden de las secciones sale de
+// cv.meta.sectionOrder; una sección sin contenido no se renderiza ni
+// aparece en el índice ni en la barra superior.
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Hero from "./Hero.astro";
-import ProjectsSection from "./ProjectsSection.astro";
+import Cover from "./Cover.astro";
+import StackSection from "./StackSection.astro";
+import WorkSection from "./WorkSection.astro";
 import ExperienceSection from "./ExperienceSection.astro";
 import EducationSection from "./EducationSection.astro";
-import SkillsSection from "./SkillsSection.astro";
-import HobbiesSection from "./HobbiesSection.astro";
+import AboutSection from "./AboutSection.astro";
 import ContactSection from "./ContactSection.astro";
-import { loadCv, loadProjects, loadHobbies, cleanField } from "../lib/content.js";
+import { loadCv, loadProjects, loadHobbies, loadHome, loadNow, cleanField } from "../lib/content.js";
 
 interface Props {
   lang: "en" | "es";
 }
 const { lang } = Astro.props;
 const cv = loadCv(lang);
+const home = loadHome();
+const now = loadNow();
+const hobbies = loadHobbies();
 const { person } = cv;
 
-const stackIntro = cleanField(cv.skills?.intro ?? null);
 const experienceItems = cv.experience ?? [];
 const educationItems = cv.education ?? [];
-const visibleProjectsCount = loadProjects().filter((p) => p.status !== "planned").length;
-// F-22: mismo criterio que visibleProjectsCount — un ítem sin fotos no
-// cuenta (hobbies.schema.json: "un item SIN images no se renderiza").
-const visibleHobbiesCount = (loadHobbies().items ?? []).filter(
-  (h) => (h.images ?? []).length > 0,
-).length;
+const projects = loadProjects().filter((p: any) => p.status !== "planned");
+const visibleHobbiesCount = (hobbies.items ?? []).filter((h: any) => (h.images ?? []).length > 0).length;
+const featuredJob = experienceItems.find((e: any) => (e.projects ?? []).length > 0) ?? null;
+const skills = { ...cv.skills, intro: cleanField(cv.skills?.intro ?? null) };
 
 const DEFAULT_SECTION_ORDER = ["intro", "skills", "projects", "experience", "education", "hobbies", "contact"];
-const rawOrder = cv.meta?.sectionOrder ?? DEFAULT_SECTION_ORDER;
-
-// Presencia de contenido por id semántico — el único filtro que decide si
-// una sección entra al orden final (y por lo tanto al nav). "intro" y
-// "contact" siempre tienen algo (person.name/headline y person.email son
-// campos requeridos por el schema); "skills" también, en la práctica (las
-// categorías del CV nunca están vacías) pero igual queda atado a datos
-// reales por si algún día lo estuvieran.
-const sectionHasContent = {
+const rawOrder: string[] = cv.meta?.sectionOrder ?? DEFAULT_SECTION_ORDER;
+const sectionHasContent: Record<string, boolean> = {
   intro: true,
-  skills: (cv.skills?.categories?.length ?? 0) > 0 || Boolean(cv.skills?.learning),
-  projects: visibleProjectsCount > 0,
+  skills: (cv.skills?.categories?.length ?? 0) > 0,
+  projects: projects.length > 0 || Boolean(featuredJob),
   experience: experienceItems.length > 0,
   education: educationItems.length > 0,
   hobbies: visibleHobbiesCount > 0,
   contact: true,
 };
-
 const orderedSections = rawOrder.filter((id) => sectionHasContent[id] === true);
-
-// Numeración de SectionHeading (01, 02…): por posición real dentro del
-// orden ya filtrado, no hardcodeada por componente. "intro" (el hero) no
-// numera — no lleva SectionHeading, es el h1 de la página.
-const sectionNumbers = {};
-let numberCounter = 0;
-for (const id of orderedSections) {
-  if (id === "intro") continue;
-  numberCounter += 1;
-  sectionNumbers[id] = String(numberCounter).padStart(2, "0");
-}
-
-// Ids para el nav (SiteNav.astro): el mismo orden ya filtrado, sin "intro"
-// (el hero no lleva ancla propia en esa fila, igual que antes "top"
-// tampoco aparecía).
 const navSections = orderedSections.filter((id) => id !== "intro");
+const numbers: Record<string, string> = {};
+navSections.forEach((id, i) => (numbers[id] = String(i + 1).padStart(2, "0")));
+const toc = navSections.map((id) => ({ id, number: numbers[id] }));
 
 const title = `${person.name} — ${person.headline}`;
 const description =
   lang === "es"
     ? `${person.name} — ${person.headline}. Con base en ${person.location}. Portfolio, CV y proyectos.`
     : `${person.name} — ${person.headline}. Based in ${person.location}. Portfolio, CV and projects.`;
-
 const path = lang === "es" ? "/es/" : "/";
 const siteUrl = "https://diegochiquiar.dev";
-
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
@@ -96,16 +61,9 @@ const jsonLd = {
   jobTitle: person.headline,
   email: `mailto:${person.email}`,
   url: `${siteUrl}${path}`,
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Montevideo",
-    addressCountry: "UY",
-  },
-  ...(person.links?.linkedin || person.links?.github
-    ? {
-        sameAs: [person.links?.linkedin, person.links?.github].filter(Boolean),
-      }
-    : {}),
+  image: `${siteUrl}/images/diego-portrait.webp`,
+  address: { "@type": "PostalAddress", addressLocality: "Montevideo", addressCountry: "UY" },
+  sameAs: [person.links?.linkedin, person.links?.github].filter(Boolean),
 };
 ---
 
@@ -114,32 +72,19 @@ const jsonLd = {
     {orderedSections.map((id) => {
       switch (id) {
         case "intro":
-          return <Hero lang={lang} person={person} />;
+          return <Cover lang={lang} person={person} previous={experienceItems[0] ?? null} home={home} now={now} toc={toc} />;
         case "skills":
-          return (
-            <SkillsSection
-              lang={lang}
-              number={sectionNumbers.skills}
-              categories={cv.skills.categories ?? []}
-              languages={cv.languages ?? []}
-              intro={stackIntro}
-              learning={cv.skills?.learning ?? null}
-            />
-          );
+          return <StackSection lang={lang} number={numbers.skills} skills={skills} languages={cv.languages ?? []} />;
         case "projects":
-          return <ProjectsSection lang={lang} number={sectionNumbers.projects} />;
+          return <WorkSection lang={lang} number={numbers.projects} job={featuredJob} cases={home.cases ?? []} projects={projects} />;
         case "experience":
-          return (
-            <ExperienceSection lang={lang} number={sectionNumbers.experience} experience={experienceItems} />
-          );
+          return <ExperienceSection lang={lang} number={numbers.experience} experience={experienceItems} />;
         case "education":
-          return (
-            <EducationSection lang={lang} number={sectionNumbers.education} education={educationItems} />
-          );
+          return <EducationSection lang={lang} number={numbers.education} education={educationItems} />;
         case "hobbies":
-          return <HobbiesSection lang={lang} number={sectionNumbers.hobbies} />;
+          return <AboutSection lang={lang} number={numbers.hobbies} hobbies={hobbies} />;
         case "contact":
-          return <ContactSection lang={lang} number={sectionNumbers.contact} person={person} />;
+          return <ContactSection lang={lang} number={numbers.contact} person={person} contact={cv.contact} />;
         default:
           return null;
       }

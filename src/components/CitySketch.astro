@@ -1,0 +1,29 @@
+---
+// fig. 2: Montevideo dibujado en trazos SVG desde la Rambla: el Cerro con
+// la fortaleza a la izquierda, la línea de edificios, el Palacio Salvo, la
+// Torre de Antel, el agua y un sol en color de tinta. Cada trazo usa
+// pathLength=1 para dibujarse al revelarse (ver .sketch en site.css).
+const blds: number[][] = [[360, 178, 26, 27], [388, 183, 18, 22], [410, 164, 18, 41], [432, 155, 18, 50], [450, 182, 18, 23], [470, 183, 30, 22], [500, 152, 18, 53], [520, 135, 18, 70], [542, 173, 18, 32], [564, 184, 34, 21], [706, 152, 18, 53], [724, 161, 26, 44], [750, 180, 34, 25], [788, 152, 26, 53], [818, 181, 22, 24], [844, 147, 34, 58], [878, 181, 26, 24], [978, 174, 34, 31], [1014, 160, 34, 45], [1050, 150, 30, 55], [1082, 168, 26, 37], [1108, 143, 22, 62], [1130, 151, 18, 54], [1150, 156, 34, 49]];
+---
+<svg class="sketch" viewBox="0 0 1200 260" role="img" aria-label="Montevideo: Cerro, Palacio Salvo, Torre de Antel">
+  <g class="sketch__far">
+    <path pathLength="1" d="M0 205 C 50 196, 95 160, 150 152 C 195 146, 235 170, 330 203" />
+    <path pathLength="1" d="M138 152 V 140 H 166 V 151 M 152 140 V 124 M 147 128 H 157" />
+  </g>
+  <g class="sketch__blds">
+    {blds.map(([x, y, w, h]) => <rect x={x} y={y} width={w} height={h} pathLength="1" />)}
+  </g>
+  <g class="sketch__main">
+    <path pathLength="1" d="M606 205 V 128 H 680 V 205 M 625 128 V 78 H 661 V 128 M 632 78 V 56 H 654 V 78 M 632 56 Q 643 36 654 56 M 643 44 V 14" />
+    <path pathLength="1" d="M616 140 H 670 M 616 154 H 670 M 616 168 H 670 M 616 182 H 670 M 635 92 H 651 M 635 106 H 651" />
+    <path pathLength="1" d="M912 205 L 922 92 L 934 34 L 946 92 L 956 205 M 922 92 H 946 M 918 140 H 950" />
+  </g>
+  <path class="sketch__shore" pathLength="1" d="M300 207 C 600 199, 900 200, 1200 208" />
+  <g class="sketch__water">
+    <path pathLength="1" d="M40 228 q 14 -6 28 0 t 28 0 M 210 240 q 14 -6 28 0 t 28 0 t 28 0 M 470 230 q 14 -6 28 0 t 28 0 M 760 244 q 14 -6 28 0 t 28 0 t 28 0 M 1010 230 q 14 -6 28 0 t 28 0" />
+  </g>
+  <g class="sketch__birds">
+    <path pathLength="1" d="M760 60 q 6 -6 12 0 q 6 -6 12 0 M 800 44 q 5 -5 10 0 q 5 -5 10 0 M 470 80 q 5 -5 10 0 q 5 -5 10 0" />
+  </g>
+  <circle class="sketch__sun" cx="1085" cy="72" r="24" pathLength="1" />
+</svg>

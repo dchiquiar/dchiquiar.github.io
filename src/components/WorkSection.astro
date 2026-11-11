@@ -1,0 +1,113 @@
+---
+// Trabajo: casos reales del último empleo (tarjetas con cifra y dibujo) y
+// proyectos propios (filas numeradas que se expanden).
+import { ui } from "../i18n/ui.js";
+import { splitParagraphs } from "../lib/content.js";
+import Chapter from "./Chapter.astro";
+import CaseFigure from "./CaseFigure.astro";
+
+interface Props {
+  lang: "en" | "es";
+  number: string;
+  job: any;
+  cases: any[];
+  projects: any[];
+}
+const { lang, number, job, cases, projects } = Astro.props;
+const t = ui[lang];
+const s = t.sections.projects;
+const jobYears = job ? `${job.startDate.slice(0, 4)} — ${job.endDate ? job.endDate.slice(0, 4) : t.experience.now}` : "";
+const fieldProjects = job?.projects ?? [];
+---
+<Chapter id="projects" number={number} kicker={s.kicker} title={s.title} emphasis={s.emphasis}>
+  {job?.summary && <p class="chapter__intro" data-reveal>{splitParagraphs(job.summary)[0]}</p>}
+
+  {fieldProjects.length > 0 && (
+    <div class="subhead" data-reveal>
+      <p class="kicker">{t.projects.fieldWork}</p>
+      <p class="kicker muted">{job.employer.name} · {jobYears}</p>
+    </div>
+  )}
+
+  <div class="cases">
+    {fieldProjects.map((p: any, i: number) => {
+      const meta = cases[i];
+      const paras = splitParagraphs(p.description);
+      return (
+        <article class="case" data-reveal>
+          <header class="case__head">
+            <span class="kicker">{t.projects.case} {String(i + 1).padStart(2, "0")}</span>
+          </header>
+          {meta && (
+            <div class="case__stat">
+              <span class="case__value">{meta.value}</span>
+              <span class="case__unit">{meta.unit[lang]}</span>
+            </div>
+          )}
+          {meta && <CaseFigure kind={meta.figure} />}
+          {meta && <p class="figcap">{meta.caption[lang]}</p>}
+          <h3 class="case__title">{p.name}</h3>
+          <p class="case__text">{paras[0]}</p>
+          {paras.length > 1 && (
+            <details class="disclose">
+              <summary><span>{t.experience.details}</span><span class="disclose__icon" aria-hidden="true">+</span></summary>
+              {paras.slice(1).map((para) => <p>{para}</p>)}
+            </details>
+          )}
+          <ul class="tags tags--small">
+            {p.technologies.map((tech: string) => <li>{tech}</li>)}
+          </ul>
+        </article>
+      );
+    })}
+  </div>
+
+  {projects.length > 0 && (
+    <div class="work-list" data-reveal>
+      <div class="subhead">
+        <p class="kicker">{t.projects.selected}</p>
+      </div>
+      <ol class="rows">
+        {projects.map((p: any, i: number) => (
+          <li class="row">
+            <details class="row__details">
+              <summary class="row__summary">
+                <span class="row__n">{String(i + 1).padStart(2, "0")}</span>
+                <span class="row__main">
+                  <span class="row__tag">{t.projects.status[p.status] ?? p.status}</span>
+                  <span class="row__title">{p.title[lang]}</span>
+                  <span class="row__desc">{p.description[lang]}</span>
+                </span>
+                <span class="row__arrow" aria-hidden="true">→</span>
+              </summary>
+              <div class="row__more">
+                {p.problem?.[lang] && (
+                  <div>
+                    <p class="kicker">{t.projects.problem}</p>
+                    <p>{p.problem[lang]}</p>
+                  </div>
+                )}
+                {p.images?.length > 0 && (
+                  <div class="shots">
+                    {p.images.map((img: any) => (
+                      <img src={img.src} width={img.width} height={img.height} alt={img.alt[lang]} loading="lazy" decoding="async" />
+                    ))}
+                  </div>
+                )}
+                <div class="row__foot">
+                  <ul class="tags tags--small">
+                    {p.technologies.map((tech: string) => <li>{tech}</li>)}
+                  </ul>
+                  <p class="row__links">
+                    {p.repoUrl ? <a class="link" href={p.repoUrl} rel="noopener">{t.projects.viewCode} ↗</a> : <span class="muted">{t.projects.noRepo}</span>}
+                    {p.liveUrl && <a class="link" href={p.liveUrl} rel="noopener">{t.projects.viewLive} ↗</a>}
+                  </p>
+                </div>
+              </div>
+            </details>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )}
+</Chapter>

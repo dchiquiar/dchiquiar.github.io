@@ -1,0 +1,34 @@
+---
+// Envoltorio de cada sección numerada: riel lateral con el número en un
+// círculo, rótulo mono "§ 01 — STACK" y título grande con subrayado a mano.
+import Underline from "./Underline.astro";
+
+interface Props {
+  id: string;
+  number: string;
+  kicker: string;
+  title: string;
+  emphasis: string;
+  headingId?: string;
+}
+const { id, number, kicker, title, emphasis } = Astro.props;
+const headingId = `${id}-title`;
+---
+<section class="chapter" id={id} aria-labelledby={headingId} data-chapter>
+  <div class="chapter__rail" aria-hidden="true">
+    <span class="chapter__num">{number}</span>
+    <span class="chapter__line"><span class="chapter__ink"></span></span>
+  </div>
+  <div class="chapter__body">
+    <header class="chapter__head" data-reveal>
+      <p class="kicker">§ {number} — {kicker}</p>
+      <h2 class="display display--section" id={headingId}>
+        <slot name="title">
+          {title}{" "}
+          <span class="underlined">{emphasis}<Underline variant={2} /></span><span class="dot">.</span>
+        </slot>
+      </h2>
+    </header>
+    <slot />
+  </div>
+</section>

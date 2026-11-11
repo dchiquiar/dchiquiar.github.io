@@ -1,0 +1,38 @@
+---
+// "Acerca de mí": hobbies de data/hobbies.yaml. Cada tema con su texto y
+// una tira de fotos con scroll-snap (sin JS).
+import { ui } from "../i18n/ui.js";
+import Chapter from "./Chapter.astro";
+
+interface Props {
+  lang: "en" | "es";
+  number: string;
+  hobbies: any;
+}
+const { lang, number, hobbies } = Astro.props;
+const t = ui[lang];
+const s = t.sections.hobbies;
+const items = (hobbies.items ?? [])
+  .filter((h: any) => (h.images ?? []).length > 0)
+  .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+---
+<Chapter id="hobbies" number={number} kicker={hobbies.section?.title?.[lang] ?? s.kicker} title={s.title} emphasis={s.emphasis}>
+  <div class="hobbies">
+    {items.map((h: any, i: number) => (
+      <article class="hobby" data-reveal>
+        <div class="hobby__text">
+          <p class="kicker"><span class="kicker__n">{String(i + 1).padStart(2, "0")}</span> {h.title[lang]}</p>
+          {h.description?.[lang] && <p>{h.description[lang]}</p>}
+          <p class="figcap">fig. {i + 4} — {h.title[lang].toLowerCase()} · {h.images.length} {lang === "es" ? "fotos" : "photos"} →</p>
+        </div>
+        <ul class="hobby__strip" tabindex="0" aria-label={h.title[lang]}>
+          {h.images.map((img: any) => (
+            <li>
+              <img src={img.src} width={img.width} height={img.height} alt={img.alt[lang]} loading="lazy" decoding="async" />
+            </li>
+          ))}
+        </ul>
+      </article>
+    ))}
+  </div>
+</Chapter>

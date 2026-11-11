@@ -1,0 +1,50 @@
+---
+import { ui } from "../i18n/ui.js";
+
+interface Props {
+  lang: "en" | "es";
+  sections: string[];
+}
+const { lang, sections } = Astro.props;
+const t = ui[lang];
+const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
+---
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href={lang === "es" ? "/es/" : "/"}>
+      <span class="brand__mark" aria-hidden="true">dc</span>
+      <span class="brand__name">diegochiquiar<span class="brand__tld">.dev</span></span>
+    </a>
+    <nav class="topbar__nav" aria-label={lang === "es" ? "Secciones" : "Sections"}>
+      {sections.map((id) => (
+        <a href={`#${id}`} data-nav-link>{t.nav[id]}</a>
+      ))}
+    </nav>
+    <div class="topbar__tools">
+      <button class="icon-btn" type="button" id="theme-toggle" aria-pressed="true" aria-label={t.themeLabel}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>
+      </button>
+      <div class="lang-switch" role="group" aria-label={t.langLabel}>
+        <a href="/" hreflang="en" lang="en" aria-current={lang === "en" ? "true" : undefined}>EN</a>
+        <a href="/es/" hreflang="es" lang="es" aria-current={lang === "es" ? "true" : undefined}>ES</a>
+      </div>
+      <a class="chip-btn" href={cvHref} download>&lt; {t.downloadCv} /&gt;</a>
+    </div>
+  </div>
+</header>
+<script is:inline>
+  (function () {
+    var btn = document.getElementById("theme-toggle");
+    if (!btn) return;
+    var d = document.documentElement;
+    function sync() { btn.setAttribute("aria-pressed", String(d.getAttribute("data-theme") === "dark")); }
+    sync();
+    btn.addEventListener("click", function () {
+      var next = d.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      d.setAttribute("data-theme", next);
+      try { localStorage.setItem("theme", next); } catch (e) {}
+      sync();
+    });
+  })();
+</script>

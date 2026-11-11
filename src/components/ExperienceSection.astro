@@ -1,123 +1,97 @@
 ---
+// Experiencia: línea de tiempo a escala (fig. 3) y filas que se expanden.
 import { ui } from "../i18n/ui.js";
-import SectionHeading from "./SectionHeading.astro";
-import { cleanField, cleanList, splitParagraphs } from "../lib/content.js";
+import { splitParagraphs } from "../lib/content.js";
 import { formatDateRange } from "../lib/format.js";
+import Chapter from "./Chapter.astro";
 
 interface Props {
   lang: "en" | "es";
   number: string;
-  experience: Array<Record<string, any>>;
+  experience: any[];
 }
 const { lang, number, experience } = Astro.props;
 const t = ui[lang];
-const cvHref = lang === "es" ? "/cv-es.pdf" : "/cv-en.pdf";
+const s = t.sections.experience;
+
+const toNum = (ym: string) => {
+  const [y, m] = ym.split("-").map(Number);
+  return y + (m - 1) / 12;
+};
+const today = new Date();
+const nowNum = today.getFullYear() + today.getMonth() / 12;
+const items = experience.map((e) => ({
+  ...e,
+  from: toNum(e.startDate),
+  to: e.endDate ? toNum(e.endDate) : nowNum,
+}));
+const min = Math.floor(Math.min(...items.map((i) => i.from)));
+const max = Math.max(nowNum, ...items.map((i) => i.to));
+const pct = (v: number) => ((v - min) / (max - min)) * 100;
+const ticks: number[] = [];
+for (let y = min; y <= Math.floor(max); y += 1) ticks.push(y);
+const sorted = [...items].sort((a, b) => a.from - b.from);
 ---
-
-<section id="experience" class="section">
-  <div class="container">
-    <SectionHeading number={number} title={t.sections.experience} id="experience" />
-
-    <p>
-      <a class="btn btn-primary" href={cvHref} download>{t.experience.downloadCv}</a>
-    </p>
-
-    {experience.map((job) => {
-      const employerName = cleanField(job.employer?.name);
-      const sector = cleanField(job.employer?.sector);
-      // `job.summary` es una línea corta con comillas dobles en el YAML,
-      // no un bloque plegado (`>-`) como `person.summary`/`project.description`:
-      // por contrato no trae varios párrafos, así que no necesita
-      // `splitParagraphs` (revisado a propósito, no es un olvido).
-      const summary = cleanField(job.summary);
-      const highlights = cleanList(job.highlights);
-      const technologies = job.technologies ?? [];
-      // `projects` es nuevo y opcional (ADR-0010): sólo algunos empleos lo
-      // traen. Cada proyecto pasa por el mismo filtro que cualquier otro
-      // campo del YAML; si falta nombre o descripción, ese proyecto no se
-      // muestra (mismo criterio defensivo que el resto del sitio).
-      const projects = (job.projects ?? [])
-        .map((p) => ({
-          name: cleanField(p?.name),
-          description: cleanField(p?.description),
-          technologies: cleanList(p?.technologies),
-        }))
-        .filter((p) => p.name && p.description);
-      return (
-        <div class="job">
-          {/* F-26 (ADR-0026): "cada encabezado de puesto... cuando le
-             toque entrar" — la sección completa mide ~2100px, así que cada
-             `.job` revela por separado (el observer compartido dispara uno
-             por uno, nunca todos juntos al cargar). Sin `data-reveal-index`
-             a propósito: no son un grupo chico para escalonar con
-             `--reveal-stagger-step` (eso dejaría a los últimos puestos con
-             el mismo delay tope, atrasando su aparición sin motivo) — cada
-             uno dispara por su propia entrada real en pantalla. */}
-          <div class="job__header" data-reveal>
-            <h3 class="job__role">{job.role}</h3>
-            <span class="job__dates">{formatDateRange(job, lang)}</span>
-          </div>
-          {employerName && <p class="job__employer">{employerName}</p>}
-          {(sector || job.location) && (
-            <p class="job__meta">
-              {[sector, job.location].filter(Boolean).join(" · ")}
-            </p>
-          )}
-          {summary && <p class="job__summary">{summary}</p>}
-          {projects.length > 0 && (
-            <div class="job__projects">
-              {projects.map((project) => (
-                // F-26: "cada tarjeta" — un puesto con 2-3 proyectos puede
-                // ocupar mucho más alto que un pantallazo; cada
-                // `.job__project` revela cuando LE toca, no junto con el
-                // encabezado del puesto.
-                <div class="job__project" data-reveal>
-                  <h4 class="job__project-name">{project.name}</h4>
-                  {/* `description` puede traer varios párrafos separados
-                      por línea en blanco (TAS, hoy el único caso) — mismo
-                      contrato de YAML plegado (`>-`) que person.summary y
-                      la description de ProjectCard. Un solo `<p>` colapsaba
-                      el salto en un bloque único. */}
-                  {splitParagraphs(project.description).map((paragraph) => (
-                    <p class="job__project-description">{paragraph}</p>
-                  ))}
-                  {project.technologies.length > 0 && (
-                    <ul class="tag-list">
-                      {project.technologies.map((tech) => (
-                        <li class="tag">{tech}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-          {highlights.length > 0 && (
-            <ul class="job__highlights">
-              {highlights.map((h) => (
-                <li>{h}</li>
-              ))}
-            </ul>
-          )}
-          {technologies.length > 0 && (
-            <>
-              {/* Dos niveles de tags conviven cuando hay proyectos: éstos
-                  son el stack agregado de TODO el puesto, los de arriba
-                  son de cada proyecto puntual. El eyebrow lo deja explícito
-                  sólo cuando hace falta desambiguar; sin proyectos, esta
-                  lista es la única señal de stack y no necesita etiqueta. */}
-              {projects.length > 0 && (
-                <span class="eyebrow">{t.experience.roleStackLabel}</span>
-              )}
-              <ul class="tag-list">
-                {technologies.map((tech) => (
-                  <li class="tag">{tech}</li>
-                ))}
-              </ul>
-            </>
-          )}
+<Chapter id="experience" number={number} kicker={s.kicker} title={s.title} emphasis={s.emphasis}>
+  <figure class="timeline" data-reveal>
+    <div class="timeline__track">
+      {sorted.map((e, i) => (
+        <div
+          class={`timeline__bar ${i === sorted.length - 1 ? "is-latest" : ""}`}
+          style={`left:${pct(e.from)}%;width:${Math.max(pct(e.to) - pct(e.from), 1.2)}%;--row:${i % 2}`}
+        >
+          <span class="timeline__label">{e.employer.name.split(" — ")[0]}</span>
         </div>
+      ))}
+      <div class="timeline__axis" aria-hidden="true">
+        {ticks.map((y) => (
+          <span class={`timeline__tick ${y % 2 === 1 ? "is-minor" : ""}`} style={`left:${pct(y)}%`}>
+            <span>{y}</span>
+          </span>
+        ))}
+        <span class="timeline__now" style="left:100%"><span>{t.experience.now}</span></span>
+      </div>
+    </div>
+    <figcaption class="figcap">{t.experience.figTimeline.replace("{from}", String(min))}</figcaption>
+  </figure>
+
+  <ol class="rows rows--xp" data-reveal>
+    {experience.map((e) => {
+      const paras = splitParagraphs(e.summary);
+      return (
+        <li class="row">
+          <details class="row__details">
+            <summary class="row__summary row__summary--xp">
+              <span class="row__title">{e.employer.name}</span>
+              <span class="row__role">{e.role}</span>
+              <span class="row__years">{formatDateRange(e, lang)}</span>
+              <span class="row__arrow" aria-hidden="true">→</span>
+            </summary>
+            <div class="row__more">
+              {e.employer.sector && <p class="kicker">{e.employer.sector}{e.location && ` · ${e.location}`}</p>}
+              {paras.map((p) => <p>{p}</p>)}
+              {e.highlights?.length > 0 && (
+                <ul class="bullets">
+                  {e.highlights.map((h: string) => <li>{h}</li>)}
+                </ul>
+              )}
+              {e.projects?.length > 0 && (
+                <>
+                  <p class="kicker">{t.experience.projects}</p>
+                  <ul class="bullets">
+                    {e.projects.map((p: any) => <li>{p.name}</li>)}
+                  </ul>
+                </>
+              )}
+              {e.technologies?.length > 0 && (
+                <ul class="tags tags--small">
+                  {e.technologies.map((tech: string) => <li>{tech}</li>)}
+                </ul>
+              )}
+            </div>
+          </details>
+        </li>
       );
     })}
-  </div>
-</section>
+  </ol>
+</Chapter>

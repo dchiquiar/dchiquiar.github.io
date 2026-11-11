@@ -1,0 +1,57 @@
+---
+import { ui } from "../i18n/ui.js";
+import Chapter from "./Chapter.astro";
+
+interface Props {
+  lang: "en" | "es";
+  number: string;
+  skills: any;
+  languages: any[];
+}
+const { lang, number, skills, languages } = Astro.props;
+const t = ui[lang];
+const s = t.sections.skills;
+const categories = skills.categories ?? [];
+const learning = skills.learning;
+---
+<Chapter id="skills" number={number} kicker={s.kicker} title={s.title} emphasis={s.emphasis}>
+  {skills.intro && <p class="chapter__intro" data-reveal>{skills.intro}</p>}
+
+  <div class="stack" data-reveal>
+    <div class="stack__grid">
+      {categories.map((cat: any, i: number) => (
+        <div class="stack__cat">
+          <p class="kicker"><span class="kicker__n">{String(i + 1).padStart(2, "0")}</span> {cat.label}</p>
+          <ul>
+            {cat.items.map((item: string) => <li>{item}</li>)}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <aside class="stack__side">
+      {learning && (
+        <div class="panel">
+          <p class="kicker kicker--ink"><span class="pulse" aria-hidden="true"></span>{t.skills.learning}</p>
+          {learning.description && <p class="panel__text">{learning.description}</p>}
+          <ul class="tags">
+            {learning.items.map((i: string) => <li>{i}</li>)}
+          </ul>
+        </div>
+      )}
+      {languages.length > 0 && (
+        <div class="panel">
+          <p class="kicker">{t.skills.languages}</p>
+          <dl class="langs">
+            {languages.map((l: any) => (
+              <div>
+                <dt>{l.name}</dt>
+                <dd>{l.level}{l.note && <span class="muted"> — {l.note}</span>}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+    </aside>
+  </div>
+</Chapter>

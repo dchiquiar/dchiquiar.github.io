@@ -1,18 +1,16 @@
 ---
 // Layout único para las dos páginas (en/es). Todo lo que cambia entre
-// idiomas llega por props; el markup no se duplica (regla del brief).
+// idiomas llega por props; el markup no se duplica.
 import { ui } from "../i18n/ui.js";
-import SiteNav from "../components/SiteNav.astro";
+import TopBar from "../components/TopBar.astro";
 import SiteFooter from "../components/SiteFooter.astro";
-import "../styles/global.css";
+import "../styles/site.css";
 
 interface Props {
   lang: "en" | "es";
   title: string;
   description: string;
   jsonLd: Record<string, unknown>;
-  // F-18: ids semánticos de las secciones con contenido, en el orden real
-  // de renderizado (ver SiteNav.astro) — reemplaza al viejo `showAbout`.
   sections: string[];
 }
 
@@ -23,164 +21,50 @@ const path = lang === "es" ? "/es/" : "/";
 const canonicalUrl = new URL(path, Astro.site);
 const enUrl = new URL("/", Astro.site);
 const esUrl = new URL("/es/", Astro.site);
-// Una imagen por idioma (F-15): el cargo que muestra la tarjeta ("Software
-// Developer" / "Desarrollador de Software") sale de la misma imagen sólo si
-// coincide con el idioma de la página, así que EN y ES no pueden compartir
-// un único archivo. Generadas con scripts/generate-og-image.mjs.
 const ogImageFile = lang === "es" ? "/og-image-es.png" : "/og-image.png";
 const ogImageUrl = new URL(ogImageFile, Astro.site);
-const ogImageAlt =
-  lang === "es"
-    ? `${title}. Retrato sobre fondo papel, con el mismo estilo editorial del sitio.`
-    : `${title}. Portrait on a paper background, in the site's editorial style.`;
+const ogImageAlt = title;
 const ogLocale = lang === "es" ? "es_UY" : "en_US";
 const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
 ---
 
 <!doctype html>
-<html lang={lang}>
+<html lang={lang} data-theme="dark">
   <head>
     <meta charset="utf-8" />
-    <!--
-      Precarga de los 3 estilos de Source Serif 4 que se usan por encima
-      del pliegue (nav, hero, botones): 400 cuerpo/nav/botones, 700
-      nombre del hero/marca del nav, 400 itálica (hero__role — el "dek"
-      editorial bajo el título grande). Se declara acá, antes que nada,
-      porque el <link rel="stylesheet"> con las reglas @font-face lo
-      genera Astro al final del <head> — para cuando el navegador lo
-      descubre ya perdimos tiempo. El preload no depende de que el CSS
-      se haya parseado.
-
-      No es sólo una optimización de velocidad: en F-4, sin esto medí un
-      CLS real de ~0.015 con la fuente sans anterior — con las fuentes ya
-      en caché del navegador antes de que el CSS pida usarlas, el primer
-      layout ya se hace con las métricas reales de la fuente y no hay una
-      segunda pasada que pueda mover nada (con textos que están justo en
-      el límite de envolver una línea más, hasta un ajuste de métricas de
-      respaldo bien calculado puede fallar por una fracción de carácter).
-      Mismo patrón acá con la serif nueva (T-K).
-    -->
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href="/fonts/source-serif4-400.woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href="/fonts/source-serif4-700.woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href="/fonts/source-serif4-400-italic.woff2"
-      crossorigin
-    />
-    <!--
-      F-27: dos preloads más, para los títulos de sección (bajo el
-      pliegue, pero igual — ver global.css, comentario del @font-face de
-      cada una). Sin esto, con `font-display: optional` medí Comic Sans MS
-      pintando el título en 5 de 8 cargas frías (CDP
-      CSS.getPlatformFontsForNode, no document.fonts.check(): esa última
-      sólo dice si la fuente está disponible, no si se usó para pintar) —
-      el respaldo `cursive` genérico de Windows/Chrome ES Comic Sans MS.
-      El preload adelanta el pedido al principio del `<head>` en vez de
-      esperar a que el navegador lo descubra por el `<link
-      rel="stylesheet">` que Astro genera al final; la prioridad de
-      descarga ya era `VeryHigh` desde antes (un @font-face referenciado
-      en el DOM compite a esa prioridad aunque el texto esté fuera de
-      pantalla), así que esto no la sube, sólo adelanta un pedido que de
-      todos modos iba a competir por el mismo ancho de banda.
-    -->
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href="/fonts/playwrite-is-400.woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      as="font"
-      type="font/woff2"
-      href="/fonts/poppins-700.woff2"
-      crossorigin
-    />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/geist-variable.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/geist-mono-variable.woff2" crossorigin />
     <script is:inline>
-      // Aplica el tema antes del primer pintado (sin esto, flash del tema
-      // equivocado). Oscuro por defecto; respeta prefers-color-scheme sólo
-      // en la primera visita; a partir de que el usuario elige, gana su
-      // elección guardada en localStorage. Envuelto en try/catch: en
-      // ventana privada `localStorage` puede lanzar excepción.
+      // Tema, tinta y movimiento antes del primer pintado (sin flash).
+      // localStorage puede lanzar en ventana privada: todo en try/catch.
       (function () {
+        var d = document.documentElement;
         try {
-          var stored = localStorage.getItem("theme");
-          var theme =
-            stored === "light" || stored === "dark"
-              ? stored
-              : window.matchMedia &&
-                  window.matchMedia("(prefers-color-scheme: light)").matches
-                ? "light"
-                : "dark";
-          document.documentElement.setAttribute("data-theme", theme);
-        } catch (e) {
-          document.documentElement.setAttribute("data-theme", "dark");
-        }
-      })();
-    </script>
-    <script is:inline>
-      // F-26 (ADR-0026): gate de "oculto antes de revelar" para
-      // [data-reveal] (global.css, "Reveals al scroll") — puesto ANTES del
-      // primer pintado, como el tema de arriba, para no mostrar el
-      // contenido y después esconderlo de golpe. Sólo se agrega si hay
-      // IntersectionObserver y no se pidió menos movimiento: sin esta
-      // clase, `[data-reveal]` no tiene ningún estilo oculto (ver
-      // global.css) y el contenido es simplemente visible, como si esta
-      // tarea no existiera — la defensa real contra "contenido invisible
-      // para siempre" es que la clase NUNCA se agrega si no va a haber
-      // quien la revele.
-      (function () {
-        var reduceMotion =
-          window.matchMedia &&
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (reduceMotion || !("IntersectionObserver" in window)) return;
-        document.documentElement.classList.add("js-reveal");
+          var theme = localStorage.getItem("theme");
+          if (theme !== "light" && theme !== "dark") {
+            theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          }
+          d.setAttribute("data-theme", theme);
+          var ink = localStorage.getItem("ink");
+          if (ink) d.setAttribute("data-ink", ink);
+          var motion = localStorage.getItem("motion");
+          if (motion === "off") d.setAttribute("data-motion", "off");
+        } catch (e) {}
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduce && !d.hasAttribute("data-motion")) d.setAttribute("data-motion", "off");
+        if ("IntersectionObserver" in window) d.classList.add("js");
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <!--
-      Dos metas, una por esquema (F-3, auditoría apple-design): antes
-      había una sola fija en oscuro, así que en tema claro la barra del
-      navegador quedaba azul noche sobre papel crema. Valores calcados
-      de --color-bg de cada tema en global.css (no se pueden referenciar
-      variables CSS desde un atributo HTML) — si esos dos hex cambian,
-      actualizar acá y en el script de SiteNav.astro que los sincroniza
-      cuando el toggle gana sobre la preferencia del sistema.
-    -->
-    <meta
-      name="theme-color"
-      content="#f6ecd3"
-      media="(prefers-color-scheme: light)"
-    />
-    <meta
-      name="theme-color"
-      content="#0f121f"
-      media="(prefers-color-scheme: dark)"
-    />
+    <meta name="theme-color" content="#f4f0e8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12100e" media="(prefers-color-scheme: dark)" />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-
     <link rel="alternate" hreflang="en" href={enUrl} />
     <link rel="alternate" hreflang="es" href={esUrl} />
     <link rel="alternate" hreflang="x-default" href={enUrl} />
-
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -194,83 +78,70 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image:alt" content={ogImageAlt} />
     <meta name="twitter:image" content={ogImageUrl} />
-
+    <meta name="twitter:image:alt" content={ogImageAlt} />
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body>
     <a class="skip-link" href="#main">{t.skipToContent}</a>
-    <SiteNav lang={lang} sections={sections} />
+    <TopBar lang={lang} sections={sections} />
     <slot />
     <SiteFooter lang={lang} />
     <script is:inline>
-      // F-26 (ADR-0026): único IntersectionObserver del sitio para los
-      // reveals al scroll — de acá cuelgan tanto el contenido de las seis
-      // secciones como el trazo de los títulos (`data-reveal` en el propio
-      // `<h2>`, ver SectionHeading.astro/global.css). Nada de esto corre
-      // si el script de <head> no puso `.js-reveal` (sin JS,
-      // `prefers-reduced-motion: reduce`, o sin IntersectionObserver): en
-      // esos casos `[data-reveal]` ya es visible por CSS y no hace falta
-      // tocar nada acá.
       (function () {
-        if (!document.documentElement.classList.contains("js-reveal")) return;
-
-        function revealAll() {
-          var all = document.querySelectorAll("[data-reveal]");
-          for (var i = 0; i < all.length; i++) {
-            all[i].classList.add("is-revealed");
+        var d = document.documentElement;
+        // Reveals: un solo IntersectionObserver para [data-reveal]. Sin JS
+        // (o sin IO) la clase .js nunca se agrega y todo es visible.
+        if (d.classList.contains("js")) {
+          var reveal = function (el) { el.classList.add("is-in"); };
+          try {
+            var io = new IntersectionObserver(function (entries) {
+              entries.forEach(function (e) {
+                if (e.isIntersecting) { reveal(e.target); io.unobserve(e.target); }
+              });
+            }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+            document.querySelectorAll("[data-reveal]").forEach(function (el) { io.observe(el); });
+            document.addEventListener("focusin", function (e) {
+              var el = e.target.closest && e.target.closest("[data-reveal]");
+              if (el) reveal(el);
+            });
+            setTimeout(function () {
+              document.querySelectorAll("[data-reveal]").forEach(reveal);
+            }, 5000);
+          } catch (err) {
+            d.classList.remove("js");
           }
         }
 
-        try {
-          var targets = Array.prototype.slice.call(
-            document.querySelectorAll("[data-reveal]"),
-          );
-          if (!targets.length) return;
+        // Riel de cada capítulo: la tinta baja a medida que se scrollea.
+        var chapters = Array.prototype.slice.call(document.querySelectorAll("[data-chapter]"));
+        var ticking = false;
+        function paint() {
+          var vh = window.innerHeight;
+          chapters.forEach(function (c) {
+            var r = c.getBoundingClientRect();
+            var p = (vh * 0.6 - r.top) / Math.max(r.height, 1);
+            c.style.setProperty("--progress", Math.max(0, Math.min(1, p)).toFixed(3));
+          });
+          ticking = false;
+        }
+        window.addEventListener("scroll", function () {
+          if (!ticking) { ticking = true; requestAnimationFrame(paint); }
+        }, { passive: true });
+        paint();
 
-          var observer = new IntersectionObserver(
-            function (entries) {
-              entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                  entry.target.classList.add("is-revealed");
-                  observer.unobserve(entry.target);
-                }
+        // Sección activa en la barra superior.
+        var links = document.querySelectorAll("[data-nav-link]");
+        if (links.length && "IntersectionObserver" in window) {
+          var navIo = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
+              if (!e.isIntersecting) return;
+              links.forEach(function (l) {
+                l.toggleAttribute("aria-current", l.getAttribute("href") === "#" + e.target.id);
               });
-            },
-            // La zona inferior visible, no el viewport completo: revela
-            // antes de que el usuario llegue a leer el bloque (pedido del
-            // brief), no cuando ya está a mitad de pantalla.
-            { threshold: 0.1, rootMargin: "0px 0px -10% 0px" },
-          );
-          targets.forEach(function (el) {
-            observer.observe(el);
-          });
-
-          // Defensa de teclado/enlace directo (ADR-0026, obligatoria): si
-          // el foco llega a un [data-reveal] antes de que el observer lo
-          // haya marcado, se revela de inmediato — nunca queda un control
-          // enfocado dentro de contenido invisible. Cubre además el caso
-          // de navegar por ancla (`/es/#contacto`): el navegador mueve el
-          // scroll al cargar, el observer ya ve la sección intersectando
-          // en su primer callback y la revela sola, pero esto agrega una
-          // segunda red de seguridad si algo llega a interrumpir eso.
-          document.addEventListener("focusin", function (e) {
-            var el = e.target.closest
-              ? e.target.closest("[data-reveal]")
-              : null;
-            if (el && !el.classList.contains("is-revealed")) {
-              el.classList.add("is-revealed");
-              observer.unobserve(el);
-            }
-          });
-
-          // Red de seguridad final: si por lo que sea el observer nunca
-          // disparó para algo, no se queda oculto para siempre.
-          setTimeout(revealAll, 4000);
-        } catch (err) {
-          document.documentElement.classList.remove("js-reveal");
-          revealAll();
+            });
+          }, { rootMargin: "-45% 0px -50% 0px" });
+          chapters.forEach(function (c) { navIo.observe(c); });
         }
       })();
     </script>
