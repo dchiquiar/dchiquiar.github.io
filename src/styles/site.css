@@ -1103,13 +1103,25 @@ a.contact-card:hover .kicker,
 .prefs__toggle { display: inline-flex; gap: 10px; align-items: center; }
 .site-footer__top { color: var(--text); text-decoration: none; }
 .site-footer__top:hover { color: var(--ink); }
-.site-footer__colophon {
-  padding: 0 0 48px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  max-width: 70ch;
+.wordmark-wrap {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  overflow: hidden;
 }
+.wordmark {
+  margin: clamp(8px, 2vw, 24px) 0 0;
+  font-weight: 640;
+  font-size: 15.2vw;
+  line-height: 1;
+  letter-spacing: -0.065em;
+  white-space: nowrap;
+  text-align: center;
+  color: color-mix(in srgb, var(--text) 7%, transparent);
+  transform: translateY(8%);
+  user-select: none;
+  pointer-events: none;
+}
+.wordmark::selection { background: transparent; }
 
 /* ---------- Movimiento --------------------------------------------------- */
 /* Todo lo de abajo sólo corre con JS (.js en <html>) y movimiento activo.
@@ -1198,3 +1210,15 @@ a.contact-card:hover .kicker,
 }
 
 .contact-card__cvs { display: flex; gap: 18px; }
+
+/* ---------- Trazo que sigue al mouse ------------------------------------ */
+.pen-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+:root[data-motion="off"] .pen-trail { display: none; }
+@media (pointer: coarse), (hover: none) { .pen-trail { display: none; } }

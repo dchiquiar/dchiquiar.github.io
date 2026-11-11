@@ -72,7 +72,6 @@ export const ui = {
       on: "On",
       off: "Off",
       backToTop: "Back to the cover",
-      colophon: "Set in Geist and Geist Mono. Every line drawn in SVG. Built with Astro, served by GitHub Pages.",
     },
   },
   es: {
@@ -146,7 +145,6 @@ export const ui = {
       on: "Sí",
       off: "No",
       backToTop: "Volver a la portada",
-      colophon: "Compuesto en Geist y Geist Mono. Cada línea dibujada en SVG. Hecho con Astro, servido por GitHub Pages.",
     },
   },
 };

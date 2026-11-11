@@ -302,6 +302,18 @@ education:
       frameworks such as ISO and NIST.
 
 
+  - id: english-c1
+
+    title: "English, C1 level"
+    institution: "Cambridge English · C1 Advanced (CAE)"
+
+    year: null
+    status: "in-progress"
+
+    detail: >-
+      Studying English at C1 level to sit the Cambridge C1 Advanced exam in late 2027.
+
+
   - id: devops-ort
 
     title: "DevOps Engineer Certification"

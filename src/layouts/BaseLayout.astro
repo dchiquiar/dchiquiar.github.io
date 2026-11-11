@@ -87,6 +87,72 @@ const ogLocaleAlt = lang === "es" ? "en_US" : "es_UY";
     <TopBar lang={lang} sections={sections} />
     <slot />
     <SiteFooter lang={lang} />
+    <canvas class="pen-trail" aria-hidden="true"></canvas>
+    <script is:inline>
+      // Trazo de tinta que sigue al mouse con retardo: un punto "pluma" se
+      // acerca al cursor con easing y deja una estela fina que se desvanece.
+      // Sólo con mouse fino y con movimiento activo.
+      (function () {
+        var canvas = document.querySelector(".pen-trail");
+        if (!canvas || !canvas.getContext) return;
+        var fine = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+        if (!fine) return;
+        var d = document.documentElement;
+        var ctx = canvas.getContext("2d");
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var mouse = null, pen = null, pts = [], running = false;
+        var MAX = 28, EASE = 0.16;
+        function resize() {
+          canvas.width = innerWidth * dpr;
+          canvas.height = innerHeight * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resize();
+        addEventListener("resize", resize);
+        function ink() {
+          return getComputedStyle(d).getPropertyValue("--ink").trim() || "#f2743b";
+        }
+        var color = ink();
+        new MutationObserver(function () { color = ink(); }).observe(d, { attributes: true, attributeFilter: ["data-ink", "data-theme"] });
+        function frame() {
+          ctx.clearRect(0, 0, innerWidth, innerHeight);
+          if (d.getAttribute("data-motion") === "off" || !mouse) { running = false; pts = []; return; }
+          pen.x += (mouse.x - pen.x) * EASE;
+          pen.y += (mouse.y - pen.y) * EASE;
+          pts.push({ x: pen.x, y: pen.y });
+          if (pts.length > MAX) pts.shift();
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.strokeStyle = color;
+          for (var i = 1; i < pts.length; i++) {
+            var t = i / pts.length;
+            ctx.globalAlpha = t * 0.85;
+            ctx.lineWidth = 0.4 + t * 1.2;
+            ctx.beginPath();
+            ctx.moveTo(pts[i - 1].x, pts[i - 1].y);
+            ctx.lineTo(pts[i].x, pts[i].y);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(pen.x, pen.y, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+          var still = Math.abs(mouse.x - pen.x) + Math.abs(mouse.y - pen.y) < 0.3 &&
+            pts.length && Math.abs(pts[0].x - pen.x) + Math.abs(pts[0].y - pen.y) < 0.3;
+          if (still) { running = false; return; }
+          requestAnimationFrame(frame);
+        }
+        addEventListener("mousemove", function (e) {
+          mouse = { x: e.clientX, y: e.clientY };
+          if (!pen) pen = { x: mouse.x, y: mouse.y };
+          if (!running) { running = true; requestAnimationFrame(frame); }
+        }, { passive: true });
+        document.addEventListener("mouseleave", function () {
+          mouse = null; pen = null;
+        });
+      })();
+    </script>
     <script is:inline>
       (function () {
         var d = document.documentElement;
